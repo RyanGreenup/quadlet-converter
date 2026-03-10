@@ -1,0 +1,24 @@
+[Unit]
+After=prometheus.service
+Requires=prometheus.service
+
+[Container]
+Image=docker.io/grafana/grafana:11.5
+Pod=postgres-example.pod
+Volume=grafana_data:/var/lib/grafana:Z
+DropCapability=ALL
+ReadOnly=true
+Tmpfs=/tmp
+HealthCmd=wget -qO- http://127.0.0.1:3000/api/health
+HealthInterval=15s
+HealthRetries=3
+HealthTimeout=5s
+NoNewPrivileges=true
+
+[Service]
+CPUQuota=100%
+MemoryMax=256m
+Restart=always
+
+[Install]
+WantedBy=default.target

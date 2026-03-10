@@ -1,0 +1,67 @@
+#
+# PgCat config
+#
+
+[general]
+# Unix socket only — no TCP listener
+# host is still required by pgcat but we bind to localhost since clients use the socket
+host = "127.0.0.1"
+unix_socket_dir = "/tmp/pgcat"
+port = 6432
+
+# Prometheus metrics (scraped by prometheus over the internal monitoring network)
+enable_prometheus_exporter = true
+prometheus_exporter_port = 9930
+
+# How long to wait before aborting a server connection (ms).
+connect_timeout = 5000
+
+# How much time to give `SELECT 1` health check query to return with a result (ms).
+healthcheck_timeout = 1000
+
+# How long to keep connection available for immediate re-use, without running a healthcheck query on it
+healthcheck_delay = 30000
+
+# How much time to give clients during shutdown before forcibly killing client connections (ms).
+shutdown_timeout = 60000
+
+# For how long to ban a server if it fails a health check (seconds).
+ban_time = 60
+
+log_client_connections = false
+log_client_disconnections = false
+
+# Admin credentials — TODO: move to podman secrets
+admin_username = "postgres"
+admin_password = "postgres"
+
+[pools.postgres]
+# transaction: one server connection per transaction, returned to pool after.
+# Caveat: prepared statements, SET, and advisory locks are not supported;
+# use SET LOCAL and pg_advisory_xact_lock (transaction-scoped) instead.
+pool_mode = "transaction"
+
+# Single primary — no replicas yet.
+default_role = "primary"
+
+# --- Read/write splitting & sharding (commented out — enable when adding replicas) ---
+# query_parser_enabled = true
+# query_parser_read_write_splitting = true
+# primary_reads_enabled = true
+# default_role = "any"
+# sharding_function = "pg_bigint_hash"
+
+# Credentials — TODO: move to podman secrets
+[pools.postgres.users.0]
+username = "app"
+password = "postgres"
+pool_size = 50
+# Kill queries exceeding 30s — prevents runaway queries from holding connections
+statement_timeout = 30000
+
+[pools.postgres.shards.0]
+# Connect via unix socket (host is the socket directory)
+servers = [
+    [ "/var/run/postgresql", 5432, "primary" ],
+]
+database = "postgres"

@@ -649,7 +649,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
   const { canUsePod } = analyzeNetworks(normalNames, services)
   const normalNameSet = new Set(normalNames)
 
-  if (!canUsePod) {
+  if (!canUsePod || opts?.usePod === false) {
     // Multi-network path: standalone containers with Network= entries (no pod)
     const files: QuadletFileSet = []
 

@@ -51,9 +51,34 @@ const composeToQuadletCommand = defineCommand({
       process.exit(1)
     }
 
-    const file = Bun.file(filePath)
+    const resolvedPath = path.resolve(filePath)
+    const composeDir = path.dirname(resolvedPath)
+    const file = Bun.file(resolvedPath)
     const text = await file.text()
     const compose = parseCompose(text)
+
+    // Resolve relative volume paths against the compose file's directory
+    if (compose.services) {
+      for (const service of Object.values(compose.services)) {
+        if (!service.volumes) continue
+        service.volumes = service.volumes.map(vol => {
+          if (typeof vol === 'string') {
+            const sep = vol.indexOf(':')
+            if (sep === -1) return vol
+            const source = vol.slice(0, sep)
+            const rest = vol.slice(sep)
+            if (source.startsWith('./') || source.startsWith('../')) {
+              return path.resolve(composeDir, source) + rest
+            }
+            return vol
+          }
+          if (vol.source && (vol.source.startsWith('./') || vol.source.startsWith('../'))) {
+            return { ...vol, source: path.resolve(composeDir, vol.source) }
+          }
+          return vol
+        })
+      }
+    }
 
     if (!compose.services || Object.keys(compose.services).length === 0) {
       console.error('Error: no services found in compose file')

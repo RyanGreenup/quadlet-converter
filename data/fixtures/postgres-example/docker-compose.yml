@@ -1,0 +1,158 @@
+
+services:
+  postgres:
+    image: docker.io/library/postgres:17
+    restart: unless-stopped
+    # No network — postgres is only reachable via the shared unix socket
+    network_mode: "none"
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+      - pgcat_password
+    volumes:
+      - pg_data:/var/lib/postgresql/data:Z # :Z private — only postgres owns its data
+      - pg_socket:/var/run/postgresql:z # :z shared — pgbouncer also needs access
+      - ./initdb.d:/docker-entrypoint-initdb.d:Z # :Z private — only postgres runs init scripts
+    user: postgres
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "4.0"
+          pids: 100
+        reservations:
+          memory: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgbouncer:
+    image: docker.io/edoburu/pgbouncer:v1.24.0-p0
+    restart: unless-stopped
+    user: postgres
+    entrypoint: ["/entrypoint.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Only reachable via unix socket and the internal monitoring network
+    networks:
+      - monitoring
+    secrets:
+      - pgcat_password
+    volumes:
+      - pg_socket:/var/run/postgresql:z # :z shared with postgres
+      - pgbouncer_socket:/tmp/pgbouncer:Z # :Z private — only pgbouncer exposes this socket
+      - ./config/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:Z,ro
+      - ./config/pgbouncer/entrypoint.sh:/entrypoint.sh:Z,ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "2.0"
+          pids: 50
+        reservations:
+          memory: 64m
+    healthcheck:
+      test: ["CMD-SHELL", "cat < /dev/tcp/127.0.0.1/6432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: docker.io/prom/prometheus:v3.2.0
+    restart: unless-stopped
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+    networks:
+      - monitoring
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro # :Z private — only prometheus reads its config
+      - prometheus_data:/prometheus:Z # :Z private — only prometheus owns its data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+          pids: 50
+        reservations:
+          memory: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: docker.io/grafana/grafana:11.5
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - monitoring
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana:Z # :Z private — only grafana owns its data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "1.0"
+          pids: 50
+        reservations:
+          memory: 64m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pg_data:
+  pg_socket:
+  pgbouncer_socket:
+  prometheus_data:
+  grafana_data:
+
+secrets:
+  postgres_password:
+    external: true
+  pgcat_password:
+    external: true
+
+networks:
+  monitoring:
+    internal: true

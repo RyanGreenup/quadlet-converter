@@ -1,0 +1,26 @@
+[Unit]
+After=pgbouncer.service
+Requires=pgbouncer.service
+
+[Container]
+Image=docker.io/prom/prometheus:v3.2.0
+Pod=postgres-example.pod
+Volume=./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
+Volume=prometheus_data:/prometheus:Z
+DropCapability=ALL
+ReadOnly=true
+Tmpfs=/tmp
+HealthCmd=wget -qO- http://127.0.0.1:9090/-/healthy
+HealthInterval=15s
+HealthRetries=3
+HealthTimeout=5s
+NoNewPrivileges=true
+Notify=healthy
+
+[Service]
+CPUQuota=100%
+MemoryMax=512m
+Restart=always
+
+[Install]
+WantedBy=default.target
