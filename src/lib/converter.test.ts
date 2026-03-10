@@ -64,6 +64,38 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'User', value: '1000:1000' })
   })
 
+  test('converts networks (list form)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      networks: ['frontend', 'backend'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Network', value: 'frontend' })
+    expect(ir.Container).toContainEqual({ key: 'Network', value: 'backend' })
+  })
+
+  test('converts networks (map form)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      networks: {
+        frontend: { aliases: ['web'] },
+        backend: null,
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'Network', value: 'frontend' })
+    expect(ir.Container).toContainEqual({ key: 'Network', value: 'backend' })
+  })
+
+  test('network_mode and networks are independent', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      network_mode: 'host',
+      networks: ['custom'],
+    })
+    const networkEntries = ir.Container!.filter(e => e.key === 'Network')
+    expect(networkEntries).toContainEqual({ key: 'Network', value: 'host' })
+    expect(networkEntries).toContainEqual({ key: 'Network', value: 'custom' })
+  })
+
   test('handles service with no optional fields', () => {
     const ir = composeServiceToQuadletIR('empty', {})
     expect(ir).toEqual({})
@@ -119,6 +151,27 @@ describe('quadletIRToCompose', () => {
         limits: { cpus: '1', memory: '512M' },
       },
     })
+  })
+
+  test('maps Network=host to network_mode, named networks to networks', () => {
+    const ir: QuadletIR = {
+      Container: [
+        { key: 'Network', value: 'host' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].network_mode).toBe('host')
+    expect(compose.services!['svc'].networks).toBeUndefined()
+
+    const ir2: QuadletIR = {
+      Container: [
+        { key: 'Network', value: 'frontend' },
+        { key: 'Network', value: 'backend' },
+      ],
+    }
+    const compose2 = quadletIRToCompose(ir2, 'svc')
+    expect(compose2.services!['svc'].network_mode).toBeUndefined()
+    expect(compose2.services!['svc'].networks).toEqual(['frontend', 'backend'])
   })
 
   test('handles empty IR', () => {

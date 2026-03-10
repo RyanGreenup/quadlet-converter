@@ -87,6 +87,18 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.networks) {
+    if (Array.isArray(service.networks)) {
+      for (const net of service.networks) {
+        container.push({ key: 'Network', value: net })
+      }
+    } else {
+      for (const net of Object.keys(service.networks)) {
+        container.push({ key: 'Network', value: net })
+      }
+    }
+  }
+
   if (service.container_name) {
     container.push({ key: 'ContainerName', value: service.container_name })
   }
@@ -201,7 +213,12 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         service.image = value
         break
       case 'Network':
-        service.network_mode = value
+        if (['host', 'none', 'bridge', 'slirp4netns'].includes(value)) {
+          service.network_mode = value
+        } else {
+          if (!service.networks) service.networks = [] as string[]
+          ;(service.networks as string[]).push(value)
+        }
         break
       case 'PublishPort':
         if (!service.ports) service.ports = []
