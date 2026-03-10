@@ -143,7 +143,7 @@ export function checkService(name: string, service: Service): CheckResult[] {
   }
 
   if (!service.userns_mode) {
-    results.push({ id: 'no-userns', severity: 'suggestion', message: `${name}: consider setting userns_mode for user namespace remapping` })
+    results.push({ id: 'no-userns', severity: 'suggestion', message: `${name}: no userns_mode set — if running rootful, set userns_mode (e.g. "auto") to remap container UIDs to unprivileged host UIDs (rootless Podman does this automatically)` })
   }
 
   return results
