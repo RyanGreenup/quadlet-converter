@@ -1,0 +1,15 @@
+# caddy.container
+[Container]
+Image=docker.io/library/caddy:latest
+PublishPort=80:80
+PublishPort=127.0.0.1:8081:8081
+PublishPort=443:443
+PublishPort=443:443/udp
+Volume=./data/etc/caddy:/etc/caddy:ro,z
+Volume=./data/srv:/srv:ro,z
+Volume=./data/public:/public:ro,z
+Volume=caddy_data:/data
+Volume=caddy_config:/config
+Volume=:/tmp
+Volume=/mnt/volume_syd1_05/Applications/gforce_docs/book:/docs:ro,z
+Volume=/mnt/volume_syd1_05/Applications/slint-ui_docs/book:/slint_ui_docs:ro,z

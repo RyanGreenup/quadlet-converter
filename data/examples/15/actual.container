@@ -1,0 +1,4 @@
+# app.container
+[Container]
+PublishPort=3019:3019
+Environment=DATABASE_URL=postgres://app:app@db:5432/app

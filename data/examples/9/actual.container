@@ -1,0 +1,8 @@
+# postgres-data-sync.container
+[Container]
+Volume=./data:/app/data:Z
+Volume=./current.duckdb:/app/current.duckdb:Z
+Volume=$HOME/.mcli:/root/.mcli:Z
+
+[Service]
+Restart=always

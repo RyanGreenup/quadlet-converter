@@ -1,0 +1,11 @@
+# my-caddy.container
+[Container]
+Image=caddy:2
+Network=host
+Volume=caddy_storage:/caddy_storage
+Environment=XDG_DATA_HOME=/caddy_storage/data
+Environment=XDG_CONFIG_HOME=/caddy_storage/config
+Environment=CADDYFILE_PATH=/caddy_storage/Caddyfile
+
+[Service]
+Restart=always

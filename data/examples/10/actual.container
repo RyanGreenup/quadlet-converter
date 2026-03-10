@@ -1,0 +1,8 @@
+# gfmdata.container
+[Container]
+PublishPort=3019:3019
+Volume=./.data:/app/.data:Z
+ContainerName=gfmdata
+
+[Service]
+Restart=always
