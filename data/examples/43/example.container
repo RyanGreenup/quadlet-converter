@@ -1,0 +1,46 @@
+# mariadb.container
+[Container]
+Environment=MARIADB_USER=bn_wordpress MARIADB_DATABASE=bitnami_wordpress ALLOW_EMPTY_PASSWORD=yes
+Image=bitnami/mariadb:latest
+Label=kompose.service.type=headless
+Volume=mariadb-data.volume:/bitnami/mariadb
+
+---
+
+# wordpress.container
+[Unit]
+Requires=mariadb.service
+After=mariadb.service
+
+[Container]
+Environment=MARIADB_HOST=mariadb MARIADB_PORT=3306 WORDPRESS_DATABASE_USER=bn_wordpress WORDPRESS_DATABASE_NAME=bitnami_wordpress ALLOW_EMPTY_PASSWORD=yes
+Image=bitnami/wordpress:latest
+PublishPort=80:80
+PublishPort=443:443
+Volume=wordpress-data.volume:/bitnami/wordpress
+Volume=apache-data.volume:/bitnami/apache
+Volume=php-data.volume:/bitnami/php
+
+---
+
+# mariadb-data.volume
+[Volume]
+Driver=local
+
+---
+
+# wordpress-data.volume
+[Volume]
+Driver=local
+
+---
+
+# apache-data.volume
+[Volume]
+Driver=local
+
+---
+
+# php-data.volume
+[Volume]
+Driver=local

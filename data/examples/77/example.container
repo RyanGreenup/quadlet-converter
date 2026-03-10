@@ -1,0 +1,10 @@
+# siyuan.container
+[Container]
+Environment=TZ="Australia/Sydney"
+Exec='--workspace=/siyuan/workspace/' '--accessAuthCode=93290320932902390'
+Image=b3log/siyuan
+PublishPort=6806:6806
+Volume=/siyuan/workspace:/siyuan/workspace
+
+[Service]
+Restart=always

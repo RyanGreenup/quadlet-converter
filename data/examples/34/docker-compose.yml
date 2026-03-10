@@ -1,0 +1,23 @@
+services:
+  dokuwiki:
+    # Podman requires fully qualified image names for non-interactive use (systemd)
+    image: lscr.io/linuxserver/dokuwiki:latest
+    container_name: dokuwiki
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./config:/config:Z
+    # No ports needed - Caddy reaches it via caddy_network
+    # ports:
+    #   - 8923:80
+
+    # Security hardening
+    # Note: Linuxserver images need broad capabilities for their s6-overlay init
+    # Keeping no-new-privileges and network isolation as primary security controls
+    security_opt:
+      - no-new-privileges:true
+
+# Networks managed via override.conf (podlet doesn't support external networks)
+

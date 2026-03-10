@@ -1,0 +1,6 @@
+# db.container
+[Container]
+Image=postgres:10.1
+Label=kompose.volume.size=1Gi
+PublishPort=5432
+Volume=db-data:/var/lib/postgresql/data

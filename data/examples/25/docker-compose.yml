@@ -1,0 +1,195 @@
+services:
+
+###############################################################################
+# NETWORK ARCHITECTURE
+###############################################################################
+#
+#  [Internet]
+#      |
+#      v
+#  +---------------------------------------------------------------------------+
+#  |  caddy_network (external/public-facing)                                   |
+#  |    - Caddy (reverse proxy)                                                |
+#  |    - Frontend App (served by Caddy)                                       |
+#  |    - ch-ui, Grafana, Metabase (dashboards proxied by Caddy)               |
+#  +---------------------------------------------------------------------------+
+#      |
+#      v (apps connect to backend via internal network)
+#  +---------------------------------------------------------------------------+
+#  |  backend_network (internal - NOT exposed to internet)                     |
+#  |    - ClickHouse (database)                                                |
+#  |    - PostgreSQL (metabase persistence)                                    |
+#  +---------------------------------------------------------------------------+
+#
+###############################################################################
+
+###############################################################################
+# ClickHouse ##################################################################
+###############################################################################
+
+#  Clickhouse Image ............................................................
+#  NETWORK: backend_network ONLY - never directly exposed to public traffic
+
+  clickhouse:
+    image: clickhouse
+    ulimits:
+      nofile:
+        hard: 262144
+        soft: 262144
+    container_name: some-clickhouse-server
+    environment:
+      - CLICKHOUSE_USER=user
+      - CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
+      # Required for postgres access
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - PGSSLCERT=/tmp/postgresql.crt
+    # SECURITY: No ports exposed to host - only accessible via backend_network
+    # Remove or comment out any 'ports:' section in production
+    # ports:
+    #   - "19000:9000"  # NATIVE - REMOVE IN PRODUCTION
+    expose:
+      - "9000"   # Native protocol - internal only
+      - "8123"   # HTTP protocol - internal only
+    networks:
+      - backend_network  # INTERNAL ONLY - isolated from public traffic
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-config:/etc/clickhouse-server/users.d
+    restart: always
+
+#  UI Image ....................................................................
+#  NETWORK: caddy_network (for Caddy proxy) + backend_network (to reach ClickHouse)
+
+  # NOTE: I had to spin this up twice before it worked, so up, down, up again
+  ch-ui:
+    image: ghcr.io/caioricciuti/ch-ui:latest
+    restart: always
+    expose:
+      - "5521"  # Caddy proxies to this port
+    networks:
+      - caddy_network    # Receives traffic from Caddy reverse proxy
+      - backend_network  # Connects to ClickHouse
+    depends_on:
+      - clickhouse
+
+###############################################################################
+# Visualization and Dashboards ################################################
+###############################################################################
+
+#  Grafana ....................................................................
+#  NETWORK: caddy_network (for Caddy proxy) + backend_network (to reach ClickHouse)
+
+  grafana:
+  # Password is admin/admin
+  # Extension is
+  # http://localhost:32679/connections/datasources/grafana-clickhouse-datasource
+    image: grafana/grafana
+    expose:
+      - "3000"  # Caddy proxies to this port
+    networks:
+      - caddy_network    # Receives traffic from Caddy reverse proxy
+      - backend_network  # Connects to ClickHouse for data queries
+    volumes:
+        - grafana-storage:/var/lib/grafana/
+    environment:
+        - GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+        - GF_PATHS_DATA=/var/lib/grafana
+        - GF_PATHS_HOME=/usr/share/grafana
+        - GF_PATHS_LOGS=/var/log/grafana
+        - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+        - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    # After docker makes everything, run `sudo chown -R "472:0" ./data`
+    # cofirm with docker compose exec -it grafana id -u; id -g
+    user: "472"
+    depends_on:
+      - clickhouse
+
+#  Metabase ....................................................................
+#  NETWORK: caddy_network (for Caddy proxy) + backend_network (to reach databases)
+
+# Adapted from <https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-docker>
+  metabase-app:
+    image: metabase/metabase
+    restart: always
+    expose:
+      - "3000"  # Caddy proxies to this port
+    networks:
+      - caddy_network    # Receives traffic from Caddy reverse proxy
+      - backend_network  # Connects to ClickHouse and PostgreSQL
+    volumes:
+      - metabase-storage:/metabase-data
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_PORT: 5432
+      MB_DB_USER: postgres
+      MB_DB_PASS: postgres
+      MB_DB_HOST: postgres-db
+    depends_on:
+      - postgres-db
+      - clickhouse
+
+#  Postgres for Metabase Persistence ------------------------------------------
+#  NETWORK: backend_network ONLY - never directly exposed to public traffic
+
+  postgres-db:
+    image: postgres:16
+    restart: always
+    # SECURITY: No ports exposed to host
+    expose:
+      - "5432"  # Internal only
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - pg_storage:/var/lib/postgresql/data
+    command: >
+          -c work_mem=0.5GB
+          -c max_parallel_workers_per_gather=12
+    networks:
+      - backend_network  # INTERNAL ONLY - isolated from public traffic
+
+###############################################################################
+# Frontend Application (Example) ##############################################
+###############################################################################
+#  Uncomment and customize for your frontend app
+#  NETWORK: caddy_network (for Caddy proxy) + backend_network (if it queries DB directly)
+
+  # frontend-app:
+  #   image: your-frontend-image
+  #   restart: unless-stopped
+  #   expose:
+  #     - "3000"  # Caddy proxies to this port
+  #   networks:
+  #     - caddy_network    # Receives traffic from Caddy reverse proxy
+  #     - backend_network  # Only if app queries ClickHouse directly; omit if using an API layer
+  #   depends_on:
+  #     - clickhouse
+
+# See Also ~/.config/sql-language-server/.sqllsrc.json
+
+###############################################################################
+# Networks ####################################################################
+###############################################################################
+
+networks:
+  # PUBLIC-FACING: Caddy and services it proxies to
+  # This network is external and managed outside this compose file
+  caddy_network:
+    external: true
+
+  # INTERNAL: Database tier - isolated from public internet
+  # Services on this network cannot be reached directly from outside
+  backend_network:
+    internal: true  # Docker won't create external connectivity
+
+###############################################################################
+# Volumes #####################################################################
+###############################################################################
+
+volumes:
+  grafana-storage:
+  clickhouse-data:
+  clickhouse-config:
+  metabase-storage:
+  pg_storage:

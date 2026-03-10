@@ -1,0 +1,36 @@
+# wallabag.container
+[Unit]
+Requires=db.service redis.service
+After=db.service redis.service
+
+[Container]
+Environment=MYSQL_ROOT_PASSWORD=wallaroot SYMFONY__ENV__DATABASE_DRIVER=pdo_mysql SYMFONY__ENV__DATABASE_HOST=db SYMFONY__ENV__DATABASE_PORT=3306 SYMFONY__ENV__DATABASE_NAME=wallabag SYMFONY__ENV__DATABASE_USER=wallabag SYMFONY__ENV__DATABASE_PASSWORD=wallapass SYMFONY__ENV__DATABASE_CHARSET=utf8mb4 SYMFONY__ENV__DATABASE_TABLE_PREFIX="wallabag_" SYMFONY__ENV__MAILER_DSN=smtp://127.0.0.1 SYMFONY__ENV__FROM_EMAIL=wallabag@example.com SYMFONY__ENV__DOMAIN_NAME=http://vale:5108 "SYMFONY__ENV__SERVER_NAME="Your wallabag instance""
+HealthCmd=["wget","--no-verbose","--tries=1","--spider","http://localhost"]
+HealthInterval=1m
+HealthTimeout=3s
+Image=wallabag/wallabag
+PublishPort=5108:80
+Volume=/opt/wallabag/images:/var/www/wallabag/web/assets/images
+
+[Service]
+Restart=always
+
+---
+
+# db.container
+[Container]
+Environment=MYSQL_ROOT_PASSWORD=wallaroot
+HealthCmd=["mysqladmin","ping","-h","localhost"]
+HealthInterval=20s
+HealthTimeout=3s
+Image=mariadb
+Volume=./data:/var/lib/mysql
+
+---
+
+# redis.container
+[Container]
+HealthCmd=["redis-cli","ping"]
+HealthInterval=20s
+HealthTimeout=3s
+Image=redis:alpine

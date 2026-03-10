@@ -1,0 +1,58 @@
+version: "3"
+services:
+
+# Adapted from <https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-docker>
+  metabase-app:
+    image: metabase/metabase
+    restart: always
+    ports:
+      - 3007:3000
+    volumes:
+      # declare your mount volume /host/dir:/container/dir
+      - ./metabase-data:/metabase-data
+  # Comment out all environment variables to just use H2 Driver
+  # If using postgres, `CREATE DATABASE metabaseappdb` and restart container
+  # on first run.
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_PORT: 5432
+      MB_DB_USER: postgres
+      MB_DB_PASS: postgres
+      MB_DB_HOST: postgres-db
+    depends_on:
+      - postgres-db
+    links:
+      - postgres-db
+
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 2878:8080
+  pgadmin:
+      image: dpage/pgadmin4
+      restart: always
+      environment:
+        PGADMIN_DEFAULT_EMAIL: admin@admin.com
+        PGADMIN_DEFAULT_PASSWORD: root
+      volumes:
+        # Must be owned by 5050 <https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html#mapped-files-and-directories>
+        # chown -R 5050:5050 ./data/
+        - ./data/pgadmin:/var/lib/pgadmin
+      ports:
+        - "5050:80"
+  postgres-db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      # declare your mount volume /host/dir:/container/dir
+      - ./pgdata:/var/lib/postgresql/data
+
+# See Also ~/.config/sql-language-server/.sqllsrc.json

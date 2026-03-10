@@ -1,0 +1,28 @@
+version: "2.1"
+services:
+  airsonic-advanced:
+    image: lscr.io/linuxserver/airsonic-advanced:latest
+    container_name: airsonic-advanced
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+#      - CONTEXT_PATH=<URL_BASE> #optional
+#      - JAVA_OPTS=<options> #optional
+    volumes:
+      - ./airsonic_data/config:/config
+      - /media/Media8TB/Media/Music/:/music
+      - /media/Media8TB/Media/Music/Playlists:/playlists
+      - /media/Media8TB/Media/Podcasts:/podcasts
+#      - </path/to/other media>:/media #optional
+    ports:
+      - 4040:4040
+#    devices:
+#      - /dev/snd:/dev/snd #optional
+    restart: unless-stopped
+
+
+## Note that Navidrome finds any .m3u files and uses those for playlists.
+## Airsonic needs the location mounted correctly
+## An .m3u file is a list of absolute paths to music, see the [wiki] for more info
+## [wiki]: http://127.0.0.1:8923/doku.php?id=navidrome

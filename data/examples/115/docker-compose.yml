@@ -1,0 +1,119 @@
+version: "3.9"
+services:
+
+###############################################################################
+# ClickHouse ##################################################################
+###############################################################################
+
+#  Clickhouse Image ............................................................
+
+  clickhouse:
+    image: clickhouse
+    ulimits:
+      nofile:
+        hard: 262144
+        soft: 262144
+    container_name: some-clickhouse-server
+    environment:
+      - CLICKHOUSE_USER=user
+      - CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
+    ports:
+      - "19000:9000"
+      - "18123:8123"
+    volumes:
+      # Store data to HDD
+      - ./data/clickhouse/data:/var/lib/clickhouse/
+
+      # # Base Clickhouse cfg (One must have the config.xml in place first)
+      # - ./data/clickhouse/config.xml:/etc/clickhouse-server/config.d/config.xml
+      # - ./data/clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
+
+#  UI Image ...................................................................
+
+  # NOTE: I had to spin this up twice before it worked, so up, down, up again
+  ch-ui:
+    image: ghcr.io/caioricciuti/ch-ui:latest
+    restart: always
+    ports:
+      - "5521:5521"
+    environment:
+      # Note, This must be the location for the client (as JS is client side)
+      VITE_CLICKHOUSE_URL: "http://localhost:18123"
+      VITE_CLICKHOUSE_USER: "user"
+      VITE_CLICKHOUSE_PASS: "sadflkjdslkfj3298"
+
+###############################################################################
+# Visualization and Dashboards ################################################
+###############################################################################
+
+#  Grafana ....................................................................
+
+  grafana:
+  # Password is admin/admin
+  # Extension is
+  # http://localhost:32679/connections/datasources/grafana-clickhouse-datasource
+    image: grafana/grafana
+    ports:
+        - '32679:3000'
+    volumes:
+        - ./data/grafana/data:/var/lib/grafana/
+    environment:
+        - GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+        - GF_PATHS_DATA=/var/lib/grafana
+        - GF_PATHS_HOME=/usr/share/grafana
+        - GF_PATHS_LOGS=/var/log/grafana
+        - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+        - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    # After docker makes everything, run `sudo chown -R "472:0" ./data`
+    # cofirm with docker compose exec -it grafana id -u; id -g
+    user: "472"  # This is the default Grafana user in the container
+
+#  Metabase ...................................................................
+
+# Adapted from <https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-docker>
+  metabase-app:
+    image: metabase/metabase
+    restart: always
+    ports:
+      - 30637:3000
+    volumes:
+      # declare your mount volume /host/dir:/container/dir
+      - ./data/metabase-data:/metabase-data
+      - ./data/metabase-plugins/clickhouse.metabase-driver.jar:/plugins/clickhouse.metabase-driver.jar
+  # Comment out all environment variables to just use H2 Driver
+  # If using postgres, `CREATE DATABASE metabaseappdb` and restart container
+  # on first run.
+  # docker compose exec -it postgres-db psql -U postgres -d postgres -c 'CREATE DATABASE metabaseappdb'
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_PORT: 5432
+      MB_DB_USER: postgres
+      MB_DB_PASS: postgres
+      MB_DB_HOST: postgres-db
+    depends_on:
+      - postgres-db
+    links:
+      - postgres-db
+
+#  Postgres for Metabase Persistence ------------------------------------------
+
+  postgres-db:
+    image: postgres:16
+    restart: always
+    # ports:
+    #   - 54325:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      # declare your mount volume /host/dir:/container/dir
+      - ./data/pgdata:/var/lib/postgresql/data
+# -c maintenance_work_mem=256MB
+# -c max_wal_size=1GB
+    command: >
+          -c work_mem=0.5GB
+          -c max_parallel_workers_per_gather=12
+
+# See Also ~/.config/sql-language-server/.sqllsrc.json
+

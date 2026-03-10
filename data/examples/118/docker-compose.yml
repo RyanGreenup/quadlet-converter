@@ -1,0 +1,24 @@
+version: "3"
+services:
+
+# TODO not sure on this one.
+# I think the easiest setup would be:
+#  1. Ubuntu/Debian
+#  2. Miniconda
+#  3. Mount Notebooks
+# Potential Complexity:
+#  * CUDA and torch
+
+  jupyter:
+    image: continuumio/miniconda3
+    restart: always
+    ports:
+        - 8998:8888
+
+# There is an anaconda container, but it's probably more trouble that it's worth:
+
+    # doas docker run -i -t -p 8892:8888 continuumio/miniconda3 /bin/bash \
+    # -c "/opt/conda/bin/conda install jupyter -y --quiet && mkdir \
+    # /opt/notebooks && /opt/conda/bin/jupyter notebook \
+    # --notebook-dir=/opt/notebooks --ip='*' --port=8888 \
+    # --no-browser --allow-root"

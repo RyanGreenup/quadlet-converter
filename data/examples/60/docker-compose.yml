@@ -1,0 +1,8 @@
+services:
+  nfs:
+    build: .
+    privileged: true
+    ports:
+      - "2049:2049"
+    volumes:
+      - ./data:/exports

@@ -1,0 +1,23 @@
+services:
+  grafana:
+    # need glibc for duckdb so not Alpine
+    #image: grafana/grafana:main-ubuntu
+    image: grafana/grafana:latest-ubuntu
+    ports:
+      - '32679:3000'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - grafana-config:/etc/grafana/
+      # - ./data/config:/etc/grafana/
+    environment:
+      - GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_PATHS_HOME=/usr/share/grafana
+      - GF_PATHS_LOGS=/var/log/grafana
+      - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    user: "472"
+
+volumes:
+  grafana-storage:
+  grafana-config:

@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  lilium:
+    build: .
+    container_name: lilium
+    ports:
+      - "${PORT}:${PORT}"
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./.data:/app/.data:Z
+    security_opt:
+      - label=type:container_runtime_t

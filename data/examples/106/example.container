@@ -1,0 +1,14 @@
+# vscodium.container
+[Container]
+AddCapability=IPC_LOCK
+ContainerName=vscodium
+Environment=PUID=1000 PGID=1000 TZ=Etc/UTC
+Image=lscr.io/linuxserver/vscodium:latest
+PublishPort=3003:3000
+PublishPort=3004:3001
+SeccompProfile=unconfined
+ShmSize=1gb
+Volume=./config:/config
+
+[Service]
+Restart=always

@@ -1,0 +1,6 @@
+# pgadmin.container
+[Container]
+Environment=PGADMIN_DEFAULT_EMAIL=admin@admin.com PGADMIN_DEFAULT_PASSWORD=admin
+Image=dpage/pgadmin4
+PublishPort=35050:80
+Volume=pgadmin_data:/var/lib/pgadmin

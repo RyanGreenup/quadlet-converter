@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+  caddy:
+    image: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+      - "8823:8823"            # mTLS protected reverse proxy
+      - "127.0.0.1:2077:2077"  # Admin API - localhost only
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./srv:/srv
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+      - ./mtls:/etc/caddy/mtls:ro  # CA certificates for mTLS

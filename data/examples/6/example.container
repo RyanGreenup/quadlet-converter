@@ -1,0 +1,6 @@
+# dokuwiki.container
+[Container]
+ContainerName=dokuwiki
+Image=dokuwiki/dokuwiki:stable
+NoNewPrivileges=true
+Volume=./storage:/storage

@@ -1,0 +1,7 @@
+# mediawiki.container
+[Container]
+ContainerName=mediawiki
+Image=docker.io/library/mediawiki:stable
+NoNewPrivileges=true
+Volume=mediawiki_data:/var/www/html/images
+Volume=mediawiki_sqlite:/var/www/data

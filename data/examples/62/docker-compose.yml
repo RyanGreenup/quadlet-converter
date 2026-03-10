@@ -1,0 +1,17 @@
+services:
+  mediawiki:
+    # Official MediaWiki image
+    image: docker.io/library/mediawiki:stable
+    container_name: mediawiki
+    volumes:
+      - mediawiki_data:/var/www/html/images
+      - mediawiki_sqlite:/var/www/data
+      # LocalSettings.php mounted via override after initial setup
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  mediawiki_data:
+  mediawiki_sqlite:
+
+# Networks managed via override.conf (podlet doesn't support external networks)

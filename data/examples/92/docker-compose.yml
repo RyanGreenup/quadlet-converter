@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  appimage-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: appimage-builder:qt6-latest
+    container_name: appimage-builder
+    volumes:
+      # Source code mounted as read-only
+      - type: bind
+        source: .
+        target: /source
+        read_only: true
+      # Build directory (writable)
+      - type: bind
+        source: ./build-appimage
+        target: /build
+      # Output directory for AppImage
+      - type: bind
+        source: ./appimage-output
+        target: /output
+    environment:
+      - QT_QPA_PLATFORM=offscreen
+      - QT_DEBUG_PLUGINS=0
+    user: "1000:1000"
+    working_dir: /build
+    stdin_open: true
+    tty: true

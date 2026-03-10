@@ -1,0 +1,21 @@
+version: '3.5'
+
+services:
+  tabby:
+    restart: always
+    image: tabbyml/tabby
+#   command: serve --model TabbyML/Mistral-7B --device cuda
+    command: serve --model ${MODEL} --device cuda
+    volumes:
+      - "$HOME/.tabby:/data"
+    # Change port endpoint in:
+    # /home/ryan/.tabby-client/agent/config.toml
+    ports:
+      - 7652:8080
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

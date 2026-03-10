@@ -1,0 +1,7 @@
+# jupyter.container
+[Container]
+Image=continuumio/miniconda3
+PublishPort=8998:8888
+
+[Service]
+Restart=always

@@ -1,0 +1,22 @@
+# bookstack.container
+[Container]
+ContainerName=bookstack
+Environment=PUID=1000 PGID=1000 TZ=Etc/UTC APP_URL=http://bookstack.vale APP_KEY=base64:3qjlIoUX4Tw6fUQgZcxMbz6lb8+dAzqpvItqHvahW1c= DB_HOST=mariadb DB_PORT=3306 DB_DATABASE=bookstack DB_USERNAME=bookstack DB_PASSWORD=bookstack8432
+Image=lscr.io/linuxserver/bookstack:version-v25.02
+PublishPort=6875:80
+Volume=./bookstack_app_data:/config
+
+[Service]
+Restart=always
+
+---
+
+# mariadb.container
+[Container]
+ContainerName=mariadb
+Environment=PUID=1000 PGID=1000 TZ=Etc/UTC MYSQL_ROOT_PASSWORD=mysupersecretrootpassword MYSQL_DATABASE=bookstack MYSQL_USER=bookstack MYSQL_PASSWORD=bookstack8432
+Image=lscr.io/linuxserver/mariadb:11.4.4
+Volume=./bookstack_db_data:/config
+
+[Service]
+Restart=always

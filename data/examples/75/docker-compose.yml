@@ -1,0 +1,46 @@
+---
+version: "3"
+services:
+  jupyter:
+    image: localhost/r
+    container_name: jupyter
+    hostname: jupyter
+    environment:
+      - PUID=1000
+      - PGID=1000
+    # [fn_ns]
+    userns_mode: keep-id
+    # [fn_priv]
+#   privileged: true
+    # [fn_selinux]
+    security_opt:
+      - "label=disable"
+    volumes:
+      - /home/ryan/:/home/ryan
+      - /home/ryan/.local/share/virtualenvs:/home/ryan/.local/share/virtualenvs
+    # Rather than mapping ports, use the host network
+    # this will be easier for gradio, flask etc.
+    network_mode: host
+    command: $HOME/.local/share/virtualenvs/default/bin/jupyter lab $HOME --no-browser --port=8962 --ip=0.0.0.0
+    restart: unless-stopped
+    # The gui is on port 8384
+
+
+
+# [fn_ns]: https://github.com/containers/podman-compose/issues/166
+#     This might only be a big issue with SELinux like Fedora
+#     Alternatively:
+#         export PODMAN_USERNS=keep-id
+#     That may need to be in bashrc??
+#
+#     I don't see what this does that environment UID etc. doesn't,
+#     however, it's certainly more succinct and clearer
+
+# [fn_priv]:
+#     https://github.com/containers/podman-compose/discussions/619
+#     https://www.redhat.com/sysadmin/container-permission-denied-errors
+
+# [fn_selinux]
+# the article <https://www.redhat.com/sysadmin/container-permission-denied-errors>
+# suggested disabling selinux rather than the broader more dangerous --privileged
+# podman-compose uses this syntax <https://github.com/containers/podman-compose/issues/263>

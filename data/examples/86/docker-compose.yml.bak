@@ -1,0 +1,19 @@
+---
+version: "3"
+services:
+  syncthing:
+    image: syncthing/syncthing
+    container_name: vidar-syncthing
+    hostname: vidar-syncthing
+    userns: host
+#   environment:
+#     - PUID=1000
+#     - PGID=1000
+    volumes:
+     - ./data:/var/syncthing:z
+     - /home/ryan/Sync:/var/syncthing/Sync:z
+     - /home/ryan/Agenda:/var/syncthing/Agenda:z
+     - /home/ryan/Agenda:/var/syncthing/Sync-Archive:z
+    network_mode: host
+    restart: unless-stopped
+    # The gui is on port 8384

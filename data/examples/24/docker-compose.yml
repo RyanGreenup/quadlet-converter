@@ -1,0 +1,13 @@
+services:
+  note-directory-classifier:
+    build: .
+    volumes:
+      - ./data:/data
+    working_dir: /data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

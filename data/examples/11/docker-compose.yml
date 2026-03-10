@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  gfmdata:
+    build: .
+    container_name: gfmdata
+    ports:
+      - "3019:3019"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # NOTE this is required if dev machine has self-signed certs in
+      # its store
+      - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED:-1}
+    volumes:
+      - ./.data:/app/.data:Z
+    security_opt:
+      - label=type:container_runtime_t

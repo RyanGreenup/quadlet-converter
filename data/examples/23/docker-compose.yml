@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  helloworld-qml:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: helloworld-qml:latest
+    container_name: helloworld-qml
+
+    # Common environment variables
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-xcb}
+      - QT_X11_NO_MITSHM=1
+      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/1000}
+
+    volumes:
+      # X11 Unix socket for X11 display
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # X11 authentication (optional)
+      - ${HOME}/.Xauthority:/home/appuser/.Xauthority:ro
+      # Wayland socket (conditional - will be ignored if doesn't exist)
+      - ${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}:rw
+
+    # Use host network for simpler X11/Wayland access
+    network_mode: host
+
+    # Keep container running for development
+    stdin_open: true
+    tty: true
+
+    # Optional: GPU acceleration (recommended for Wayland)
+    devices:
+      - /dev/dri:/dev/dri
+
+    # Security options
+    security_opt:
+      - seccomp:unconfined

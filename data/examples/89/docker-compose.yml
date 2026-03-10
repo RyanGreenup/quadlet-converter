@@ -1,0 +1,22 @@
+services:
+  webdav:
+    build: .
+    container_name: webdav-server
+    ports:
+      - "127.0.0.1:4918:4918"
+    volumes:
+      # TODO should this be the whole directory
+      - /home/ryan/Sync/Projects/solid-js/lilium_dev/.data/:/data
+    environment:
+      - WEBDAV_HOST=0.0.0.0
+      - WEBDAV_PORT=4918
+      - WEBDAV_DATABASE=/data/notes.sqlite
+      - WEBDAV_USERNAME=ryan
+      - WEBDAV_PASSWORD=1234
+      # Optional: specify a user_id if different from username
+      # - WEBDAV_USER_ID=custom_user_id
+      - WEBDAV_USER_ID=84a9e6d1ba7f6fd229c4276440d43886
+    restart: unless-stopped
+
+volumes:
+  webdav-data:

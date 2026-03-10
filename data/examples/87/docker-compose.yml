@@ -1,0 +1,78 @@
+---
+services:
+  syncthing:
+    image: syncthing/syncthing
+#   image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    hostname: syncthing #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./data:/var/syncthing/config:z  # [fn_mount]
+      - /home/ryan/Sync:/var/syncthing/Sync
+      - /home/ryan/Notes:/var/syncthing/Notes
+      - /home/ryan/Agenda:/var/syncthing/Agenda
+      - /home/ryan/Sync-Archive:/var/syncthing/Sync-Archive
+    network_mode: host
+# Using network_mode host is better than mapping ports for
+# making connections on lan [fn_1]
+#   ports:
+#     - 8384:8384
+#     - 22000:22000/tcp
+#     - 22000:22000/udp
+#     - 21027:21027/udp
+    restart: unless-stopped
+    # [fn_ns]
+    userns_mode: keep-id
+    # [fn_priv]
+#   privileged: true
+    # [fn_selinux]
+    security_opt:
+      - "label=disable"
+
+# NOTE: The UI is on port 8384
+
+
+# [fn_1]: https://github.com/syncthing/syncthing/blob/main/README-Docker.md#discovery
+
+
+
+
+# [fn_ns]: https://github.com/containers/podman-compose/issues/166
+#     This might only be a big issue with SELinux like Fedora
+#     Alternatively:
+#         export PODMAN_USERNS=keep-id
+#     That may need to be in bashrc??
+#
+#     I don't see what this does that environment UID etc. doesn't,
+#     however, it's certainly more succinct and clearer
+
+# [fn_priv]:
+#     https://github.com/containers/podman-compose/discussions/619
+#     https://www.redhat.com/sysadmin/container-permission-denied-errors
+
+# [fn_selinux]
+# the article <https://www.redhat.com/sysadmin/container-permission-denied-errors>
+# suggested disabling selinux rather than the broader more dangerous --privileged
+# podman-compose uses this syntax <https://github.com/containers/podman-compose/issues/263>
+
+
+# [fn_mount]
+# It seems that selinux does not like the `:z` option when it applied to a home
+# directory.
+# Disabling selinux or setting privileged mode seems unwise
+# rather I only need to persist the directories that matter.
+#
+# I looked around inside a container built from the image like so:
+#     podman container exec -it 8139c9a9cab1 /bin/sh
+# then
+#     ls -ultrah /var/syncthing
+# and I found that the only directory there (other than what I added with mounts)
+# was `/var/syncthing/config`.
+#
+# So it seems safe to only mount that.
+
+# Nevermind, this doesn't work either
+

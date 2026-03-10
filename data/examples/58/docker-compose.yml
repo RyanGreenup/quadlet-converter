@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  quartz:
+    build: .
+    container_name: quartz
+    volumes:
+      - $HOME/Notes/slipbox:/usr/src/app/content
+    ports:
+      - "3818:8080"
+    restart: unless-stopped

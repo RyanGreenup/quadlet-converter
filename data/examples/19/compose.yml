@@ -1,0 +1,91 @@
+# Development compose — Tier 1 (infra) and Tier 2 (full app)
+# Tier 1: podman-compose up -d --build clickhouse postgres-proxy
+# Tier 2: GFMDATA_CMD="npm run dev -- --host" podman-compose up --build
+# Production uses quadlets in deploy/containers/
+services:
+  gfmdata:
+    build: .
+    container_name: gfmdata
+    ports:
+      - "3019:3019"
+    env_file: .env
+    environment:
+      - GFMDATA_CMD
+      - CLICKHOUSE_HOST=clickhouse
+      - PGHOST=postgres-proxy
+    volumes:
+      - .:/app:z
+      - node-modules:/app/node_modules
+    command: ["/bin/sh", "-c", "npm install && exec ${GFMDATA_CMD:-node .output/server/index.mjs}"]
+    secrets:
+      - session_secret
+      - clickhouse_password
+      - pgpassword
+      - pguser_auth
+      - svc_gfmdata_auth_password
+    security_opt:
+      - label=type:container_runtime_t
+    depends_on:
+      - clickhouse
+      - postgres-proxy
+
+  clickhouse:
+    build:
+      context: ./deploy
+      dockerfile: Containerfile.clickhouse
+    image: gfmdata-clickhouse:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+    environment:
+      - POSTGRES_HOST=postgres-proxy
+      - POSTGRES_PORT=25061
+      - POSTGRES_DATABASE=gforce
+      - POSTGRES_USER=svc_clickhouse_cdc
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        export CLICKHOUSE_PASSWORD="$$(cat /run/secrets/clickhouse_password)"
+        export POSTGRES_PASSWORD="$$(cat /run/secrets/svc_clickhouse_cdc_password)"
+        exec /entrypoint.sh
+    secrets:
+      - clickhouse_password
+      - svc_clickhouse_cdc_password
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse:z
+    security_opt:
+      - label=type:container_runtime_t
+    depends_on:
+      - postgres-proxy
+
+  postgres-proxy:
+    image: docker.io/library/haproxy:3.1-alpine
+    container_name: postgres-proxy
+    volumes:
+      - ./deploy/containers/haproxy-config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "25061:25061"
+    restart: unless-stopped
+    security_opt:
+      - label=type:container_runtime_t
+
+secrets:
+  session_secret:
+    external: true
+  clickhouse_password:
+    external: true
+  pgpassword:
+    external: true
+  pguser_auth:
+    external: true
+  svc_gfmdata_auth_password:
+    external: true
+  svc_clickhouse_cdc_password:
+    external: true
+
+volumes:
+  node-modules:
+  clickhouse-data:
+    external: true
+    name: systemd-clickhouse-data

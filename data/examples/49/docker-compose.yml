@@ -1,0 +1,149 @@
+services:
+  nginx:
+    image: nginx:stable-bookworm
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - strapi
+      - meilisearch
+    networks:
+      - webhost
+    volumes:
+      - ./nginx/nginx-conf/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx-conf/security-headers.conf:/etc/nginx/snippets/security-headers.conf
+      - ./nginx/nginx-conf/csp.conf:/etc/nginx/snippets/csp.conf
+      - ./nginx/nginx-conf/oauth2-proxy.conf:/etc/nginx/snippets/oauth2-proxy.conf
+      - ./nginx/certs:/etc/ssl/
+      - ./media:/usr/share/nginx/html/media
+      - wellknown:/usr/share/nginx/html/.well-known
+    restart: unless-stopped
+
+  strapi:
+    image: ghcr.io/weareimpress/sunrice-strapi4/strapi:latest
+    user: strapi:strapi
+    depends_on:
+      - meilisearch
+      - strapi_redis
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: 5432
+      # TODO don't use postgres superuser here.
+      DATABASE_USERNAME: ${POSTGRES_ROOT_USER}
+      DATABASE_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+      NODE_ENV: ${NODE_ENV}
+      HOST: ${HOST}
+      PORT: 1337
+      PUBLIC_URL: ${STRAPI_URL}
+      APP_KEYS: ${APP_KEYS}
+      API_TOKEN_SALT: ${API_TOKEN_SALT}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_ACCESS_SECRET: ${AWS_ACCESS_SECRET}
+      AWS_REGION: ${AWS_REGION}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      REDIS_URL: redis://strapi_redis:6379
+    volumes:
+      - backups:/home/node/backups
+    networks:
+      - webhost
+      - cms_int
+    restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.34.3
+    command: ["meilisearch"]
+    environment:
+      # https://docs.meilisearch.com/learn/configuration/instance_options.html#environment-variables
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_ENV: "production"
+      MEILI_NO_ANALYTICS: "true"
+    networks:
+      - webhost
+    volumes:
+      - meili_data:/meili_data
+    restart: unless-stopped
+
+  auth_redis:
+    image: redis:latest
+    networks:
+      - webhost
+    volumes:
+      - auth_redis_cache:/data
+
+  strapi_redis:
+    image: redis:latest
+    networks:
+      - webhost
+    volumes:
+      - auth_redis_cache:/data
+
+  webhooks:
+    build: webhooks
+    depends_on:
+      - strapi
+    environment:
+      GITHUB_OWNER: ${GITHUB_USER}
+      GITHUB_REPO: ${GITHUB_REPO_FRONTEND}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+    networks:
+      - cms_int
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 500M
+
+  auth:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.14.2
+    ports:
+      - 4180:4180
+    depends_on:
+      - auth_redis
+    environment:
+      OAUTH2_PROXY_UPSTREAMS: "http://nginx:80"
+      OAUTH2_PROXY_HTTP_ADDRESS: "http://auth:4180"
+      OAUTH2_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_SESSION_STORE_TYPE: "redis"
+      OAUTH2_PROXY_REDIS_CONNECTION_URL: "redis://auth_redis"
+      OAUTH2_PROXY_COOKIE_REFRESH: "1h"
+      OAUTH2_PROXY_COOKIE_EXPIRE: "12h"
+      OAUTH2_PROXY_COOKIE_SECURE: "true"
+      OAUTH2_PROXY_COOKIE_CSRF_EXPIRE: "5m"
+      OAUTH2_PROXY_COOKIE_CSRF_PER_REQUEST: "true"
+      OAUTH2_PROXY_SHOW_DEBUG_ON_ERROR: "false"
+      OAUTH2_PROXY_ERRORS_TO_INFO_LOG: "false"
+      OAUTH2_PROXY_PROVIDER: ${OAUTH2_PROXY_PROVIDER}
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_COOKIE_DOMAINS: ${OAUTH2_PROXY_COOKIE_DOMAINS}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_AZURE_TENANT: ${OAUTH2_PROXY_AZURE_TENANT}
+      OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
+    restart: unless-stopped
+    networks:
+      - webhost
+
+networks:
+  webhost:
+    driver: bridge
+  cms_int:
+    driver: bridge
+
+volumes:
+  wellknown:
+  backups:
+  auth_redis_cache:
+    driver: local
+  strapi_redis_cache:
+    driver: local
+  meili_data:
+    driver: local

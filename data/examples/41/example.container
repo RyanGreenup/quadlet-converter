@@ -1,0 +1,5 @@
+# client.container
+[Container]
+Image=registry.centos.org/centos/centos:7
+PodmanArgs=--tty
+PublishPort=1337

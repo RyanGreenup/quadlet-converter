@@ -1,0 +1,10 @@
+services:
+  firefox:
+    build: .
+    volumes: ./data:/home/user/.mozilla
+  environment:
+    - DISPLAY=${DISPLAY}
+# --security-opt label=type:container_runtime_t \
+     my-firefox-image
+
+

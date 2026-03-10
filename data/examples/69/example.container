@@ -1,0 +1,21 @@
+# bukuserver.container
+[Container]
+Environment=BUKUSERVER_PER_PAGE=200 BUKUSERVER_OPEN_IN_NEW_TAB=true
+Image=bukuserver/bukuserver
+PublishPort=5001:5001
+Volume=./data:/root/.local/share/buku
+
+[Service]
+Restart=always
+
+---
+
+# nginx.container
+[Container]
+Image=nginx:alpine
+PublishPort=50018:80
+Volume=./data/nginx:/etc/nginx/conf.d
+Volume=./data/basic_auth:/basic_auth
+
+[Service]
+Restart=always

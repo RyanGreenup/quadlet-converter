@@ -1,0 +1,16 @@
+services:
+  dokuwiki:
+    # Official DokuWiki image - simpler than linuxserver
+    # https://github.com/dokuwiki/docker
+    image: dokuwiki/dokuwiki:stable
+    container_name: dokuwiki
+    # No user: directive - handled by UserNS=keep-id in override.conf
+    volumes:
+      - ./storage:/storage
+    # No ports needed - Caddy reaches it via caddy_network
+
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+
+# Networks managed via override.conf (podlet doesn't support external networks)

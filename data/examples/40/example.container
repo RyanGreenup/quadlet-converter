@@ -1,0 +1,5 @@
+# db.container
+[Container]
+Image=postgres:10.1
+PublishPort=5432
+Volume=./data_sux:/var/lib/postgresql/data_sux

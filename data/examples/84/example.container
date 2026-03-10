@@ -1,0 +1,5 @@
+# jsonhero_web.container
+[Container]
+ContainerName=super-productivity
+Image=johannesjo/super-productivity
+PublishPort=8782:80

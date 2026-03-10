@@ -1,0 +1,8 @@
+version: "3.9"
+
+services:
+  jsonhero_web:
+    image: johannesjo/super-productivity
+    container_name: super-productivity
+    ports:
+      - "8782:80"

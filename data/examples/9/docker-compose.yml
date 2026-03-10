@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  postgres-data-sync:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data:Z
+      - ./current.duckdb:/app/current.duckdb:Z
+      - $HOME/.mcli:/root/.mcli:Z
+    env_file:
+      - .env
+    # It ran with 3G, we'll monitor and increase as necessary
+    mem_limit: 3G

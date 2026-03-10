@@ -1,0 +1,21 @@
+services:
+  db:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "32789:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: task-manager
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

@@ -1,0 +1,35 @@
+# https://docs.gitea.io/en-us/install-with-docker/
+version: "3"
+
+networks:
+  gitea:
+    external: false
+
+services:
+  katex:
+#     image: katex
+      build: "./Dockerfiles/KaTeX"
+      container_name: katex
+      ports:
+        - 57359:8080
+  server:
+#   image: gitea/gitea:latest
+# This image is built from ./Dockerfiles/Extra Dependencies/
+# It contains pandoc in addition to the default, this allows
+# previewing jupyter and docx
+#   image: forgejo-extra-dep
+    build: "./Dockerfiles/Extra Dependencies/"
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: always
+    networks:
+      - gitea
+    volumes:
+      - ./data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+      - "222:22"

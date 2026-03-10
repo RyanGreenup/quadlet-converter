@@ -1,0 +1,8 @@
+services:
+  suse:
+    image: opensuse-datascience
+    build: ./
+    volumes:
+      - /tmp/:/tmp/
+    environment:
+      - DISPLAY:{$DISPLAY}

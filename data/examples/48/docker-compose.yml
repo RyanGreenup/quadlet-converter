@@ -1,0 +1,158 @@
+services:
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+      args:
+        SERVER_NAME: ${SERVER_NAME}
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - strapi
+    networks:
+      - webhost
+    volumes:
+      - wellknown:/usr/share/nginx/html/.well-known
+    restart: unless-stopped
+
+  strapi:
+    image: ghcr.io/weareimpress/nationalintermodal-cms/strapi:latest
+    user: strapi:strapi
+    # depends_on:
+    #   - strapi_redis
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_NAME: strapi
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: 5432
+      # TODO don't use postgres superuser here.
+      DATABASE_USERNAME: ${POSTGRES_ROOT_USER}
+      DATABASE_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+      NODE_ENV: ${NODE_ENV}
+      HOST: ${HOST}
+      PORT: 1337
+      PUBLIC_URL: ${STRAPI_URL}
+      APP_KEYS: ${APP_KEYS}
+      API_TOKEN_SALT: ${API_TOKEN_SALT}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      AWS_ACCESS_KEY_ID: ${MEDIA_AWS_ACCESS_KEY_ID}
+      AWS_ACCESS_SECRET: ${MEDIA_AWS_ACCESS_SECRET}
+      AWS_REGION: ${MEDIA_AWS_REGION}
+      AWS_BUCKET_NAME: ${MEDIA_AWS_BUCKET_NAME}
+      STRAPI_TELEMETRY_DISABLED: "true"
+      STRAPI_DISABLE_REMOTE_DATA_TRANSFER: "true"
+      BROWSER: "false"
+    volumes:
+      - media:/opt/app/public/uploads
+    networks:
+      - webhost
+      - cms_int
+    restart: unless-stopped
+
+  strapi_db:
+    image: postgres:16
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      DATABASE_HOST: ${DATABASE_HOST}
+      POSTGRES_DB: strapi
+      POSTGRES_USER: ${POSTGRES_ROOT_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+    # Only uncomment this to expose the database for direct access 
+    # ports:
+    #   - 5432:5432
+    networks:
+      - cms_int
+      - database
+    restart: unless-stopped
+    volumes:
+      - cms_db_data:/var/lib/postgresql/data
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.8.4
+    command: ["meilisearch"]
+    environment:
+      # https://docs.meilisearch.com/learn/configuration/instance_options.html#environment-variables
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_ENV: "production"
+      MEILI_NO_ANALYTICS: "true"
+    networks:
+      - webhost
+    volumes:
+      - meili_data:/meili_data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+
+  # strapi_redis:
+  #   image: redis:latest
+  #   networks:
+  #     - webhost
+  #   volumes:
+  #     - auth_redis_cache:/data
+
+  # auth:
+  #   image: quay.io/oauth2-proxy/oauth2-proxy:v7.4.0
+  #   ports:
+  #     - 4180:4180
+  #   depends_on:
+  #     - auth_redis
+  #   environment:
+  #     OAUTH2_PROXY_UPSTREAMS: "http://nginx:80"
+  #     OAUTH2_PROXY_HTTP_ADDRESS: "http://auth:4180"
+  #     OAUTH2_REVERSE_PROXY: "true"
+  #     OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+  #     OAUTH2_PROXY_SESSION_STORE_TYPE: "redis"
+  #     OAUTH2_PROXY_REDIS_CONNECTION_URL: "redis://auth_redis"
+  #     OAUTH2_PROXY_COOKIE_REFRESH: "1h"
+  #     OAUTH2_PROXY_COOKIE_EXPIRE: "12h"
+  #     OAUTH2_PROXY_COOKIE_SECURE: "true"
+  #     OAUTH2_PROXY_COOKIE_CSRF_EXPIRE: "5m"
+  #     OAUTH2_PROXY_COOKIE_CSRF_PER_REQUEST: "true"
+  #     OAUTH2_PROXY_SHOW_DEBUG_ON_ERROR: "false"
+  #     OAUTH2_PROXY_ERRORS_TO_INFO_LOG: "false"
+  #     OAUTH2_PROXY_PROVIDER: ${OAUTH2_PROXY_PROVIDER}
+  #     OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+  #     OAUTH2_PROXY_COOKIE_DOMAINS: ${OAUTH2_PROXY_COOKIE_DOMAINS}
+  #     OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+  #     OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+  #     OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+  #     OAUTH2_PROXY_AZURE_TENANT: ${OAUTH2_PROXY_AZURE_TENANT}
+  #     OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
+  #   restart: unless-stopped
+  #   networks:
+  #     - webhost
+  #
+  # auth_redis:
+  #   image: redis:latest
+  #   networks:
+  #     - webhost
+  #   volumes:
+  #     - auth_redis_cache:/data
+
+networks:
+  webhost:
+    driver: bridge
+  cms_int:
+    driver: bridge
+  database:
+    driver: bridge
+
+volumes:
+  wellknown:
+    driver: local
+  media:
+    driver: local
+  # auth_redis_cache:
+  #   driver: local
+  # strapi_redis_cache:
+  #   driver: local
+  cms_db_data:
+    driver: local
+  meili_data:
+    driver: local

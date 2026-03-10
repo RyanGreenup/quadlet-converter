@@ -1,0 +1,9 @@
+# postgres-db.container
+[Container]
+Environment=POSTGRES_PASSWORD=postgres PGDATA=/var/lib/postgresql/data
+Image=pgvector/pgvector:pg17
+PublishPort=5434:5432
+Volume=./pgdata:/var/lib/postgresql/data
+
+[Service]
+Restart=always

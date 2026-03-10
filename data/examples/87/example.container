@@ -1,0 +1,17 @@
+# syncthing.container
+[Container]
+ContainerName=syncthing
+Environment=PUID=1000 PGID=1000 TZ=Etc/UTC
+HostName=syncthing
+Image=syncthing/syncthing
+Network=host
+SecurityLabelDisable=true
+UserNS=keep-id
+Volume=./data:/var/syncthing/config:z
+Volume=/home/ryan/Sync:/var/syncthing/Sync
+Volume=/home/ryan/Notes:/var/syncthing/Notes
+Volume=/home/ryan/Agenda:/var/syncthing/Agenda
+Volume=/home/ryan/Sync-Archive:/var/syncthing/Sync-Archive
+
+[Service]
+Restart=always

@@ -1,0 +1,29 @@
+---
+version: "3"
+services:
+  webdav:
+    build: .
+  # image: localhost/
+  # container_name: jupyter
+  # hostname: jupyter
+  # environment:
+  #   - PUID=1000
+  #   - PGID=1000
+    # [fn_ns]
+    userns_mode: keep-id
+    # [fn_priv]
+#   privileged: true
+    # [fn_selinux]
+    security_opt:
+      - "label=disable"
+    volumes:
+      - /home/ryan/Agenda:/home/user/share/Agenda
+#     - /home/ryan/.local/share/virtualenvs:/home/ryan/.local/share/virtualenvs
+    ports:
+      - 0.0.0.0:${PORT}:${PORT}
+    # Rather than mapping ports, use the host network
+    # this will be easier for gradio, flask etc.
+#   network_mode: host
+    command: rclone serve webdav -L /home/user/share --addr 0.0.0.0:${PORT} --user ryan --pass h0Dqk5rIDUYOxeksdf8AWaVnNNe0bLJUKzLn
+    restart: unless-stopped
+

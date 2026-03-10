@@ -1,0 +1,9 @@
+# dashy.container
+[Container]
+ContainerName=my-dashboard
+Image=lissy93/dashy:latest
+PublishPort=8888:8080
+Volume=./my-local-conf.yml:/app/user-data/conf.yml
+
+[Service]
+Restart=always

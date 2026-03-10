@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  dropbox-photo-sync:
+    build: .
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PGHOST=${PGHOST}
+      - PGPORT=${PGPORT:-5432}
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
+      - APP_KEY=${APP_KEY}
+      - APP_SECRET=${APP_SECRET}
+      - GENERATED_ACCESS_TOKEN=${GENERATED_ACCESS_TOKEN}
+      - REFRESH_TOKEN=${REFRESH_TOKEN}
+    volumes:
+      - ./.env:/app/.env:Z
+    # TODO should we not mount it then?
+    env_file:
+      - .env
+    # TODO this is a bit large
+    mem_limit: 2G
+    restart: unless-stopped
+    working_dir: /app
+    command: python main.py watch

@@ -1,0 +1,4 @@
+# webapiapplication.container
+[Container]
+Image=webapiapplication
+Label=kompose.service.type=NodePort

@@ -1,0 +1,29 @@
+# caddy.container
+[Container]
+Image=caddy:2-alpine
+Network=app_network
+PublishPort=8080:80
+PublishPort=4443:443
+Volume=./Caddyfile:/etc/caddy/Caddyfile:ro
+Volume=caddy_data:/data
+Volume=caddy_config:/config
+
+[Service]
+Restart=always
+
+---
+
+# webapp.container
+[Container]
+Image=nginx:alpine
+Network=app_network
+Volume=./html:/usr/share/nginx/html:ro
+
+[Service]
+Restart=always
+
+---
+
+# app_network.network
+[Network]
+Driver=bridge

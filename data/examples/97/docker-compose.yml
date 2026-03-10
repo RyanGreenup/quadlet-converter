@@ -1,0 +1,56 @@
+# MediaWiki with Default SQLite
+#
+version: '3'
+services:
+  mediawiki:
+    # image: mediawiki
+    image: mediawiki_with_ghostscript_and_vim_latest
+      # build: Dockerfile  #  [fn_ghostscript]
+    restart: always
+    ports:
+      - 8076:80
+      # - 127.0.0.1:8076:80
+      # user: "ryan" # 1000:33
+    volumes:
+      - ./images:/var/www/html/images
+      - ./sqlite_db:/var/www/data
+      - ./assets/SimpleMathJax:/var/www/html/extensions/SimpleMathJax
+      - ./assets/PDFEmbed:/var/www/html/extensions/PDFEmbed
+    # - ./assets/Popups:/var/www/html/extensions/Popups  # Seems broken
+      - ./assets/EmbedVideo-v2.9.0:/var/www/html/extensions/EmbedVideo
+    # - ./assets/Cargo/:/var/www/html/extensions/Cargo
+      - ./assets/Mandeltree.svg:/var/www/html/resources/assets/change-your-logo.svg
+      - ./assets/php-custom.ini:/usr/local/etc/php/conf.d/php-custom.ini
+      # Bind Mount composer extensions [fn_composer_extensions]
+      - ./assets/composer_extensions/extensions/Network/:/var/www/html/extensions/Network
+      - ./assets/composer_extensions/vendor/professional-wiki/:/var/www/html/vendor/professional-wiki
+      - ./assets/skins/skin-tyrian:/var/www/html/skins/Tyrian
+      - ./assets/skins/medik/:/var/www/html/skins/Medik
+      # After initial setup, download LocalSettings.php to the same directory as
+      # this yaml and uncomment the following line and use compose to restart
+      # the mediawiki service
+      - ./LocalSettings.php:/var/www/html/LocalSettings.php
+      - ./upload:/upload
+  # This key also defines the name of the database host used during setup instead of the default "localhost"
+volumes:
+  images:
+  sqlite_db:
+
+
+
+# [fn_composer_extensions]
+      # Network wants to use composer, I created
+      # assets/extensions/composer_extensions and ran the composer stuff in there
+      # Here I bind-mount them in. Any future composer extensions can be
+      # installed in that directory as well. I listed the command in
+      # ./assets/composer_extensions/00_get_with_composer.sh
+# [fn_ghostscript]
+      # This is broken on current Go, so comment it out and build it separately
+      # This was needed to ensure that ghostscript was installed
+      # For whatever reason the container didn't include it
+      # Instead use
+      #  ```
+      #  docker build -t mediawiki_with_ghostscript_and_vim ./
+      #  ```
+
+

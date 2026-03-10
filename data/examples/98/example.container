@@ -1,0 +1,36 @@
+# postgres.container
+[Container]
+EnvironmentFile=.env
+Image=postgres:16-alpine
+Volume=./data/pgdata:/var/lib/postgresql/data
+
+[Service]
+Restart=always
+
+---
+
+# linkwarden.container
+[Unit]
+Requires=postgres.service meilisearch.service
+After=postgres.service meilisearch.service
+
+[Container]
+Environment=DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+EnvironmentFile=.env
+Image=ghcr.io/linkwarden/linkwarden:latest
+PublishPort=37193:3000
+Volume=./data/lw_data:/data/data
+
+[Service]
+Restart=always
+
+---
+
+# meilisearch.container
+[Container]
+EnvironmentFile=.env
+Image=getmeili/meilisearch:v1.12.8
+Volume=./data/meili_data:/meili_data
+
+[Service]
+Restart=always

@@ -1,0 +1,11 @@
+# calibre-web.container
+[Container]
+ContainerName=calibre-web
+Environment=PUID=1000 PGID=1000 TZ=Etc/UTC DOCKER_MODS=linuxserver/mods:universal-calibre OAUTHLIB_RELAX_TOKEN_SCOPE=1
+Image=lscr.io/linuxserver/calibre-web:latest
+PublishPort=8083:8083
+Volume=./config:/config
+Volume=/home/ryan/Sync/calibre_library:/books
+
+[Service]
+Restart=always

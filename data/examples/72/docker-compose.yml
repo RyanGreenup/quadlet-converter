@@ -1,0 +1,31 @@
+services:
+  server:
+    image: yooooomi/your_spotify_server
+    restart: always
+    ports:
+      - "47382:8080"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    environment:
+      API_ENDPOINT: http://localhost:47382 # This MUST be included as a valid URL in the spotify dashboard (see below)
+      # CLIENT_ENDPOINT: http://localhost:3729
+      CLIENT_ENDPOINT: http://spotify.vale
+      SPOTIFY_PUBLIC: b9b8bc240c8143388344820ca78e9e14
+      SPOTIFY_SECRET: 7edc7e7a020643dfba7a105101040d61
+  mongo:
+    container_name: mongo
+    image: mongo:6
+    volumes:
+      - ./your_spotify_db:/data/db
+
+  web:
+    image: yooooomi/your_spotify_client
+    restart: always
+    ports:
+      - "3729:3000"
+    environment:
+      API_ENDPOINT: http://localhost:47382
+
+# b9b8bc240c8143388344820ca78e9e14

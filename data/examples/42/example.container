@@ -1,0 +1,5 @@
+# client.container
+[Container]
+Image=registry.centos.org/centos/centos:7
+PodmanArgs=--attach stdin
+PublishPort=1337

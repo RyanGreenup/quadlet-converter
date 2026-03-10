@@ -1,0 +1,15 @@
+# jupyter.container
+[Container]
+ContainerName=jupyter
+Environment=PUID=1000 PGID=1000
+Exec='$HOME/.local/share/virtualenvs/default/bin/jupyter' lab '$HOME' --no-browser '--port=8962' '--ip=0.0.0.0'
+HostName=jupyter
+Image=localhost/r
+Network=host
+SecurityLabelDisable=true
+UserNS=keep-id
+Volume=/home/ryan/:/home/ryan
+Volume=/home/ryan/.local/share/virtualenvs:/home/ryan/.local/share/virtualenvs
+
+[Service]
+Restart=always
