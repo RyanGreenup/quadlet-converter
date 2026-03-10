@@ -19,26 +19,26 @@
 - [X] entrypoint → Entrypoint
 - [X] user → User
 - [X] hostname → HostName
-- [ ] working_dir → WorkingDir
+- [X] working_dir → WorkingDir
 - [X] cap_add → AddCapability
 - [X] cap_drop → DropCapability
 - [X] devices → AddDevice
-- [ ] labels → Label
 - [X] dns → DNS
-- [ ] dns_search → DNSSearch
-- [ ] expose → ExposeHostPort
-- [ ] extra_hosts → AddHost
-- [ ] env_file → EnvironmentFile
 - [X] networks → Network
-- [ ] read_only → ReadOnly
-- [ ] tmpfs → Tmpfs
-- [ ] shm_size → ShmSize
-- [ ] sysctls → Sysctl
-- [ ] stop_signal → StopSignal
-- [ ] stop_grace_period → StopTimeout
-- [ ] logging → LogDriver
-- [ ] group_add → GroupAdd
-- [ ] userns_mode → UserNS
+- [X] labels → Label
+- [X] dns_search → DNSSearch
+- [X] expose → ExposeHostPort
+- [X] extra_hosts → AddHost
+- [X] env_file → EnvironmentFile
+- [X] read_only → ReadOnly
+- [X] tmpfs → Tmpfs
+- [X] shm_size → ShmSize
+- [X] sysctls → Sysctl
+- [X] stop_signal → StopSignal
+- [X] stop_grace_period → StopTimeout
+- [X] logging → LogDriver
+- [X] group_add → GroupAdd
+- [X] userns_mode → UserNS
 - [ ] security_opt → SecurityLabelType / SecurityLabelLevel
 - [ ] privileged → SecurityLabelDisable (or PodmanArgs=--privileged)
 - [ ] pid → PidHost (when pid: host)
@@ -95,7 +95,7 @@
 
 ** Other mappable fields
 - [ ] secrets → Secret=
-- [ ] annotations → Annotation=
+- [X] annotations → Annotation=
 
 * Security checks (=check= command)
 ** Implemented

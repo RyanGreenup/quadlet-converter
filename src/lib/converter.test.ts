@@ -70,6 +70,14 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'DropCapability', value: 'ALL' })
   })
 
+  test('converts working_dir', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      working_dir: '/app/src',
+    })
+    expect(ir.Container).toContainEqual({ key: 'WorkingDir', value: '/app/src' })
+  })
+
   test('converts entrypoint (string)', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',
@@ -84,6 +92,99 @@ describe('composeServiceToQuadletIR', () => {
       entrypoint: ['/bin/sh', '-c', 'echo hello'],
     })
     expect(ir.Container).toContainEqual({ key: 'Entrypoint', value: '/bin/sh -c echo hello' })
+  })
+
+  test('converts labels (object)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      labels: { 'com.example.env': 'prod', 'com.example.version': '1.0' },
+    })
+    expect(ir.Container).toContainEqual({ key: 'Label', value: 'com.example.env=prod' })
+    expect(ir.Container).toContainEqual({ key: 'Label', value: 'com.example.version=1.0' })
+  })
+
+  test('converts labels (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      labels: ['com.example.env=prod'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Label', value: 'com.example.env=prod' })
+  })
+
+  test('converts dns_search (string)', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', dns_search: 'example.com' })
+    expect(ir.Container).toContainEqual({ key: 'DNSSearch', value: 'example.com' })
+  })
+
+  test('converts dns_search (list)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      dns_search: ['example.com', 'test.local'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'DNSSearch', value: 'example.com' })
+    expect(ir.Container).toContainEqual({ key: 'DNSSearch', value: 'test.local' })
+  })
+
+  test('converts expose', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      expose: ['3000', 4000],
+    })
+    expect(ir.Container).toContainEqual({ key: 'ExposeHostPort', value: '3000' })
+    expect(ir.Container).toContainEqual({ key: 'ExposeHostPort', value: '4000' })
+  })
+
+  test('converts extra_hosts (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      extra_hosts: ['myhost:192.168.1.1', 'other:10.0.0.1'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddHost', value: 'myhost:192.168.1.1' })
+    expect(ir.Container).toContainEqual({ key: 'AddHost', value: 'other:10.0.0.1' })
+  })
+
+  test('converts extra_hosts (object)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      extra_hosts: { myhost: '192.168.1.1', multi: ['10.0.0.1', '10.0.0.2'] },
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddHost', value: 'myhost:192.168.1.1' })
+    expect(ir.Container).toContainEqual({ key: 'AddHost', value: 'multi:10.0.0.1' })
+    expect(ir.Container).toContainEqual({ key: 'AddHost', value: 'multi:10.0.0.2' })
+  })
+
+  test('converts env_file (string)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      env_file: '.env',
+    })
+    expect(ir.Container).toContainEqual({ key: 'EnvironmentFile', value: '.env' })
+  })
+
+  test('converts env_file (array with objects)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      env_file: ['.env', { path: '.env.local', required: false }],
+    })
+    expect(ir.Container).toContainEqual({ key: 'EnvironmentFile', value: '.env' })
+    expect(ir.Container).toContainEqual({ key: 'EnvironmentFile', value: '.env.local' })
+  })
+
+  test('converts read_only', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      read_only: true,
+    })
+    expect(ir.Container).toContainEqual({ key: 'ReadOnly', value: 'true' })
+  })
+
+  test('does not emit ReadOnly when false', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      read_only: false,
+    })
+    const readOnly = (ir.Container ?? []).filter(e => e.key === 'ReadOnly')
+    expect(readOnly).toHaveLength(0)
   })
 
   test('converts dns (string)', () => {
@@ -140,6 +241,91 @@ describe('composeServiceToQuadletIR', () => {
     const networkEntries = ir.Container!.filter(e => e.key === 'Network')
     expect(networkEntries).toContainEqual({ key: 'Network', value: 'host' })
     expect(networkEntries).toContainEqual({ key: 'Network', value: 'custom' })
+  })
+
+  test('converts tmpfs (string)', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', tmpfs: '/run' })
+    expect(ir.Container).toContainEqual({ key: 'Tmpfs', value: '/run' })
+  })
+
+  test('converts tmpfs (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      tmpfs: ['/run', '/tmp'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Tmpfs', value: '/run' })
+    expect(ir.Container).toContainEqual({ key: 'Tmpfs', value: '/tmp' })
+  })
+
+  test('converts shm_size', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', shm_size: '256m' })
+    expect(ir.Container).toContainEqual({ key: 'ShmSize', value: '256m' })
+  })
+
+  test('converts sysctls (object)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      sysctls: { 'net.core.somaxconn': 1024, 'net.ipv4.tcp_syncookies': 0 },
+    })
+    expect(ir.Container).toContainEqual({ key: 'Sysctl', value: 'net.core.somaxconn=1024' })
+    expect(ir.Container).toContainEqual({ key: 'Sysctl', value: 'net.ipv4.tcp_syncookies=0' })
+  })
+
+  test('converts sysctls (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      sysctls: ['net.core.somaxconn=1024'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Sysctl', value: 'net.core.somaxconn=1024' })
+  })
+
+  test('converts stop_signal', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', stop_signal: 'SIGTERM' })
+    expect(ir.Container).toContainEqual({ key: 'StopSignal', value: 'SIGTERM' })
+  })
+
+  test('converts stop_grace_period to StopTimeout in seconds', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', stop_grace_period: '1m30s' })
+    expect(ir.Container).toContainEqual({ key: 'StopTimeout', value: '90' })
+  })
+
+  test('converts logging driver', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      logging: { driver: 'journald' },
+    })
+    expect(ir.Container).toContainEqual({ key: 'LogDriver', value: 'journald' })
+  })
+
+  test('converts group_add', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      group_add: ['audio', 999],
+    })
+    expect(ir.Container).toContainEqual({ key: 'GroupAdd', value: 'audio' })
+    expect(ir.Container).toContainEqual({ key: 'GroupAdd', value: '999' })
+  })
+
+  test('converts userns_mode', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', userns_mode: 'keep-id' })
+    expect(ir.Container).toContainEqual({ key: 'UserNS', value: 'keep-id' })
+  })
+
+  test('converts annotations (object)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      annotations: { 'com.example.env': 'prod', 'com.example.version': '1.0' },
+    })
+    expect(ir.Container).toContainEqual({ key: 'Annotation', value: 'com.example.env=prod' })
+    expect(ir.Container).toContainEqual({ key: 'Annotation', value: 'com.example.version=1.0' })
+  })
+
+  test('converts annotations (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      annotations: ['com.example.env=prod'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Annotation', value: 'com.example.env=prod' })
   })
 
   test('converts raw devices to AddDevice', () => {

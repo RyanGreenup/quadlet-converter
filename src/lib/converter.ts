@@ -21,6 +21,35 @@ const restartToCompose: Record<string, string> = {
   'on-failure': 'on-failure',
 }
 
+/** Parse a compose duration string (e.g. "1m30s", "10s", "500ms") to integer seconds string. */
+function parseDurationToSeconds(duration: string): string {
+  let total = 0
+  const re = /(\d+)(h|m(?!s)|s|ms|us)/g
+  let match
+  while ((match = re.exec(duration)) !== null) {
+    const val = parseInt(match[1], 10)
+    switch (match[2]) {
+      case 'h': total += val * 3600; break
+      case 'm': total += val * 60; break
+      case 's': total += val; break
+      case 'ms': total += val / 1000; break
+      case 'us': total += val / 1000000; break
+    }
+  }
+  if (total === 0 && /^\d+$/.test(duration)) {
+    total = parseInt(duration, 10)
+  }
+  return String(Math.round(total))
+}
+
+/** Convert integer seconds to a compose duration string. */
+function secondsToDuration(seconds: number): string {
+  if (seconds >= 60 && seconds % 60 === 0) {
+    return `${seconds / 60}m`
+  }
+  return `${seconds}s`
+}
+
 /** Convert a single compose service to QuadletIR. */
 export function composeServiceToQuadletIR(
   name: string,
@@ -119,6 +148,10 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.working_dir) {
+    container.push({ key: 'WorkingDir', value: service.working_dir })
+  }
+
   if (service.cap_add) {
     for (const cap of service.cap_add) {
       container.push({ key: 'AddCapability', value: cap })
@@ -135,6 +168,121 @@ export function composeServiceToQuadletIR(
     const dnsServers = Array.isArray(service.dns) ? service.dns : [service.dns]
     for (const d of dnsServers) {
       container.push({ key: 'DNS', value: d })
+    }
+  }
+
+  if (service.dns_search) {
+    const searches = Array.isArray(service.dns_search) ? service.dns_search : [service.dns_search]
+    for (const d of searches) {
+      container.push({ key: 'DNSSearch', value: d })
+    }
+  }
+
+  if (service.labels) {
+    if (Array.isArray(service.labels)) {
+      for (const label of service.labels) {
+        container.push({ key: 'Label', value: String(label) })
+      }
+    } else {
+      for (const [k, v] of Object.entries(service.labels)) {
+        container.push({ key: 'Label', value: v != null ? `${k}=${v}` : k })
+      }
+    }
+  }
+
+  if (service.expose) {
+    for (const port of service.expose) {
+      container.push({ key: 'ExposeHostPort', value: String(port) })
+    }
+  }
+
+  if (service.extra_hosts) {
+    if (Array.isArray(service.extra_hosts)) {
+      for (const host of service.extra_hosts) {
+        container.push({ key: 'AddHost', value: host })
+      }
+    } else {
+      for (const [hostname, ip] of Object.entries(service.extra_hosts)) {
+        const ips = Array.isArray(ip) ? ip : [ip]
+        for (const addr of ips) {
+          container.push({ key: 'AddHost', value: `${hostname}:${addr}` })
+        }
+      }
+    }
+  }
+
+  if (service.env_file) {
+    const files = typeof service.env_file === 'string'
+      ? [service.env_file]
+      : Array.isArray(service.env_file)
+        ? service.env_file
+        : [service.env_file]
+    for (const f of files) {
+      const path = typeof f === 'string' ? f : f.path
+      container.push({ key: 'EnvironmentFile', value: path })
+    }
+  }
+
+  if (service.read_only) {
+    container.push({ key: 'ReadOnly', value: 'true' })
+  }
+
+  if (service.tmpfs) {
+    const paths = Array.isArray(service.tmpfs) ? service.tmpfs : [service.tmpfs]
+    for (const t of paths) {
+      container.push({ key: 'Tmpfs', value: t })
+    }
+  }
+
+  if (service.shm_size != null) {
+    container.push({ key: 'ShmSize', value: String(service.shm_size) })
+  }
+
+  if (service.sysctls) {
+    if (Array.isArray(service.sysctls)) {
+      for (const s of service.sysctls) {
+        container.push({ key: 'Sysctl', value: s })
+      }
+    } else {
+      for (const [k, v] of Object.entries(service.sysctls)) {
+        container.push({ key: 'Sysctl', value: v != null ? `${k}=${v}` : k })
+      }
+    }
+  }
+
+  if (service.stop_signal) {
+    container.push({ key: 'StopSignal', value: service.stop_signal })
+  }
+
+  if (service.stop_grace_period) {
+    container.push({ key: 'StopTimeout', value: parseDurationToSeconds(service.stop_grace_period) })
+  }
+
+  if (service.logging) {
+    if (service.logging.driver) {
+      container.push({ key: 'LogDriver', value: service.logging.driver })
+    }
+  }
+
+  if (service.group_add) {
+    for (const g of service.group_add) {
+      container.push({ key: 'GroupAdd', value: String(g) })
+    }
+  }
+
+  if (service.userns_mode) {
+    container.push({ key: 'UserNS', value: service.userns_mode })
+  }
+
+  if (service.annotations) {
+    if (Array.isArray(service.annotations)) {
+      for (const a of service.annotations) {
+        container.push({ key: 'Annotation', value: String(a) })
+      }
+    } else {
+      for (const [k, v] of Object.entries(service.annotations)) {
+        container.push({ key: 'Annotation', value: v != null ? `${k}=${v}` : k })
+      }
     }
   }
 
@@ -326,6 +474,9 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'Entrypoint':
         service.entrypoint = value
         break
+      case 'WorkingDir':
+        service.working_dir = value
+        break
       case 'AddCapability':
         if (!service.cap_add) service.cap_add = []
         service.cap_add.push(value)
@@ -337,6 +488,61 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'DNS':
         if (!service.dns) service.dns = [] as string[]
         ;(service.dns as string[]).push(value)
+        break
+      case 'DNSSearch':
+        if (!service.dns_search) service.dns_search = [] as string[]
+        ;(service.dns_search as string[]).push(value)
+        break
+      case 'Label':
+        if (!service.labels) service.labels = [] as string[]
+        ;(service.labels as string[]).push(value)
+        break
+      case 'ExposeHostPort':
+        if (!service.expose) service.expose = []
+        service.expose.push(value)
+        break
+      case 'AddHost':
+        if (!service.extra_hosts) service.extra_hosts = [] as string[]
+        ;(service.extra_hosts as string[]).push(value)
+        break
+      case 'EnvironmentFile':
+        if (!service.env_file) service.env_file = [] as string[]
+        ;(service.env_file as string[]).push(value)
+        break
+      case 'ReadOnly':
+        service.read_only = value === 'true'
+        break
+      case 'Tmpfs':
+        if (!service.tmpfs) service.tmpfs = [] as string[]
+        ;(service.tmpfs as string[]).push(value)
+        break
+      case 'ShmSize':
+        service.shm_size = value
+        break
+      case 'Sysctl':
+        if (!service.sysctls) service.sysctls = [] as string[]
+        ;(service.sysctls as string[]).push(value)
+        break
+      case 'StopSignal':
+        service.stop_signal = value
+        break
+      case 'StopTimeout':
+        service.stop_grace_period = secondsToDuration(parseInt(value, 10))
+        break
+      case 'LogDriver':
+        if (!service.logging) service.logging = {}
+        service.logging.driver = value
+        break
+      case 'GroupAdd':
+        if (!service.group_add) service.group_add = []
+        service.group_add.push(value)
+        break
+      case 'UserNS':
+        service.userns_mode = value
+        break
+      case 'Annotation':
+        if (!service.annotations) service.annotations = [] as string[]
+        ;(service.annotations as string[]).push(value)
         break
       case 'AddDevice':
         if (value.startsWith('/dev/')) {
