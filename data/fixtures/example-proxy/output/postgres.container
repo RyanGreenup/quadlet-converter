@@ -40,5 +40,5 @@ MemoryReservation=512m
 MemorySwapMax=2g
 TasksMax=256
 OOMScoreAdjust=-900
-ExecStop=podman exec %n su-exec postgres pg_ctl stop -m fast
+ExecStop=podman exec postgres su-exec postgres pg_ctl stop -m fast
 Restart=always

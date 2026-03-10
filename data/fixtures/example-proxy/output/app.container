@@ -21,7 +21,6 @@ Label=traefik.http.routers.app.entrypoints=websecure
 Label=traefik.http.routers.app.tls.certresolver=letsencrypt
 Label=traefik.http.services.app.loadbalancer.server.port=8080
 Label=traefik.http.routers.app.middlewares=security-headers@file,rate-limit@file
-ExposeHostPort=8080
 ReadOnly=true
 Tmpfs=/tmp:noexec,nosuid,size=128m
 LogDriver=json-file
@@ -42,8 +41,8 @@ MemoryReservation=256m
 MemorySwapMax=1g
 TasksMax=512
 OOMScoreAdjust=-300
-ExecStartPost=podman exec %n /app/bin/migrate
-ExecStop=podman exec %n /app/bin/drain-connections
+ExecStartPost=podman exec app /app/bin/migrate
+ExecStop=podman exec app /app/bin/drain-connections
 Restart=always
 ExecStartPre=/bin/bash -c 'until podman healthcheck run postgres; do sleep 1; done'
 ExecStartPre=/bin/bash -c 'until podman healthcheck run redis; do sleep 1; done'

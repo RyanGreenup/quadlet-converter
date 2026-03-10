@@ -141,13 +141,13 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'DNSSearch', value: 'test.local' })
   })
 
-  test('converts expose', () => {
+  test('ignores expose (inter-container only, no host publishing)', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',
       expose: ['3000', 4000],
     })
-    expect(ir.Container).toContainEqual({ key: 'ExposeHostPort', value: '3000' })
-    expect(ir.Container).toContainEqual({ key: 'ExposeHostPort', value: '4000' })
+    const exposeEntries = (ir.Container ?? []).filter(e => e.key === 'ExposeHostPort')
+    expect(exposeEntries).toHaveLength(0)
   })
 
   test('converts extra_hosts (array)', () => {
@@ -246,6 +246,16 @@ describe('composeServiceToQuadletIR', () => {
     })
     expect(ir.Container).toContainEqual({ key: 'Network', value: 'frontend' })
     expect(ir.Container).toContainEqual({ key: 'Network', value: 'backend' })
+  })
+
+  test('omits Network= when Pod= is set (pod owns the network namespace)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      networks: ['proxy', 'backend'],
+    }, { pod: 'myapp.pod' })
+    expect(ir.Container).toContainEqual({ key: 'Pod', value: 'myapp.pod' })
+    const networkEntries = (ir.Container ?? []).filter(e => e.key === 'Network')
+    expect(networkEntries).toHaveLength(0)
   })
 
   test('network_mode and networks are independent', () => {
@@ -648,8 +658,8 @@ describe('composeServiceToQuadletIR', () => {
       post_start: [{ command: '/bin/sh -c "echo started"' }],
       pre_stop: [{ command: ['/bin/sh', '-c', 'echo stopping'] }],
     })
-    expect(ir.Service).toContainEqual({ key: 'ExecStartPost', value: 'podman exec %n /bin/sh -c "echo started"' })
-    expect(ir.Service).toContainEqual({ key: 'ExecStop', value: 'podman exec %n /bin/sh -c echo stopping' })
+    expect(ir.Service).toContainEqual({ key: 'ExecStartPost', value: 'podman exec app /bin/sh -c "echo started"' })
+    expect(ir.Service).toContainEqual({ key: 'ExecStop', value: 'podman exec app /bin/sh -c echo stopping' })
   })
 
   test('handles service with no optional fields', () => {
@@ -820,8 +830,8 @@ describe('quadletIRToCompose', () => {
   test('converts ExecStartPost/ExecStop to lifecycle hooks', () => {
     const ir: QuadletIR = {
       Service: [
-        { key: 'ExecStartPost', value: 'podman exec %n /bin/sh -c "echo started"' },
-        { key: 'ExecStop', value: 'podman exec %n /bin/sh -c "echo stopping"' },
+        { key: 'ExecStartPost', value: 'podman exec svc /bin/sh -c "echo started"' },
+        { key: 'ExecStop', value: 'podman exec svc /bin/sh -c "echo stopping"' },
       ],
     }
     const compose = quadletIRToCompose(ir, 'svc')

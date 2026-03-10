@@ -120,7 +120,8 @@ export function composeServiceToQuadletIR(
     }
   }
 
-  if (service.networks) {
+  // Skip Network= when in a pod — pods own the network namespace
+  if (service.networks && !opts?.pod) {
     if (Array.isArray(service.networks)) {
       for (const net of service.networks) {
         container.push({ key: 'Network', value: net })
@@ -202,11 +203,8 @@ export function composeServiceToQuadletIR(
     }
   }
 
-  if (service.expose) {
-    for (const port of service.expose) {
-      container.push({ key: 'ExposeHostPort', value: String(port) })
-    }
-  }
+  // expose is inter-container only (documents ports for service discovery);
+  // it does not publish to the host, so we intentionally skip it.
 
   if (service.extra_hosts) {
     if (Array.isArray(service.extra_hosts)) {
@@ -443,13 +441,13 @@ export function composeServiceToQuadletIR(
   if (service.post_start) {
     for (const hook of service.post_start) {
       const cmd = Array.isArray(hook.command) ? hook.command.join(' ') : hook.command
-      svcSection.push({ key: 'ExecStartPost', value: `podman exec %n ${cmd}` })
+      svcSection.push({ key: 'ExecStartPost', value: `podman exec ${name} ${cmd}` })
     }
   }
   if (service.pre_stop) {
     for (const hook of service.pre_stop) {
       const cmd = Array.isArray(hook.command) ? hook.command.join(' ') : hook.command
-      svcSection.push({ key: 'ExecStop', value: `podman exec %n ${cmd}` })
+      svcSection.push({ key: 'ExecStop', value: `podman exec ${name} ${cmd}` })
     }
   }
 
@@ -852,7 +850,7 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         service.oom_score_adj = parseInt(value, 10)
         break
       case 'ExecStartPost': {
-        const postMatch = value.match(/^podman exec %n (.+)$/)
+        const postMatch = value.match(/^podman exec \S+ (.+)$/)
         if (postMatch) {
           if (!service.post_start) service.post_start = []
           service.post_start.push({ command: postMatch[1] })
@@ -860,7 +858,7 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         break
       }
       case 'ExecStop': {
-        const stopMatch = value.match(/^podman exec %n (.+)$/)
+        const stopMatch = value.match(/^podman exec \S+ (.+)$/)
         if (stopMatch) {
           if (!service.pre_stop) service.pre_stop = []
           service.pre_stop.push({ command: stopMatch[1] })
