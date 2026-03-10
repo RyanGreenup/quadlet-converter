@@ -44,9 +44,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Only reachable via unix socket and the internal monitoring network
+    # App network only — pgbouncer provides database access to application containers
     networks:
-      - monitoring
+      - app
     secrets:
       - pgcat_password
     volumes:
@@ -78,14 +78,11 @@ services:
   prometheus:
     image: docker.io/prom/prometheus:v3.2.0
     restart: unless-stopped
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
     networks:
       - monitoring
     volumes:
-      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro # :Z private — only prometheus reads its config
-      - prometheus_data:/prometheus:Z # :Z private — only prometheus owns its data
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
+      - prometheus_data:/prometheus:Z
     read_only: true
     tmpfs:
       - /tmp
@@ -118,7 +115,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
-      - grafana_data:/var/lib/grafana:Z # :Z private — only grafana owns its data
+      - grafana_data:/var/lib/grafana:Z
     read_only: true
     tmpfs:
       - /tmp
@@ -154,5 +151,10 @@ secrets:
     external: true
 
 networks:
+  # Internal bridge between pgbouncer and backend services only.
+  # Never expose pgbouncer directly — frontends must use a separate network
+  # and reach the database through the backend app.
+  app:
+    internal: true
   monitoring:
     internal: true

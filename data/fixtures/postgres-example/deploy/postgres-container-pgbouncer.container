@@ -1,14 +1,14 @@
 [Unit]
-After=postgres.service
-Requires=postgres.service
+After=postgres-container-postgres.service
+Requires=postgres-container-postgres.service
 
 [Container]
 Image=docker.io/edoburu/pgbouncer:v1.24.0-p0
-Pod=postgres-example.pod
 Volume=pg_socket:/var/run/postgresql:z
 Volume=pgbouncer_socket:/tmp/pgbouncer:Z
-Volume=./config/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:Z,ro
-Volume=./config/pgbouncer/entrypoint.sh:/entrypoint.sh:Z,ro
+Volume=/var/home/ryan/Sync/journals/2026/03/10/postgres-container/config/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:Z,ro
+Volume=/var/home/ryan/Sync/journals/2026/03/10/postgres-container/config/pgbouncer/entrypoint.sh:/entrypoint.sh:Z,ro
+Network=app.network
 User=postgres
 Entrypoint=/entrypoint.sh
 DropCapability=ALL
@@ -20,7 +20,6 @@ HealthRetries=5
 HealthTimeout=5s
 NoNewPrivileges=true
 Secret=pgcat_password
-Notify=healthy
 
 [Service]
 CPUQuota=200%

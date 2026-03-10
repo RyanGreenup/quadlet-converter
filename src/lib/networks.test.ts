@@ -29,15 +29,15 @@ describe('multi-network conversion', () => {
     expect(filenames).not.toContain('myapp.pod')
 
     // Network files
-    expect(filenames).toContain('frontend.network')
-    expect(filenames).toContain('backend.network')
+    expect(filenames).toContain('myapp-frontend.network')
+    expect(filenames).toContain('myapp-backend.network')
 
     // Prefixed container files
     expect(filenames).toContain('myapp-web.container')
     expect(filenames).toContain('myapp-api.container')
 
     // Backend network should have Internal=true
-    const backendNet = files.find(f => f.filename === 'backend.network')!
+    const backendNet = files.find(f => f.filename === 'myapp-backend.network')!
     expect(backendNet.ir.Network).toContainEqual({ key: 'Internal', value: 'true' })
 
     // Web container keeps its ports
@@ -45,8 +45,8 @@ describe('multi-network conversion', () => {
     expect(webFile.ir.Container).toContainEqual({ key: 'PublishPort', value: '80:80' })
 
     // Web container has network references
-    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'frontend.network' })
-    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'backend.network' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'myapp-frontend.network' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'myapp-backend.network' })
 
     // No Pod= on containers
     const webPod = (webFile.ir.Container ?? []).filter(e => e.key === 'Pod')
@@ -96,8 +96,8 @@ describe('multi-network conversion', () => {
     }
     const files = composeToQuadletFiles(compose, 'myapp')
     const filenames = files.map(f => f.filename)
-    expect(filenames).not.toContain('ext.network')
-    expect(filenames).toContain('internal.network')
+    expect(filenames).not.toContain('myapp-ext.network')
+    expect(filenames).toContain('myapp-internal.network')
   })
 
   test('multi-network adds Notify=healthy to dependency containers', () => {
@@ -135,7 +135,7 @@ describe('multi-network conversion', () => {
       },
     }
     const files = composeToQuadletFiles(compose, 'test')
-    const netFile = files.find(f => f.filename === 'mynet.network')!
+    const netFile = files.find(f => f.filename === 'test-mynet.network')!
     expect(netFile.ir.Network).toContainEqual({ key: 'Subnet', value: '172.20.0.0/24' })
     expect(netFile.ir.Network).toContainEqual({ key: 'Gateway', value: '172.20.0.1' })
   })

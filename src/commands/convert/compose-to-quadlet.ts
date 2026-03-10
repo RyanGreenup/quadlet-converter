@@ -96,11 +96,12 @@ const composeToQuadletCommand = defineCommand({
       console.warn()
     }
 
-    // Derive pod name from the compose filename (without extension)
-    const basename = path.basename(filePath, path.extname(filePath))
-    const podName = basename === 'docker-compose' || basename === 'compose'
-      ? path.basename(path.dirname(filePath))
-      : basename
+    // Derive project name: top-level name > directory name > filename
+    const basename = path.basename(resolvedPath, path.extname(resolvedPath))
+    const podName = compose.name
+      ?? (basename === 'docker-compose' || basename === 'compose'
+        ? path.basename(path.dirname(resolvedPath))
+        : basename)
 
     const files = composeToQuadletFiles(compose, podName, {
       build: flags.build,

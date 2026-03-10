@@ -1,12 +1,8 @@
-[Unit]
-After=pgbouncer.service
-Requires=pgbouncer.service
-
 [Container]
 Image=docker.io/prom/prometheus:v3.2.0
-Pod=postgres-example.pod
-Volume=./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
+Volume=/var/home/ryan/Sync/journals/2026/03/10/postgres-container/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
 Volume=prometheus_data:/prometheus:Z
+Network=monitoring.network
 DropCapability=ALL
 ReadOnly=true
 Tmpfs=/tmp

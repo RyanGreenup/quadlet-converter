@@ -1,11 +1,12 @@
 [Unit]
-After=prometheus.service
-Requires=prometheus.service
+After=postgres-container-prometheus.service
+Requires=postgres-container-prometheus.service
 
 [Container]
 Image=docker.io/grafana/grafana:11.5
-Pod=postgres-example.pod
+PublishPort=127.0.0.1:3000:3000
 Volume=grafana_data:/var/lib/grafana:Z
+Network=monitoring.network
 DropCapability=ALL
 ReadOnly=true
 Tmpfs=/tmp

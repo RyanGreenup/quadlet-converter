@@ -666,7 +666,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
         generatedNetworks.add(net)
         const networkDef = composeNetworks[net]
         const ir = composeNetworkToQuadletIR(net, networkDef)
-        if (ir) files.push({ filename: `${net}.network`, ir })
+        if (ir) files.push({ filename: `${podName}-${net}.network`, ir })
       }
     }
 
@@ -680,7 +680,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
       if (ir.Container) {
         for (const entry of ir.Container) {
           if (entry.key === 'Network' && generatedNetworks.has(entry.value)) {
-            entry.value = `${entry.value}.network`
+            entry.value = `${podName}-${entry.value}.network`
           }
         }
       }

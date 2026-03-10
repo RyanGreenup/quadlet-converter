@@ -78,6 +78,9 @@ edit file:
 
 
 generate-quadlet:
-    panlet convert compose-to-quadlet --sops  -o deploy/ docker-compose.yml
-    # TODO fix panlet
-    rm -r  deploy/..pod
+    #!/usr/bin/env sh
+    set -eu
+    f=$(realpath docker-compose.yml)
+    d=$(realpath ./deploy)
+    echo "$d"
+    cd "$(mktemp -d)" && panlet convert compose-to-quadlet --sops --no-pod -o "$d" "$f"

@@ -1,10 +1,9 @@
 [Container]
 Image=docker.io/library/postgres:17
-Pod=postgres-example.pod
 Network=none
 Volume=pg_data:/var/lib/postgresql/data:Z
 Volume=pg_socket:/var/run/postgresql:z
-Volume=./initdb.d:/docker-entrypoint-initdb.d:Z
+Volume=/var/home/ryan/Sync/journals/2026/03/10/quadlet-serde-tool/quadlet-serde/data/fixtures/postgres-example/initdb.d:/docker-entrypoint-initdb.d:Z
 Environment=POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
 User=postgres
 DropCapability=ALL
