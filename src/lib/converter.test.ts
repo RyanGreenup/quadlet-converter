@@ -483,13 +483,46 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'SecurityLabelDisable', value: 'true' })
   })
 
+  test('converts security_opt no-new-privileges', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['no-new-privileges:true'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'NoNewPrivileges', value: 'true' })
+  })
+
+  test('converts security_opt seccomp', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['seccomp:profile.json'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'SeccompProfile', value: 'profile.json' })
+  })
+
+  test('converts security_opt apparmor to PodmanArgs', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['apparmor:unconfined'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'PodmanArgs', value: '--security-opt=apparmor:unconfined' })
+  })
+
+  test('converts unknown security_opt to PodmanArgs', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['systempaths=unconfined'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'PodmanArgs', value: '--security-opt=systempaths=unconfined' })
+  })
+
   test('converts multiple security_opt entries', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',
-      security_opt: ['label:type:container_t', 'label:level:s0:c100,c200'],
+      security_opt: ['label:type:container_t', 'label:level:s0:c100,c200', 'no-new-privileges'],
     })
     expect(ir.Container).toContainEqual({ key: 'SecurityLabelType', value: 'container_t' })
     expect(ir.Container).toContainEqual({ key: 'SecurityLabelLevel', value: 's0:c100,c200' })
+    expect(ir.Container).toContainEqual({ key: 'NoNewPrivileges', value: 'true' })
   })
 
   test('handles service with no optional fields', () => {

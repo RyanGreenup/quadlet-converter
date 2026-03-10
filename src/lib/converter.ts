@@ -314,6 +314,16 @@ export function composeServiceToQuadletIR(
     for (const opt of service.security_opt) {
       if (opt.startsWith('label:type:')) {
         container.push({ key: 'SecurityLabelType', value: opt.slice('label:type:'.length) })
+      } else if (opt.startsWith('label:level:')) {
+        container.push({ key: 'SecurityLabelLevel', value: opt.slice('label:level:'.length) })
+      } else if (opt === 'label:disable') {
+        container.push({ key: 'SecurityLabelDisable', value: 'true' })
+      } else if (opt === 'no-new-privileges' || opt === 'no-new-privileges:true') {
+        container.push({ key: 'NoNewPrivileges', value: 'true' })
+      } else if (opt.startsWith('seccomp:')) {
+        container.push({ key: 'SeccompProfile', value: opt.slice('seccomp:'.length) })
+      } else {
+        container.push({ key: 'PodmanArgs', value: `--security-opt=${opt}` })
       }
     }
   }
@@ -623,6 +633,32 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'SecurityLabelType':
         if (!service.security_opt) service.security_opt = []
         service.security_opt.push(`label:type:${value}`)
+        break
+      case 'SecurityLabelLevel':
+        if (!service.security_opt) service.security_opt = []
+        service.security_opt.push(`label:level:${value}`)
+        break
+      case 'SecurityLabelDisable':
+        if (value === 'true') {
+          if (!service.security_opt) service.security_opt = []
+          service.security_opt.push('label:disable')
+        }
+        break
+      case 'NoNewPrivileges':
+        if (value === 'true') {
+          if (!service.security_opt) service.security_opt = []
+          service.security_opt.push('no-new-privileges')
+        }
+        break
+      case 'SeccompProfile':
+        if (!service.security_opt) service.security_opt = []
+        service.security_opt.push(`seccomp:${value}`)
+        break
+      case 'PodmanArgs':
+        if (value.startsWith('--security-opt=')) {
+          if (!service.security_opt) service.security_opt = []
+          service.security_opt.push(value.slice('--security-opt='.length))
+        }
         break
       case 'Secret': {
         if (!service.secrets) service.secrets = []

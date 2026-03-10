@@ -3,6 +3,40 @@ import { parseCompose } from './compose/index'
 import { composeToQuadletFiles } from './converter'
 import { extractSecretDefs, generateSecretsJustfile } from './secrets'
 
+describe('fixtures/sops-compose.yml', () => {
+  const loadFixture = async () => {
+    const text = await Bun.file('data/fixtures/sops-compose.yml').text()
+    return parseCompose(text)
+  }
+
+  test('all file-based secrets use sops -d with --sops flag', async () => {
+    const compose = await loadFixture()
+    const defs = extractSecretDefs(compose)
+    const justfile = generateSecretsJustfile(defs, { sops: true })
+
+    // File-based secrets use sops -d pipe
+    expect(justfile).toContain('sops -d ./secrets/db_password.enc.yaml | podman secret create db_password -')
+    expect(justfile).toContain('sops -d ./secrets/api_token.enc.yaml | podman secret create api_token -')
+
+    // Env-based secret is unchanged
+    expect(justfile).toContain('printenv QUEUE_AUTH | podman secret create queue_auth -')
+
+    // No direct file pass-through
+    expect(justfile).not.toContain('podman secret create db_password ./secrets/')
+    expect(justfile).not.toContain('podman secret create api_token ./secrets/')
+  })
+
+  test('without --sops flag, file-based secrets pass file directly', async () => {
+    const compose = await loadFixture()
+    const defs = extractSecretDefs(compose)
+    const justfile = generateSecretsJustfile(defs)
+
+    expect(justfile).toContain('podman secret create db_password ./secrets/db_password.enc.yaml')
+    expect(justfile).toContain('podman secret create api_token ./secrets/api_token.enc.yaml')
+    expect(justfile).not.toContain('sops')
+  })
+})
+
 describe('fixtures/secrets-compose.yml', () => {
   const loadFixture = async () => {
     const text = await Bun.file('data/fixtures/secrets-compose.yml').text()
@@ -59,6 +93,26 @@ describe('fixtures/secrets-compose.yml', () => {
       { key: 'Secret', value: 'db_password' },
       { key: 'Secret', value: 'db_init_sql,target=/docker-entrypoint-initdb.d/init.sql' },
     ])
+  })
+
+  test('generates justfile with sops decryption for file-based secrets', async () => {
+    const compose = await loadFixture()
+    const defs = extractSecretDefs(compose)
+    const justfile = generateSecretsJustfile(defs, { sops: true })
+
+    // File-based should use sops -d
+    expect(justfile).toContain('sops -d ./secrets/db_password.txt | podman secret create db_password -')
+    expect(justfile).toContain('sops -d ./secrets/server.crt | podman secret create tls_cert -')
+    expect(justfile).toContain('sops -d ./secrets/init.sql | podman secret create db_init_sql -')
+
+    // Env-based unchanged
+    expect(justfile).toContain('printenv API_KEY | podman secret create api_key -')
+
+    // External unchanged
+    expect(justfile).toContain("Secret 'session_key' is external")
+
+    // Should NOT contain direct file pass-through
+    expect(justfile).not.toContain('podman secret create db_password ./secrets/db_password.txt')
   })
 
   test('extracts secret defs and generates justfile', async () => {
