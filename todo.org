@@ -39,7 +39,13 @@
 - [X] logging → LogDriver
 - [X] group_add → GroupAdd
 - [X] userns_mode → UserNS
-- [ ] security_opt → SecurityLabelType / SecurityLabelLevel
+- [ ] security_opt label:type:X → SecurityLabelType=X
+- [ ] security_opt label:level:X → SecurityLabelLevel=X
+- [ ] security_opt label:disable → SecurityLabelDisable=true
+- [ ] security_opt no-new-privileges → NoNewPrivileges=true
+- [ ] security_opt seccomp:X → SeccompProfile=X
+- [ ] security_opt apparmor:X → PodmanArgs=--security-opt=apparmor=X
+- [ ] security_opt (other) → PodmanArgs=--security-opt=<value>
 - [ ] privileged → SecurityLabelDisable (or PodmanArgs=--privileged)
 - [ ] pid → PidHost (when pid: host)
 - [ ] depends_on → After= / Requires= [Unit]
