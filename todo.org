@@ -29,7 +29,7 @@
 - [ ] expose → ExposeHostPort
 - [ ] extra_hosts → AddHost
 - [ ] env_file → EnvironmentFile
-- [ ] networks → Network
+- [X] networks → Network
 - [ ] read_only → ReadOnly
 - [ ] tmpfs → Tmpfs
 - [ ] shm_size → ShmSize
@@ -56,11 +56,46 @@
 - [ ] healthcheck.start_period → HealthStartPeriod
 - [ ] healthcheck.start_interval → HealthStartupInterval
 
+** Systemd [Service] section mappings
+- [ ] post_start → ExecStartPost= [Service]
+- [ ] pre_stop → ExecStop= [Service]
+- [ ] oom_score_adj → OOMScoreAdjust= [Service]
+- [ ] pids_limit → TasksMax= [Service]
+- [ ] mem_limit → MemoryMax= [Service]
+- [ ] mem_reservation → MemoryReservation= [Service]
+- [ ] mem_swappiness → MemorySwapMax= [Service]
+- [ ] memswap_limit → MemorySwapMax= [Service]
+- [ ] cpu_shares → CPUShares= [Service]
+- [ ] cpu_quota → CPUQuota= [Service]
+- [ ] cpu_period → CPUQuotaPeriodSec= [Service]
+- [ ] cpus → CPUQuota= [Service] (multiply by 100%)
+- [ ] cpuset → AllowedCPUs= [Service]
+
 ** PodmanArgs fallbacks (no direct quadlet key)
 - [ ] ulimits → PodmanArgs=--ulimit
 - [ ] init → PodmanArgs=--init
 - [ ] tty → PodmanArgs=--tty
 - [ ] stdin_open → PodmanArgs=--interactive
+- [ ] pull_policy → PodmanArgs=--pull=
+- [ ] ipc → PodmanArgs=--ipc
+- [ ] mac_address → PodmanArgs=--mac-address
+- [ ] oom_kill_disable → PodmanArgs=--oom-kill-disable
+- [ ] volumes_from → PodmanArgs=--volumes-from
+- [ ] dns_opt → PodmanArgs=--dns-option
+- [ ] domainname → PodmanArgs=--domainname
+- [ ] uts → PodmanArgs=--uts
+- [ ] runtime → PodmanArgs=--runtime
+- [ ] blkio_config → PodmanArgs=--blkio-weight / --device-read-bps / etc.
+- [ ] cgroup_parent → PodmanArgs=--cgroup-parent
+- [ ] device_cgroup_rules → PodmanArgs=--device-cgroup-rule
+- [ ] label_file → PodmanArgs=--label-file
+- [ ] storage_opt → PodmanArgs=--storage-opt
+- [ ] gpus → AddDevice= or PodmanArgs
+- [ ] cpu_count / cpu_percent / cpu_rt_period / cpu_rt_runtime → PodmanArgs
+
+** Other mappable fields
+- [ ] secrets → Secret=
+- [ ] annotations → Annotation=
 
 * Security checks (=check= command)
 ** Implemented
@@ -159,39 +194,19 @@ compose can't replicate this behaviour.
 
 * No quadlet equivalent
 These compose fields have no meaningful quadlet mapping:
-- extends
-- links
-- profiles
-- scale
-- pull_policy
-- pull_refresh_after
-- configs
-- secrets
-- develop
-- provider
-- models
-- annotations
-- attach
-- blkio_config
-- cgroup / cgroup_parent
-- cpu_count / cpu_percent / cpu_shares / cpu_quota / cpu_period / cpu_rt_period / cpu_rt_runtime / cpus / cpuset
-- credential_spec
-- device_cgroup_rules
-- dns_opt
-- domainname
-- external_links
-- gpus
-- ipc
-- isolation
-- label_file
-- mac_address
-- mem_limit / mem_reservation / mem_swappiness / memswap_limit
-- oom_kill_disable / oom_score_adj
-- pids_limit
-- platform
-- post_start / pre_stop
-- runtime
-- storage_opt
-- uts
-- use_api_socket
-- volumes_from
+- extends (compose template resolution — resolve at conversion time)
+- links (legacy, replaced by networks)
+- profiles (compose workflow concept)
+- scale (would need multiple container files)
+- pull_refresh_after (compose-specific)
+- configs (no native quadlet configs; approximate via Volume=)
+- develop (compose dev workflow)
+- provider (compose external provider)
+- models (AI feature)
+- attach (compose logging attachment)
+- credential_spec (Windows-only)
+- isolation (Windows-only)
+- external_links (legacy)
+- platform (multi-arch, handled at build/pull time)
+- use_api_socket (Docker-specific)
+- cgroup (=host= / =private= namespace selection)
