@@ -44,8 +44,38 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Rename binary
+        run: |
+          cp dist/index quadlet-serde-linux-x64
+          chmod 755 quadlet-serde-linux-x64
+
+      - name: Build .deb
+        run: |
+          chmod +x packaging/build-deb.sh
+          packaging/build-deb.sh "${{ steps.version.outputs.version }}"
+
+      - name: Build .rpm
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+          chmod +x packaging/build-rpm.sh
+          packaging/build-rpm.sh "${{ steps.version.outputs.version }}"
+
+      - name: Prepare PKGBUILD
+        run: |
+          cd packaging
+          sed -i "s/pkgver=VERSION/pkgver=${{ steps.version.outputs.version }}/" PKGBUILD
+          tar czf PKGBUILD.tar.gz PKGBUILD
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: dist/*
+          files: |
+            quadlet-serde-linux-x64
+            quadlet-serde_*.deb
+            *.rpm
+            packaging/PKGBUILD.tar.gz

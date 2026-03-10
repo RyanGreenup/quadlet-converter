@@ -4,17 +4,66 @@
 import type { Command, CLI, GeneratedOptionMeta, RegisteredCommands, CommandOptions, GeneratedCommandMeta } from '@bunli/core'
 import { createGeneratedHelpers, registerGeneratedStore } from '@bunli/core'
 
+import Check from '../src/commands/check.js'
+import Convert from '../src/commands/convert.js'
+import FromJson from '../src/commands/from-json.js'
 import Hello from '../src/commands/hello.js'
+import Run from '../src/commands/run.js'
+import ToIr from '../src/commands/to-ir.js'
+import ToJson from '../src/commands/to-json.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['hello'] as const
+const names = ['check', 'convert', 'from-json', 'hello', 'run', 'to-ir', 'to-json'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
-  'hello': Hello
+  'check': Check,
+  'convert': Convert,
+  'from-json': FromJson,
+  'hello': Hello,
+  'run': Run,
+  'to-ir': ToIr,
+  'to-json': ToJson
 } as const
 
 const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
+  'check': {
+      name: 'check',
+      description: 'Check a compose file for potential issues',
+      path: './src/commands/check'
+    },
+  'convert': {
+      name: 'convert',
+      description: 'Convert between Compose and Quadlet formats',
+      commands: [
+        {
+          name: 'compose-to-quadlet',
+          description: 'Convert a Docker Compose file to Quadlet unit file(s)',
+          path: './src/commands/convert/compose-to-quadlet'
+        },
+        {
+          name: 'quadlet-to-compose',
+          description: 'Convert a Quadlet unit file to Docker Compose YAML',
+          options: {
+            'service': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Service name to use in the compose output', short: 's', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' }
+          },
+          path: './src/commands/convert/quadlet-to-compose'
+        }
+      ],
+      path: './src/commands/convert'
+    },
+  'from-json': {
+      name: 'from-json',
+      description: 'Convert JSON to other formats',
+      commands: [
+        {
+          name: 'quadlet',
+          description: 'Convert a JSON file to Quadlet unit format',
+          path: './src/commands/from-json/quadlet'
+        }
+      ],
+      path: './src/commands/from-json'
+    },
   'hello': {
       name: 'hello',
       description: 'Say hello to someone',
@@ -23,6 +72,55 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'excited': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Add excitement!', short: 'e', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":364,"end":369,"loc":{"start":{"line":16,"column":26,"index":364},"end":{"line":16,"column":31,"index":369}},"value":false}}]}, validator: '(val) => true' }
       },
       path: './src/commands/hello'
+    },
+  'run': {
+      name: 'run',
+      description: 'Run a .container quadlet file via podman-compose',
+      options: {
+        'service': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Service name to use (default: derived from filename)', short: 's', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'detach': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Run in detached mode', short: 'd', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":541,"end":546,"loc":{"start":{"line":18,"column":26,"index":541},"end":{"line":18,"column":31,"index":546}},"value":false}}]}, validator: '(val) => true' },
+        'rm': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Remove containers and volumes after stopping', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":678,"end":683,"loc":{"start":{"line":25,"column":26,"index":678},"end":{"line":25,"column":31,"index":683}},"value":false}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/run'
+    },
+  'to-ir': {
+      name: 'to-ir',
+      description: 'Convert JSON to intermediate representation',
+      commands: [
+        {
+          name: 'quadlet',
+          description: 'Convert QuadletData JSON to QuadletIR',
+          options: {
+            'pretty': { type: 'z.boolean.default', required: true, hasDefault: true, default: true, description: 'Pretty-print the JSON output', short: 'p', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":319,"end":323,"loc":{"start":{"line":10,"column":26,"index":319},"end":{"line":10,"column":30,"index":323}},"value":true}}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/to-ir/quadlet'
+        }
+      ],
+      path: './src/commands/to-ir'
+    },
+  'to-json': {
+      name: 'to-json',
+      description: 'Convert files to JSON',
+      commands: [
+        {
+          name: 'quadlet',
+          description: 'Convert a Quadlet unit file to JSON',
+          options: {
+            'pretty': { type: 'z.boolean.default', required: true, hasDefault: true, default: true, description: 'Pretty-print the JSON output', short: 'p', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":300,"end":304,"loc":{"start":{"line":10,"column":26,"index":300},"end":{"line":10,"column":30,"index":304}},"value":true}}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/to-json/quadlet'
+        },
+        {
+          name: 'compose',
+          description: 'Convert a Docker Compose file to JSON',
+          options: {
+            'pretty': { type: 'z.boolean.default', required: true, hasDefault: true, default: true, description: 'Pretty-print the JSON output', short: 'p', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":308,"end":312,"loc":{"start":{"line":10,"column":26,"index":308},"end":{"line":10,"column":30,"index":312}},"value":true}}]}, validator: '(val) => true' },
+            'validate': { type: 'z.boolean.default', required: true, hasDefault: true, default: true, description: 'Validate against the Compose specification schema', short: 'v', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":458,"end":462,"loc":{"start":{"line":17,"column":26,"index":458},"end":{"line":17,"column":30,"index":462}},"value":true}}]}, validator: '(val) => true' }
+          },
+          path: './src/commands/to-json/compose'
+        }
+      ],
+      path: './src/commands/to-json'
     }
 } as const
 
