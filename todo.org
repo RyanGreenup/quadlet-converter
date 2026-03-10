@@ -14,6 +14,8 @@
 * TODO Not yet implemented
 ** Container section mappings
 - [ ] command → Exec
+- [ ] build
+  - We should have a flag that will build the image upon request and use the prefixed `localhost`  (unless alt is specified if appropriate ?? ) and use that image name.
 - [ ] entrypoint → Entrypoint
 - [X] user → User
 - [ ] working_dir → WorkingDir
@@ -40,6 +42,11 @@
 - [ ] security_opt → SecurityLabelType / SecurityLabelLevel
 - [ ] privileged → SecurityLabelDisable (or PodmanArgs=--privileged)
 - [ ] pid → PidHost (when pid: host)
+- [ ] depends_on → After= / Requires= [Unit]
+  - =service_started=: =After=dep.service= + =Requires=dep.service=
+  - =service_healthy=: =After=dep.service= (must also ensure healthcheck passes; no native systemd equivalent, may need =ExecStartPre= polling)
+  - =service_completed_successfully=: =After=dep.service= + =Requires=dep.service= (oneshot dependency)
+  - Containers in the same =.pod= already get implicit ordering via the pod service
 
 ** Healthcheck mappings
 - [ ] healthcheck.test → HealthCmd
@@ -74,10 +81,84 @@
 - [ ] Suggest =no-new-privileges= security option if not present
 - [ ] Warn if =userns_mode= is not set (consider user namespace remapping)
 
+* Design notes
+** Volume name mapping
+Quadlet prefixes generated systemd units with =systemd-=. A =mydata.volume= file
+creates a podman volume named =systemd-mydata= by default (or the value of
+=VolumeName== if set).
+
+This matters because compose files reference volumes by their short name:
+
+#+begin_example
+volumes:
+  caddy_storage:
+
+services:
+  web:
+    volumes:
+      - caddy_storage:/data
+#+end_example
+
+When converting, we have three options:
+
+1. *Set =VolumeName== to match the compose name.* Generate =caddy_storage.volume=
+   with =VolumeName=caddy_storage=. Container uses =Volume=caddy_storage:/data=.
+   Simplest — volume name stays the same, no rewriting needed.
+
+2. *Rewrite volume references to the prefixed name.* Container uses
+   =Volume=systemd-caddy_storage:/data=. Fragile — every reference must be updated
+   and it leaks the systemd naming convention.
+
+3. *Use the =.volume= unit name in the container.* Quadlet supports
+   =Volume=caddy_storage.volume:/data= which resolves the name automatically.
+   This also creates an implicit systemd dependency on the volume unit.
+
+Option 3 is preferred: it's idiomatic quadlet, creates correct systemd ordering,
+and doesn't require hardcoding the =systemd-= prefix. Fall back to option 1 for
+volumes marked =external: true= (no =.volume= file generated).
+
+Compose volumes also support a =name= field that overrides the default
+project-prefixed name:
+
+#+begin_example
+volumes:
+  data:
+    name: my-custom-volume
+#+end_example
+
+When =name= is set, use it as =VolumeName== in the generated =.volume= file.
+When =name= is not set, the compose key itself (e.g. =data=) is the volume name.
+Either way, the =.volume= filename should be derived from the compose key, not
+the =name= field, so that =Volume=data.volume:/path= resolves correctly.
+
+For bind mounts (=./path:/container/path=) no =.volume= file is needed — they
+pass through as-is in the =Volume== key.
+
+** Volume Copy= behaviour
+Quadlet's =Copy=true= tells podman to copy the container image's data at the
+mount point into the volume on first use. This is the default behaviour in
+Docker/Compose — it happens implicitly whenever a named volume is mounted.
+
+In quadlet, =Copy== defaults to unset (which matches compose's implicit copy
+behaviour in most cases), so we generally don't need to emit it.
+
+*When =Copy=false= would be useful:* If you're mounting a database volume
+(e.g. =pgdata:/var/lib/postgresql/data=) and want to guarantee a clean volume
+with no image data copied in — only data written by the running process.
+Compose has no way to express this.
+
+*Workaround for compose users who want =Copy=false= semantics:* Use an
+=entrypoint= script that wipes the mount point on first run, or use an empty
+named volume and let the application initialise it. Neither is clean, which is
+one advantage quadlet has over compose here.
+
+Since compose can't express =Copy=false=, our converter doesn't need to emit
+=Copy== at all — the default is correct. If we ever add quadlet-to-compose
+conversion for files with =Copy=false=, we should emit a comment warning that
+compose can't replicate this behaviour.
+
 * No quadlet equivalent
 These compose fields have no meaningful quadlet mapping:
-- build
-- depends_on
 - extends
 - links
 - profiles
