@@ -11,9 +11,10 @@ import Hello from '../src/commands/hello.js'
 import Run from '../src/commands/run.js'
 import ToIr from '../src/commands/to-ir.js'
 import ToJson from '../src/commands/to-json.js'
+import Tui from '../src/commands/tui.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['check', 'convert', 'from-json', 'hello', 'run', 'to-ir', 'to-json'] as const
+const names = ['check', 'convert', 'from-json', 'hello', 'run', 'to-ir', 'to-json', 'tui'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
@@ -23,7 +24,8 @@ const modules: Record<GeneratedNames, Command<any>> = {
   'hello': Hello,
   'run': Run,
   'to-ir': ToIr,
-  'to-json': ToJson
+  'to-json': ToJson,
+  'tui': Tui
 } as const
 
 const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
@@ -39,6 +41,13 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         {
           name: 'compose-to-quadlet',
           description: 'Convert a Docker Compose file to Quadlet unit file(s)',
+          options: {
+            'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output directory (writes individual files instead of stdout)', short: 'o', fileType: 'directory', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'sops': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use sops to decrypt file-based secrets in justfile recipes', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":895,"end":900,"loc":{"start":{"line":23,"column":26,"index":895},"end":{"line":23,"column":31,"index":900}},"value":false}}]}, validator: '(val) => true' },
+            'build': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate build recipes for services with build contexts', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1054,"end":1059,"loc":{"start":{"line":29,"column":26,"index":1054},"end":{"line":29,"column":31,"index":1059}},"value":false}}]}, validator: '(val) => true' },
+            'start-port': { type: 'z.coerce.number.optional', required: false, hasDefault: false, description: 'Starting host port for scaled instances', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1362,"end":1367,"loc":{"start":{"line":41,"column":26,"index":1362},"end":{"line":41,"column":31,"index":1367}},"value":false}}]}, validator: '(val) => true' }
+          },
           path: './src/commands/convert/compose-to-quadlet'
         },
         {
@@ -121,6 +130,14 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         }
       ],
       path: './src/commands/to-json'
+    },
+  'tui': {
+      name: 'tui',
+      description: 'Interactive file browser with live conversion preview',
+      options: {
+        'dir': { type: 'z.string.default', required: true, hasDefault: true, default: ".", description: 'Directory to browse', short: 'd', fileType: 'directory', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"."}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/tui'
     }
 } as const
 

@@ -20,6 +20,7 @@
   "devDependencies": {
     "@bunli/test": "latest",
     "@types/bun": "latest",
+    "@types/react": "^19.2.14",
     "bunli": "latest",
     "typescript": "^5.0.0"
   },

@@ -2,35 +2,11 @@ import { defineCommand, option } from '@bunli/core'
 import { z } from 'zod'
 import { parseCompose } from '../../lib/compose/index.js'
 import { composeToQuadletFiles } from '../../lib/converter.js'
-import { serializeQuadlet } from '../../lib/quadlet.js'
+import { serializeQuadlet, irToQuadletData } from '../../lib/quadlet.js'
 import { extractBuildDefs, generateBuildJustfile } from '../../lib/build.js'
 import { extractSecretDefs, generateSecretsJustfile } from '../../lib/secrets.js'
-import type { QuadletData } from '../../lib/quadlet.js'
-import type { QuadletIR } from '../../lib/quadlet.js'
 import path from 'node:path'
 import { mkdir, writeFile } from 'node:fs/promises'
-
-/** Convert QuadletIR back to QuadletData for serialization. */
-function irToQuadletData(ir: QuadletIR): QuadletData {
-  const data: QuadletData = {}
-  for (const [section, entries] of Object.entries(ir)) {
-    const sectionData: Record<string, string | string[]> = {}
-    for (const { key, value } of entries) {
-      if (key in sectionData) {
-        const existing = sectionData[key]
-        if (Array.isArray(existing)) {
-          existing.push(value)
-        } else {
-          sectionData[key] = [existing, value]
-        }
-      } else {
-        sectionData[key] = value
-      }
-    }
-    data[section] = sectionData
-  }
-  return data
-}
 
 const composeToQuadletCommand = defineCommand({
   name: 'compose-to-quadlet',

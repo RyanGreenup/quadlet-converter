@@ -67,6 +67,28 @@ export function toQuadletIR(data: QuadletData): QuadletIR {
   return result
 }
 
+/** Convert QuadletIR back to QuadletData for serialization. */
+export function irToQuadletData(ir: QuadletIR): QuadletData {
+  const data: QuadletData = {}
+  for (const [section, entries] of Object.entries(ir)) {
+    const sectionData: Record<string, string | string[]> = {}
+    for (const { key, value } of entries) {
+      if (key in sectionData) {
+        const existing = sectionData[key]
+        if (Array.isArray(existing)) {
+          existing.push(value)
+        } else {
+          sectionData[key] = [existing, value]
+        }
+      } else {
+        sectionData[key] = value
+      }
+    }
+    data[section] = sectionData
+  }
+  return data
+}
+
 export function serializeQuadlet(data: QuadletData): string {
   const sections = Object.entries(data)
   const parts: string[] = []
