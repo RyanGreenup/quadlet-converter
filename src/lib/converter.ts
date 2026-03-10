@@ -111,6 +111,53 @@ export function composeServiceToQuadletIR(
     container.push({ key: 'HostName', value: service.hostname })
   }
 
+  if (service.cap_add) {
+    for (const cap of service.cap_add) {
+      container.push({ key: 'AddCapability', value: cap })
+    }
+  }
+
+  if (service.cap_drop) {
+    for (const cap of service.cap_drop) {
+      container.push({ key: 'DropCapability', value: cap })
+    }
+  }
+
+  // devices → AddDevice (raw device pass-through)
+  if (service.devices) {
+    for (const dev of service.devices) {
+      if (typeof dev === 'string') {
+        container.push({ key: 'AddDevice', value: dev })
+      } else {
+        const parts = [dev.source]
+        if (dev.target) parts.push(dev.target)
+        if (dev.permissions) parts.push(dev.permissions)
+        container.push({ key: 'AddDevice', value: parts.join(':') })
+      }
+    }
+  }
+
+  // gpus → AddDevice (CDI format)
+  if (service.gpus) {
+    if (service.gpus === 'all') {
+      container.push({ key: 'AddDevice', value: 'nvidia.com/gpu=all' })
+    } else if (Array.isArray(service.gpus)) {
+      for (const gpu of service.gpus) {
+        const caps = gpu.capabilities ?? []
+        if (!caps.includes('gpu')) continue
+        const driver = gpu.driver ?? 'nvidia'
+        if (gpu.device_ids) {
+          for (const id of gpu.device_ids) {
+            container.push({ key: 'AddDevice', value: `${driver}.com/gpu=${id}` })
+          }
+        } else {
+          const count = gpu.count ?? 'all'
+          container.push({ key: 'AddDevice', value: `${driver}.com/gpu=${count}` })
+        }
+      }
+    }
+  }
+
   if (service.deploy?.resources?.limits) {
     const limits = service.deploy.resources.limits
     if (limits.cpus != null) {
@@ -119,6 +166,22 @@ export function composeServiceToQuadletIR(
     }
     if (limits.memory) {
       svcSection.push({ key: 'MemoryMax', value: limits.memory })
+    }
+  }
+
+  // deploy.resources.reservations.devices → AddDevice (CDI format)
+  if (service.deploy?.resources?.reservations?.devices) {
+    for (const dev of service.deploy.resources.reservations.devices) {
+      if (!dev.capabilities?.includes('gpu')) continue
+      const driver = dev.driver ?? 'nvidia'
+      if (dev.device_ids) {
+        for (const id of dev.device_ids) {
+          container.push({ key: 'AddDevice', value: `${driver}.com/gpu=${id}` })
+        }
+      } else {
+        const count = dev.count ?? 'all'
+        container.push({ key: 'AddDevice', value: `${driver}.com/gpu=${count}` })
+      }
     }
   }
 
@@ -244,6 +307,34 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         break
       case 'HostName':
         service.hostname = value
+        break
+      case 'AddCapability':
+        if (!service.cap_add) service.cap_add = []
+        service.cap_add.push(value)
+        break
+      case 'DropCapability':
+        if (!service.cap_drop) service.cap_drop = []
+        service.cap_drop.push(value)
+        break
+      case 'AddDevice':
+        if (value.startsWith('/dev/')) {
+          if (!service.devices) service.devices = []
+          service.devices.push(value)
+        } else {
+          // Parse CDI format: driver.com/gpu=count_or_id
+          const cdiMatch = value.match(/^(.+)\.com\/gpu=(.+)$/)
+          if (cdiMatch) {
+            if (!service.deploy) service.deploy = {}
+            if (!service.deploy.resources) service.deploy.resources = {}
+            if (!service.deploy.resources.reservations) service.deploy.resources.reservations = {}
+            if (!service.deploy.resources.reservations.devices) service.deploy.resources.reservations.devices = []
+            service.deploy.resources.reservations.devices.push({
+              driver: cdiMatch[1],
+              count: cdiMatch[2],
+              capabilities: ['gpu'],
+            })
+          }
+        }
         break
     }
   }

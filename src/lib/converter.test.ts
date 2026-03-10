@@ -59,6 +59,17 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'Environment', value: 'BAZ=qux' })
   })
 
+  test('converts cap_add and cap_drop', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      cap_add: ['NET_ADMIN', 'SYS_TIME'],
+      cap_drop: ['ALL'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddCapability', value: 'NET_ADMIN' })
+    expect(ir.Container).toContainEqual({ key: 'AddCapability', value: 'SYS_TIME' })
+    expect(ir.Container).toContainEqual({ key: 'DropCapability', value: 'ALL' })
+  })
+
   test('converts hostname', () => {
     const ir = composeServiceToQuadletIR('app', { image: 'nginx', hostname: 'myhost' })
     expect(ir.Container).toContainEqual({ key: 'HostName', value: 'myhost' })
@@ -99,6 +110,71 @@ describe('composeServiceToQuadletIR', () => {
     const networkEntries = ir.Container!.filter(e => e.key === 'Network')
     expect(networkEntries).toContainEqual({ key: 'Network', value: 'host' })
     expect(networkEntries).toContainEqual({ key: 'Network', value: 'custom' })
+  })
+
+  test('converts raw devices to AddDevice', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      devices: ['/dev/kvm', '/dev/dri:/dev/dri'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: '/dev/kvm' })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: '/dev/dri:/dev/dri' })
+  })
+
+  test('converts deploy.resources.reservations.devices (nvidia GPU) to AddDevice CDI', () => {
+    const ir = composeServiceToQuadletIR('gpu', {
+      image: 'nvidia/cuda',
+      deploy: {
+        resources: {
+          reservations: {
+            devices: [{
+              driver: 'nvidia',
+              count: 'all',
+              capabilities: ['gpu'],
+            }],
+          },
+        },
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: 'nvidia.com/gpu=all' })
+  })
+
+  test('converts gpus: all to AddDevice CDI', () => {
+    const ir = composeServiceToQuadletIR('gpu', {
+      image: 'nvidia/cuda',
+      gpus: 'all',
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: 'nvidia.com/gpu=all' })
+  })
+
+  test('converts gpus array with device_ids to AddDevice CDI', () => {
+    const ir = composeServiceToQuadletIR('gpu', {
+      image: 'nvidia/cuda',
+      gpus: [{
+        capabilities: ['gpu'],
+        device_ids: ['0', '1'],
+        driver: 'nvidia',
+      }],
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: 'nvidia.com/gpu=0' })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: 'nvidia.com/gpu=1' })
+  })
+
+  test('defaults GPU driver to nvidia when not specified', () => {
+    const ir = composeServiceToQuadletIR('gpu', {
+      image: 'nvidia/cuda',
+      deploy: {
+        resources: {
+          reservations: {
+            devices: [{
+              count: 'all',
+              capabilities: ['gpu'],
+            }],
+          },
+        },
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'AddDevice', value: 'nvidia.com/gpu=all' })
   })
 
   test('handles service with no optional fields', () => {
@@ -177,6 +253,29 @@ describe('quadletIRToCompose', () => {
     const compose2 = quadletIRToCompose(ir2, 'svc')
     expect(compose2.services!['svc'].network_mode).toBeUndefined()
     expect(compose2.services!['svc'].networks).toEqual(['frontend', 'backend'])
+  })
+
+  test('converts AddDevice /dev/ path to devices', () => {
+    const ir: QuadletIR = {
+      Container: [
+        { key: 'AddDevice', value: '/dev/dri' },
+        { key: 'AddDevice', value: '/dev/kvm' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].devices).toEqual(['/dev/dri', '/dev/kvm'])
+  })
+
+  test('converts AddDevice CDI format to deploy.resources.reservations.devices', () => {
+    const ir: QuadletIR = {
+      Container: [
+        { key: 'AddDevice', value: 'nvidia.com/gpu=all' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].deploy?.resources?.reservations?.devices).toEqual([
+      { driver: 'nvidia', count: 'all', capabilities: ['gpu'] },
+    ])
   })
 
   test('handles empty IR', () => {

@@ -18,11 +18,11 @@
   - We should have a flag that will build the image upon request and use the prefixed `localhost`  (unless alt is specified if appropriate ?? ) and use that image name.
 - [ ] entrypoint → Entrypoint
 - [X] user → User
-- [ ] working_dir → WorkingDir
 - [X] hostname → HostName
-- [ ] cap_add → AddCapability
-- [ ] cap_drop → DropCapability
-- [ ] devices → AddDevice
+- [ ] working_dir → WorkingDir
+- [X] cap_add → AddCapability
+- [X] cap_drop → DropCapability
+- [X] devices → AddDevice
 - [ ] labels → Label
 - [ ] dns → DNS
 - [ ] dns_search → DNSSearch
@@ -90,7 +90,7 @@
 - [ ] device_cgroup_rules → PodmanArgs=--device-cgroup-rule
 - [ ] label_file → PodmanArgs=--label-file
 - [ ] storage_opt → PodmanArgs=--storage-opt
-- [ ] gpus → AddDevice= or PodmanArgs
+- [X] gpus → AddDevice= (CDI format)
 - [ ] cpu_count / cpu_percent / cpu_rt_period / cpu_rt_runtime → PodmanArgs
 
 ** Other mappable fields
