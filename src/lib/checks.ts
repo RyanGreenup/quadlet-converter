@@ -147,7 +147,7 @@ export function checkService(name: string, service: Service): CheckResult[] {
   }
 
   if (!service.userns_mode) {
-    results.push({ id: 'no-userns', severity: 'suggestion', message: `${name}: no userns_mode set — if running rootful, set userns_mode (e.g. "auto") to remap container UIDs to unprivileged host UIDs (rootless Podman does this automatically)` })
+    results.push({ id: 'no-userns', severity: 'suggestion', message: `${name}: no userns_mode set — if running rootful, set userns_mode (e.g. "auto") to remap container UIDs to unprivileged host UIDs. Note: userns_mode cannot be used with pods, and podman-compose runs all services in a pod by default. Rootless Podman already remaps UIDs automatically` })
   }
 
   return results
