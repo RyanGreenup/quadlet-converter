@@ -1,7 +1,7 @@
 # Build and install the CLI globally via bun
 install:
     bun run build
-    bun install --global .
+    cp dist/index ~/.local/bin/panlet
 
 # Convert the secrets fixture to individual files in data/fixtures/secrets-output/
 convert-secrets-fixture:

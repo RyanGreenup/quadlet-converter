@@ -9,11 +9,22 @@ import runCommand from './commands/run.js'
 import checkCommand from './commands/check.js'
 import tuiCommand from './commands/tui.js'
 
+// Temporarily change cwd so bunli doesn't try to load bunli.config.ts
+// (compiled binaries can't dynamically import .ts files)
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+const origCwd = process.cwd()
+const tempDir = mkdtempSync(join(tmpdir(), 'panlet-'))
+process.chdir(tempDir)
 const cli = await createCLI({
   name: 'quadlet-serde',
   version: '0.1.0',
   description: 'A CLI built with Bunli'
 })
+process.chdir(origCwd)
+rmSync(tempDir, { recursive: true })
 
 cli.command(helloCommand)
 cli.command(toJsonCommand)

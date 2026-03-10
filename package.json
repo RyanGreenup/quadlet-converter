@@ -5,7 +5,7 @@
   "description": "A CLI built with Bunli",
   "author": "",
   "bin": {
-    "panlet": "./dist/index.js"
+    "panlet": "./dist/index"
   },
   "scripts": {
     "postinstall": "bunli generate",
