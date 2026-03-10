@@ -1,0 +1,5 @@
+[Network]
+NetworkName=backend
+Driver=bridge
+Internal=true
+Subnet=172.20.1.0/24

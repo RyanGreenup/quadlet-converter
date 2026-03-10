@@ -1,8 +1,8 @@
 [Container]
 Image=docker.io/library/redis:7-alpine
-Pod=example-proxy.pod
 Volume=redis-data:/data:Z
 Environment=TZ=Australia/Melbourne
+Network=backend.network
 ContainerName=redis
 Exec=redis-server --maxmemory 200mb --maxmemory-policy allkeys-lru --save "" --appendonly no --protected-mode yes --bind 0.0.0.0 --tcp-backlog 511
 

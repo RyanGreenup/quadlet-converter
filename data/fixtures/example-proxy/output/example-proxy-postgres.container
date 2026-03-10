@@ -1,6 +1,5 @@
 [Container]
 Image=docker.io/library/postgres:17-alpine
-Pod=example-proxy.pod
 Volume=postgres-data:/var/lib/postgresql/data:Z
 Volume=./initdb:/docker-entrypoint-initdb.d:ro,Z
 Environment=POSTGRES_USER=app
@@ -8,6 +7,7 @@ Environment=POSTGRES_PASSWORD_FILE=/run/secrets/db_password
 Environment=POSTGRES_DB=myapp
 Environment=PGDATA=/var/lib/postgresql/data/pgdata
 Environment=TZ=Australia/Melbourne
+Network=backend.network
 ContainerName=postgres
 DropCapability=ALL
 AddCapability=DAC_OVERRIDE

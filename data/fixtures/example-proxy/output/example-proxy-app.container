@@ -1,18 +1,19 @@
 [Unit]
-After=postgres.service
-After=redis.service
-Requires=postgres.service
-Requires=redis.service
+After=example-proxy-postgres.service
+After=example-proxy-redis.service
+Requires=example-proxy-postgres.service
+Requires=example-proxy-redis.service
 
 [Container]
 Image=docker.io/myorg/myapp:1.4.2
-Pod=example-proxy.pod
 Volume=app-data:/app/data:Z
 Volume=app-tmp:/app/tmp:Z
 Environment=DATABASE_URL=postgresql://app:secret@postgres:5432/myapp?sslmode=require
 Environment=REDIS_URL=redis://redis:6379/0
 Environment=RUST_LOG=info
 Environment=TZ=Australia/Melbourne
+Network=proxy.network
+Network=backend.network
 ContainerName=app
 DropCapability=ALL
 Label=traefik.enable=true

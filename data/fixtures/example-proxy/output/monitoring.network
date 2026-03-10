@@ -1,0 +1,5 @@
+[Network]
+NetworkName=monitoring
+Driver=bridge
+Internal=true
+Subnet=172.20.2.0/24

@@ -1,11 +1,14 @@
 [Container]
 Image=docker.io/library/traefik:3.2
-Pod=example-proxy.pod
+PublishPort=443:443
+PublishPort=80:80
 Volume=/run/podman/podman.sock:/var/run/docker.sock:ro,Z
 Volume=traefik-certs:/etc/traefik/acme:Z
 Volume=./traefik.yml:/etc/traefik/traefik.yml:ro,Z
 Volume=./dynamic:/etc/traefik/dynamic:ro,Z
 Environment=TZ=Australia/Melbourne
+Network=proxy.network
+Network=monitoring.network
 ContainerName=traefik
 DropCapability=ALL
 AddCapability=NET_BIND_SERVICE
