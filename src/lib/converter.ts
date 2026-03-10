@@ -165,15 +165,16 @@ export function composeServiceToQuadletIR(
     container.push({ key: 'WorkingDir', value: service.working_dir })
   }
 
-  if (service.cap_add) {
-    for (const cap of service.cap_add) {
-      container.push({ key: 'AddCapability', value: cap })
-    }
-  }
-
+  // DropCapability must come before AddCapability — Podman processes
+  // --cap-drop before --cap-add, so drop ALL then add specific ones back.
   if (service.cap_drop) {
     for (const cap of service.cap_drop) {
       container.push({ key: 'DropCapability', value: cap })
+    }
+  }
+  if (service.cap_add) {
+    for (const cap of service.cap_add) {
+      container.push({ key: 'AddCapability', value: cap })
     }
   }
 

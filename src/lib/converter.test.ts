@@ -68,6 +68,13 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'AddCapability', value: 'NET_ADMIN' })
     expect(ir.Container).toContainEqual({ key: 'AddCapability', value: 'SYS_TIME' })
     expect(ir.Container).toContainEqual({ key: 'DropCapability', value: 'ALL' })
+
+    // DropCapability=ALL must come before AddCapability entries so Podman
+    // drops all caps first, then adds specific ones back
+    const entries = ir.Container!
+    const dropIdx = entries.findIndex(e => e.key === 'DropCapability' && e.value === 'ALL')
+    const firstAddIdx = entries.findIndex(e => e.key === 'AddCapability')
+    expect(dropIdx).toBeLessThan(firstAddIdx)
   })
 
   test('converts working_dir', () => {
