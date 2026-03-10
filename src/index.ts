@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { createCLI } from '@bunli/core'
 import helloCommand from './commands/hello.js'
+import toJsonCommand from './commands/to-json.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -9,5 +10,6 @@ const cli = await createCLI({
 })
 
 cli.command(helloCommand)
+cli.command(toJsonCommand)
 
 await cli.run()

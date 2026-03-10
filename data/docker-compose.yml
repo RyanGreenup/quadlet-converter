@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+# podman-compose
+# name: caddy
+services:
+  my-caddy:
+    image: caddy:2
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      # - "127.0.0.1:2019:2019"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:Z
+      # - ./srv:/srv
+      - ./caddy_data:/data:Z
+      - ./caddy_config:/config:Z
+#     environment:
+#       XDG_DATA_HOME: /caddy_storage/data
+#       XDG_CONFIG_HOME: /caddy_storage/config
+#       CADDYFILE_PATH: /caddy_storage/Caddyfile
+#     volumes:
+#       - caddy_storage:/caddy_storage
+#     command:
+#       ["caddy", "run", "--config", "$CADDYFILE_PATH", "--adapter", "caddyfile"]
+#
+# volumes:
+#   caddy_storage:
