@@ -345,6 +345,26 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.secrets) {
+    for (const secret of service.secrets) {
+      if (typeof secret === 'string') {
+        container.push({ key: 'Secret', value: secret })
+      } else {
+        const parts = [secret.source ?? '']
+        if (secret.target) parts.push(`target=${secret.target}`)
+        if (secret.uid) parts.push(`uid=${secret.uid}`)
+        if (secret.gid) parts.push(`gid=${secret.gid}`)
+        if (secret.mode != null) {
+          const mode = typeof secret.mode === 'number'
+            ? '0' + secret.mode.toString(8)
+            : secret.mode
+          parts.push(`mode=${mode}`)
+        }
+        container.push({ key: 'Secret', value: parts.join(',') })
+      }
+    }
+  }
+
   if (service.deploy?.resources?.limits) {
     const limits = service.deploy.resources.limits
     if (limits.cpus != null) {
@@ -592,6 +612,26 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         if (!service.healthcheck) service.healthcheck = {}
         service.healthcheck.start_interval = value
         break
+      case 'Secret': {
+        if (!service.secrets) service.secrets = []
+        const commaIdx = value.indexOf(',')
+        if (commaIdx === -1) {
+          service.secrets.push(value)
+        } else {
+          const name = value.slice(0, commaIdx)
+          const opts = Object.fromEntries(
+            value.slice(commaIdx + 1).split(',').map(p => p.split('=', 2) as [string, string])
+          )
+          service.secrets.push({
+            source: name,
+            ...(opts.target && { target: opts.target }),
+            ...(opts.uid && { uid: opts.uid }),
+            ...(opts.gid && { gid: opts.gid }),
+            ...(opts.mode != null && { mode: parseInt(opts.mode, 10) }),
+          })
+        }
+        break
+      }
       case 'AddDevice':
         if (value.startsWith('/dev/')) {
           if (!service.devices) service.devices = []

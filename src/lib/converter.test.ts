@@ -443,6 +443,22 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'AddDevice', value: 'nvidia.com/gpu=all' })
   })
 
+  test('converts secrets (short syntax)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      secrets: ['db_pass'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Secret', value: 'db_pass' })
+  })
+
+  test('converts secrets (long syntax)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      secrets: [{ source: 'db_pass', target: '/run/secrets/db', uid: '1000', mode: 0o440 }],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Secret', value: 'db_pass,target=/run/secrets/db,uid=1000,mode=0440' })
+  })
+
   test('handles service with no optional fields', () => {
     const ir = composeServiceToQuadletIR('empty', {})
     expect(ir).toEqual({})
@@ -541,6 +557,28 @@ describe('quadletIRToCompose', () => {
     const compose = quadletIRToCompose(ir, 'svc')
     expect(compose.services!['svc'].deploy?.resources?.reservations?.devices).toEqual([
       { driver: 'nvidia', count: 'all', capabilities: ['gpu'] },
+    ])
+  })
+
+  test('converts Secret (short) to secrets', () => {
+    const ir: QuadletIR = {
+      Container: [
+        { key: 'Secret', value: 'db_pass' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].secrets).toEqual(['db_pass'])
+  })
+
+  test('converts Secret (long) to secrets with options', () => {
+    const ir: QuadletIR = {
+      Container: [
+        { key: 'Secret', value: 'db_pass,target=/run/secrets/db,uid=1000' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].secrets).toEqual([
+      { source: 'db_pass', target: '/run/secrets/db', uid: '1000' },
     ])
   })
 

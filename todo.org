@@ -100,7 +100,7 @@
 - [ ] cpu_count / cpu_percent / cpu_rt_period / cpu_rt_runtime → PodmanArgs
 
 ** Other mappable fields
-- [ ] secrets → Secret=
+- [X] secrets → Secret=
 - [X] annotations → Annotation=
 
 * Security checks (=check= command)
