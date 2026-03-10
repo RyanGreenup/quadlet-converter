@@ -111,6 +111,14 @@ export function composeServiceToQuadletIR(
     container.push({ key: 'HostName', value: service.hostname })
   }
 
+  if (service.entrypoint != null) {
+    if (Array.isArray(service.entrypoint)) {
+      container.push({ key: 'Entrypoint', value: service.entrypoint.join(' ') })
+    } else {
+      container.push({ key: 'Entrypoint', value: service.entrypoint })
+    }
+  }
+
   if (service.cap_add) {
     for (const cap of service.cap_add) {
       container.push({ key: 'AddCapability', value: cap })
@@ -314,6 +322,9 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         break
       case 'HostName':
         service.hostname = value
+        break
+      case 'Entrypoint':
+        service.entrypoint = value
         break
       case 'AddCapability':
         if (!service.cap_add) service.cap_add = []

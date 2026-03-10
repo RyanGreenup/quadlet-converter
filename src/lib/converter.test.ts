@@ -70,6 +70,22 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'DropCapability', value: 'ALL' })
   })
 
+  test('converts entrypoint (string)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      entrypoint: '/docker-entrypoint.sh',
+    })
+    expect(ir.Container).toContainEqual({ key: 'Entrypoint', value: '/docker-entrypoint.sh' })
+  })
+
+  test('converts entrypoint (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      entrypoint: ['/bin/sh', '-c', 'echo hello'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Entrypoint', value: '/bin/sh -c echo hello' })
+  })
+
   test('converts dns (string)', () => {
     const ir = composeServiceToQuadletIR('app', { image: 'nginx', dns: '8.8.8.8' })
     expect(ir.Container).toContainEqual({ key: 'DNS', value: '8.8.8.8' })
