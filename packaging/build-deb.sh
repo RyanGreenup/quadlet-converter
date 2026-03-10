@@ -4,7 +4,7 @@ set -euo pipefail
 VERSION="${1:?Usage: build-deb.sh <version> [arch] [target]}"
 ARCH="${2:-amd64}"
 TARGET="${3:-linux-x64}"
-PKG="quadlet-serde"
+PKG="panlet"
 STAGING="${PKG}_${VERSION}_${ARCH}"
 
 rm -rf "$STAGING"

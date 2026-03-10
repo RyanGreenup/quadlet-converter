@@ -4,7 +4,7 @@ set -euo pipefail
 VERSION="${1:?Usage: build-rpm.sh <version> [arch] [target]}"
 ARCH="${2:-x86_64}"
 TARGET="${3:-linux-x64}"
-PKG="quadlet-serde"
+PKG="panlet"
 TOPDIR="$(pwd)/rpmbuild-${ARCH}"
 
 rm -rf "$TOPDIR"
@@ -20,7 +20,7 @@ Version:        $VERSION
 Release:        1%{?dist}
 Summary:        CLI tool for converting between Docker Compose and Podman Quadlet formats
 License:        MIT
-URL:            https://github.com/quadlet-serde/quadlet-serde
+URL:            https://github.com/panlet/panlet
 BuildArch:      $ARCH
 
 %description

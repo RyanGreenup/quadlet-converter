@@ -54,8 +54,8 @@ jobs:
       - name: Stage binaries
         run: |
           for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64; do
-            cp "dist/$target/index" "quadlet-serde-$target"
-            chmod 755 "quadlet-serde-$target"
+            cp "dist/$target/index" "panlet-$target"
+            chmod 755 "panlet-$target"
           done
 
       - name: Build .deb (amd64)
@@ -81,10 +81,10 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            quadlet-serde-linux-x64
-            quadlet-serde-linux-arm64
-            quadlet-serde-darwin-x64
-            quadlet-serde-darwin-arm64
-            quadlet-serde_*.deb
+            panlet-linux-x64
+            panlet-linux-arm64
+            panlet-darwin-x64
+            panlet-darwin-arm64
+            panlet_*.deb
             *.rpm
             packaging/PKGBUILD.tar.gz

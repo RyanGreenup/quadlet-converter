@@ -1,11 +1,11 @@
 {
-  "name": "quadlet-serde",
+  "name": "panlet",
   "version": "0.1.0",
   "type": "module",
   "description": "A CLI built with Bunli",
   "author": "",
   "bin": {
-    "quadlet-serde": "./dist/index.js"
+    "panlet": "./dist/index.js"
   },
   "scripts": {
     "postinstall": "bunli generate",

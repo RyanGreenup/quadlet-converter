@@ -1,13 +1,13 @@
-# Maintainer: quadlet-serde contributors
-pkgname=quadlet-serde
+# Maintainer: panlet contributors
+pkgname=panlet
 pkgver=VERSION
 pkgrel=1
 pkgdesc="CLI tool for converting between Docker Compose and Podman Quadlet formats"
 arch=('x86_64')
-url="https://github.com/quadlet-serde/quadlet-serde"
+url="https://github.com/panlet/panlet"
 license=('MIT')
 depends=()
-source=("$pkgname-$pkgver::https://github.com/quadlet-serde/quadlet-serde/releases/download/v$pkgver/quadlet-serde-linux-x64")
+source=("$pkgname-$pkgver::https://github.com/panlet/panlet/releases/download/v$pkgver/panlet-linux-x64")
 sha256sums=('SKIP')
 
 package() {
