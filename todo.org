@@ -19,7 +19,7 @@
 - [ ] entrypoint → Entrypoint
 - [X] user → User
 - [ ] working_dir → WorkingDir
-- [ ] hostname → HostName
+- [X] hostname → HostName
 - [ ] cap_add → AddCapability
 - [ ] cap_drop → DropCapability
 - [ ] devices → AddDevice

@@ -59,6 +59,11 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'Environment', value: 'BAZ=qux' })
   })
 
+  test('converts hostname', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', hostname: 'myhost' })
+    expect(ir.Container).toContainEqual({ key: 'HostName', value: 'myhost' })
+  })
+
   test('converts user', () => {
     const ir = composeServiceToQuadletIR('app', { image: 'nginx', user: '1000:1000' })
     expect(ir.Container).toContainEqual({ key: 'User', value: '1000:1000' })
