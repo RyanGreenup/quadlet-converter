@@ -310,6 +310,14 @@ export function composeServiceToQuadletIR(
     if (hc.start_interval) container.push({ key: 'HealthStartupInterval', value: hc.start_interval })
   }
 
+  if (service.security_opt) {
+    for (const opt of service.security_opt) {
+      if (opt.startsWith('label:type:')) {
+        container.push({ key: 'SecurityLabelType', value: opt.slice('label:type:'.length) })
+      }
+    }
+  }
+
   // devices → AddDevice (raw device pass-through)
   if (service.devices) {
     for (const dev of service.devices) {
@@ -611,6 +619,10 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'HealthStartupInterval':
         if (!service.healthcheck) service.healthcheck = {}
         service.healthcheck.start_interval = value
+        break
+      case 'SecurityLabelType':
+        if (!service.security_opt) service.security_opt = []
+        service.security_opt.push(`label:type:${value}`)
         break
       case 'Secret': {
         if (!service.secrets) service.secrets = []

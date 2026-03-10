@@ -39,7 +39,7 @@
 - [X] logging → LogDriver
 - [X] group_add → GroupAdd
 - [X] userns_mode → UserNS
-- [ ] security_opt label:type:X → SecurityLabelType=X
+- [X] security_opt label:type:X → SecurityLabelType=X
 - [ ] security_opt label:level:X → SecurityLabelLevel=X
 - [ ] security_opt label:disable → SecurityLabelDisable=true
 - [ ] security_opt no-new-privileges → NoNewPrivileges=true

@@ -459,6 +459,14 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'Secret', value: 'db_pass,target=/run/secrets/db,uid=1000,mode=0440' })
   })
 
+  test('converts security_opt label:type', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['label:type:container_t'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'SecurityLabelType', value: 'container_t' })
+  })
+
   test('handles service with no optional fields', () => {
     const ir = composeServiceToQuadletIR('empty', {})
     expect(ir).toEqual({})
