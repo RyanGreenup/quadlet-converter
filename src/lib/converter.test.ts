@@ -394,6 +394,50 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'HealthCmd', value: 'none' })
   })
 
+  test('converts depends_on (string list, service_started)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      depends_on: ['db', 'redis'],
+    })
+    expect(ir.Unit).toContainEqual({ key: 'After', value: 'db.service' })
+    expect(ir.Unit).toContainEqual({ key: 'Requires', value: 'db.service' })
+    expect(ir.Unit).toContainEqual({ key: 'After', value: 'redis.service' })
+    expect(ir.Unit).toContainEqual({ key: 'Requires', value: 'redis.service' })
+  })
+
+  test('converts depends_on (service_healthy)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      depends_on: {
+        db: { condition: 'service_healthy' },
+      },
+    })
+    expect(ir.Unit).toContainEqual({ key: 'After', value: 'db.service' })
+    // No Requires for healthy — just After + healthcheck poll
+    const requires = (ir.Unit ?? []).filter(e => e.key === 'Requires')
+    expect(requires).toHaveLength(0)
+    expect(ir.Service).toContainEqual({
+      key: 'ExecStartPre',
+      value: `/bin/bash -c 'until podman healthcheck run db; do sleep 1; done'`,
+    })
+  })
+
+  test('converts depends_on (service_completed_successfully)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      depends_on: {
+        migrate: { condition: 'service_completed_successfully' },
+      },
+    })
+    expect(ir.Unit).toContainEqual({ key: 'After', value: 'migrate.service' })
+    expect(ir.Unit).toContainEqual({ key: 'Requires', value: 'migrate.service' })
+  })
+
+  test('converts pid: host to PidHost', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', pid: 'host' })
+    expect(ir.Container).toContainEqual({ key: 'PidHost', value: 'true' })
+  })
+
   test('converts raw devices to AddDevice', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',

@@ -339,6 +339,10 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.pid === 'host') {
+    container.push({ key: 'PidHost', value: 'true' })
+  }
+
   if (service.privileged) {
     container.push({ key: 'PodmanArgs', value: '--privileged' })
   }
@@ -430,7 +434,37 @@ export function composeServiceToQuadletIR(
     svcSection.push({ key: 'Restart', value: mapped })
   }
 
+  const unitSection: QuadletEntry[] = []
+
+  if (service.depends_on) {
+    const deps: Array<{ name: string; condition: string }> = []
+    if (Array.isArray(service.depends_on)) {
+      for (const dep of service.depends_on) {
+        deps.push({ name: dep, condition: 'service_started' })
+      }
+    } else {
+      for (const [dep, config] of Object.entries(service.depends_on)) {
+        deps.push({ name: dep, condition: config.condition })
+      }
+    }
+
+    for (const { name, condition } of deps) {
+      const unit = `${name}.service`
+      unitSection.push({ key: 'After', value: unit })
+      if (condition === 'service_started' || condition === 'service_completed_successfully') {
+        unitSection.push({ key: 'Requires', value: unit })
+      }
+      if (condition === 'service_healthy') {
+        svcSection.push({
+          key: 'ExecStartPre',
+          value: `/bin/bash -c 'until podman healthcheck run ${name}; do sleep 1; done'`,
+        })
+      }
+    }
+  }
+
   const ir: QuadletIR = {}
+  if (unitSection.length) ir['Unit'] = unitSection
   if (container.length) ir['Container'] = container
   if (svcSection.length) ir['Service'] = svcSection
 
@@ -673,6 +707,9 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         if (!service.security_opt) service.security_opt = []
         service.security_opt.push(`seccomp:${value}`)
         break
+      case 'PidHost':
+        if (value === 'true') service.pid = 'host'
+        break
       case 'PodmanArgs':
         if (value === '--privileged') {
           service.privileged = true
@@ -744,6 +781,39 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         service.deploy.resources.limits.memory = value
         break
     }
+  }
+
+  // Reverse depends_on from Unit (After/Requires) and Service (ExecStartPre healthcheck)
+  const unitEntries = ir['Unit'] ?? []
+  const afterDeps = new Set<string>()
+  const requiresDeps = new Set<string>()
+  const healthyDeps = new Set<string>()
+
+  for (const { key, value } of unitEntries) {
+    const depName = value.replace(/\.service$/, '')
+    if (key === 'After') afterDeps.add(depName)
+    if (key === 'Requires') requiresDeps.add(depName)
+  }
+
+  for (const { key, value } of serviceEntries) {
+    if (key === 'ExecStartPre') {
+      const match = value.match(/podman healthcheck run (\S+)/)
+      if (match) healthyDeps.add(match[1])
+    }
+  }
+
+  if (afterDeps.size > 0) {
+    const depends_on: Record<string, { condition: string }> = {}
+    for (const dep of afterDeps) {
+      if (healthyDeps.has(dep)) {
+        depends_on[dep] = { condition: 'service_healthy' }
+      } else if (requiresDeps.has(dep)) {
+        depends_on[dep] = { condition: 'service_started' }
+      } else {
+        depends_on[dep] = { condition: 'service_started' }
+      }
+    }
+    service.depends_on = depends_on
   }
 
   return {

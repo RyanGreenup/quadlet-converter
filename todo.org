@@ -47,11 +47,11 @@
 - [X] security_opt apparmor:X → PodmanArgs=--security-opt=apparmor=X
 - [X] security_opt (other) → PodmanArgs=--security-opt=<value>
 - [X] privileged → PodmanArgs=--privileged
-- [ ] pid → PidHost (when pid: host)
-- [ ] depends_on (service_started) → After=dep.service + Requires=dep.service [Unit]
-- [ ] depends_on (service_healthy) → After=dep.service [Unit] + ExecStartPre= healthcheck poll [Service]
+- [X] pid → PidHost (when pid: host)
+- [X] depends_on (service_started) → After=dep.service + Requires=dep.service [Unit]
+- [X] depends_on (service_healthy) → After=dep.service [Unit] + ExecStartPre= healthcheck poll [Service]
   - No native systemd equivalent for health gating; needs =ExecStartPre= script that polls until healthy
-- [ ] depends_on (service_completed_successfully) → After=dep.service + Requires=dep.service [Unit] (oneshot)
+- [X] depends_on (service_completed_successfully) → After=dep.service + Requires=dep.service [Unit] (oneshot)
   - Note: containers in the same =.pod= already get implicit ordering via the pod service
 
 ** Healthcheck mappings
