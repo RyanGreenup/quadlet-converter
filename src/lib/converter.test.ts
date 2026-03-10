@@ -428,7 +428,7 @@ describe('composeServiceToQuadletIR', () => {
     expect(requires).toHaveLength(0)
     expect(ir.Service).toContainEqual({
       key: 'ExecStartPre',
-      value: `/bin/bash -c 'until podman healthcheck run db; do sleep 1; done'`,
+      value: `/bin/bash -c 'for i in $(seq 1 60); do podman healthcheck run db 2>/dev/null && exit 0; sleep 2; done; exit 1'`,
     })
   })
 

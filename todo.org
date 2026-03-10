@@ -216,3 +216,5 @@ These compose fields have no meaningful quadlet mapping:
 - platform (multi-arch, handled at build/pull time)
 - use_api_socket (Docker-specific)
 - cgroup (=host= / =private= namespace selection)
+
+
