@@ -1,0 +1,12 @@
+# my-caddy.container
+[Container]
+Image=caddy:2
+Network=host
+PublishPort=0.0.0.0:80:80
+PublishPort=0.0.0.0:443:443
+Volume=./Caddyfile:/etc/caddy/Caddyfile:Z
+Volume=./caddy_data:/data:Z
+Volume=./caddy_config:/config:Z
+
+[Service]
+Restart=always

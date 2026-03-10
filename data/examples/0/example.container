@@ -10,6 +10,3 @@ Volume=./caddy_config:/config:Z
 
 [Service]
 Restart=always
-CPUQuota=200%
-MemoryMax=512M
-MemoryHigh=384M

@@ -4,6 +4,7 @@ import helloCommand from './commands/hello.js'
 import toJsonCommand from './commands/to-json.js'
 import fromJsonCommand from './commands/from-json.js'
 import toIrCommand from './commands/to-ir.js'
+import convertCommand from './commands/convert.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -15,5 +16,6 @@ cli.command(helloCommand)
 cli.command(toJsonCommand)
 cli.command(fromJsonCommand)
 cli.command(toIrCommand)
+cli.command(convertCommand)
 
 await cli.run()
