@@ -135,7 +135,7 @@ export function checkService(name: string, service: Service): CheckResult[] {
   }
 
   if (!service.healthcheck || (Array.isArray(service.healthcheck.test) && service.healthcheck.test.length === 1 && service.healthcheck.test[0] === 'NONE')) {
-    results.push({ id: 'no-healthcheck', severity: 'suggestion', message: `${name}: no healthcheck defined` })
+    results.push({ id: 'no-healthcheck', severity: 'suggestion', message: `${name}: no healthcheck defined — add a healthcheck so the container runtime can detect when the service is unhealthy and restart it (e.g. healthcheck.test: ["CMD", "curl", "-f", "http://localhost/health"])` })
   }
 
   if (!service.security_opt?.some(opt => opt === 'no-new-privileges' || opt === 'no-new-privileges:true' || opt === 'no-new-privileges=true')) {
