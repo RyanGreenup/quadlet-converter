@@ -1,6 +1,11 @@
-# clickhouse.container
+### 25.pod ###
+[Pod]
+PodName=25
+
+### clickhouse.container ###
 [Container]
 Image=clickhouse
+Pod=25.pod
 Volume=clickhouse-data:/var/lib/clickhouse
 Volume=clickhouse-config:/etc/clickhouse-server/users.d
 Environment=CLICKHOUSE_USER=user
@@ -8,6 +13,52 @@ Environment=CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
 Environment=CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
 Environment=PGSSLCERT=/tmp/postgresql.crt
 ContainerName=some-clickhouse-server
+
+[Service]
+Restart=always
+
+### ch-ui.container ###
+[Container]
+Image=ghcr.io/caioricciuti/ch-ui:latest
+Pod=25.pod
+
+[Service]
+Restart=always
+
+### grafana.container ###
+[Container]
+Image=grafana/grafana
+Pod=25.pod
+Volume=grafana-storage:/var/lib/grafana/
+Environment=GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+Environment=GF_PATHS_DATA=/var/lib/grafana
+Environment=GF_PATHS_HOME=/usr/share/grafana
+Environment=GF_PATHS_LOGS=/var/log/grafana
+Environment=GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+Environment=GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+
+### metabase-app.container ###
+[Container]
+Image=metabase/metabase
+Pod=25.pod
+Volume=metabase-storage:/metabase-data
+Environment=MB_DB_TYPE=postgres
+Environment=MB_DB_DBNAME=metabaseappdb
+Environment=MB_DB_PORT=5432
+Environment=MB_DB_USER=postgres
+Environment=MB_DB_PASS=postgres
+Environment=MB_DB_HOST=postgres-db
+
+[Service]
+Restart=always
+
+### postgres-db.container ###
+[Container]
+Image=postgres:16
+Pod=25.pod
+Volume=pg_storage:/var/lib/postgresql/data
+Environment=POSTGRES_PASSWORD=postgres
+Environment=PGDATA=/var/lib/postgresql/data
 
 [Service]
 Restart=always

@@ -1,4 +1,18 @@
-# app.container
-[Container]
+### 15.pod ###
+[Pod]
+PodName=15
 PublishPort=3019:3019
+
+### app.container ###
+[Container]
+Pod=15.pod
 Environment=DATABASE_URL=postgres://app:app@db:5432/app
+
+### db.container ###
+[Container]
+Image=docker.io/library/postgres:17
+Pod=15.pod
+Volume=pgdata:/var/lib/postgresql/data
+Environment=POSTGRES_USER=app
+Environment=POSTGRES_PASSWORD=app
+Environment=POSTGRES_DB=app

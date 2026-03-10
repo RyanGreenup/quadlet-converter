@@ -1,9 +1,67 @@
-# clickhouse.container
-[Container]
-Image=clickhouse
+### 115.pod ###
+[Pod]
+PodName=115
 PublishPort=19000:9000
 PublishPort=18123:8123
+PublishPort=5521:5521
+PublishPort=32679:3000
+PublishPort=30637:3000
+
+### clickhouse.container ###
+[Container]
+Image=clickhouse
+Pod=115.pod
 Volume=./data/clickhouse/data:/var/lib/clickhouse/
 Environment=CLICKHOUSE_USER=user
 Environment=CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
 ContainerName=some-clickhouse-server
+
+### ch-ui.container ###
+[Container]
+Image=ghcr.io/caioricciuti/ch-ui:latest
+Pod=115.pod
+Environment=VITE_CLICKHOUSE_URL=http://localhost:18123
+Environment=VITE_CLICKHOUSE_USER=user
+Environment=VITE_CLICKHOUSE_PASS=sadflkjdslkfj3298
+
+[Service]
+Restart=always
+
+### grafana.container ###
+[Container]
+Image=grafana/grafana
+Pod=115.pod
+Volume=./data/grafana/data:/var/lib/grafana/
+Environment=GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+Environment=GF_PATHS_DATA=/var/lib/grafana
+Environment=GF_PATHS_HOME=/usr/share/grafana
+Environment=GF_PATHS_LOGS=/var/log/grafana
+Environment=GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+Environment=GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+
+### metabase-app.container ###
+[Container]
+Image=metabase/metabase
+Pod=115.pod
+Volume=./data/metabase-data:/metabase-data
+Volume=./data/metabase-plugins/clickhouse.metabase-driver.jar:/plugins/clickhouse.metabase-driver.jar
+Environment=MB_DB_TYPE=postgres
+Environment=MB_DB_DBNAME=metabaseappdb
+Environment=MB_DB_PORT=5432
+Environment=MB_DB_USER=postgres
+Environment=MB_DB_PASS=postgres
+Environment=MB_DB_HOST=postgres-db
+
+[Service]
+Restart=always
+
+### postgres-db.container ###
+[Container]
+Image=postgres:16
+Pod=115.pod
+Volume=./data/pgdata:/var/lib/postgresql/data
+Environment=POSTGRES_PASSWORD=postgres
+Environment=PGDATA=/var/lib/postgresql/data
+
+[Service]
+Restart=always

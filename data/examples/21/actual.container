@@ -1,12 +1,59 @@
-# postgres.container
+### 21.pod ###
+[Pod]
+PodName=21
+PublishPort=127.0.0.1:5432:5432
+PublishPort=127.0.0.1:5050:80
+PublishPort=127.0.0.1:8123:8123
+PublishPort=127.0.0.1:9000:9000
+PublishPort=127.0.0.1:3000:3000
+
+### postgres.container ###
 [Container]
 Image=docker.io/library/postgres:18
-PublishPort=127.0.0.1:5432:5432
+Pod=21.pod
 Volume=postgres_data:/var/lib/postgresql
 Environment=POSTGRES_USER=${POSTGRES_USER}
 Environment=POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 Environment=POSTGRES_DB=${POSTGRES_DB}
 ContainerName=postgres
+
+[Service]
+Restart=always
+
+### pgadmin.container ###
+[Container]
+Image=docker.io/dpage/pgadmin4:latest
+Pod=21.pod
+Volume=pgadmin_data:/var/lib/pgadmin
+Environment=PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+Environment=PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+ContainerName=pgadmin
+
+[Service]
+Restart=always
+
+### clickhouse.container ###
+[Container]
+Image=docker.io/clickhouse/clickhouse-server:latest
+Pod=21.pod
+Volume=clickhouse_data:/var/lib/clickhouse
+Volume=./config/clickhouse:/etc/clickhouse-server/config.d:ro
+Environment=CLICKHOUSE_USER=${CLICKHOUSE_USER}
+Environment=CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+Environment=CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+ContainerName=clickhouse
+
+[Service]
+Restart=always
+
+### grafana.container ###
+[Container]
+Image=docker.io/grafana/grafana:latest
+Pod=21.pod
+Volume=grafana_data:/var/lib/grafana
+Environment=GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+Environment=GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+ContainerName=grafana
 
 [Service]
 Restart=always

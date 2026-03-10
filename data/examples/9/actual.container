@@ -1,4 +1,4 @@
-# postgres-data-sync.container
+### postgres-data-sync.container ###
 [Container]
 Volume=./data:/app/data:Z
 Volume=./current.duckdb:/app/current.duckdb:Z

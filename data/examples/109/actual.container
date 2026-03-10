@@ -1,7 +1,15 @@
-# metabase-app.container
+### 109.pod ###
+[Pod]
+PodName=109
+PublishPort=3007:3000
+PublishPort=2878:8080
+PublishPort=5050:80
+PublishPort=5432:5432
+
+### metabase-app.container ###
 [Container]
 Image=metabase/metabase
-PublishPort=3007:3000
+Pod=109.pod
 Volume=./metabase-data:/metabase-data
 Environment=MB_DB_TYPE=postgres
 Environment=MB_DB_DBNAME=metabaseappdb
@@ -9,6 +17,36 @@ Environment=MB_DB_PORT=5432
 Environment=MB_DB_USER=postgres
 Environment=MB_DB_PASS=postgres
 Environment=MB_DB_HOST=postgres-db
+
+[Service]
+Restart=always
+
+### adminer.container ###
+[Container]
+Image=adminer
+Pod=109.pod
+
+[Service]
+Restart=always
+
+### pgadmin.container ###
+[Container]
+Image=dpage/pgadmin4
+Pod=109.pod
+Volume=./data/pgadmin:/var/lib/pgadmin
+Environment=PGADMIN_DEFAULT_EMAIL=admin@admin.com
+Environment=PGADMIN_DEFAULT_PASSWORD=root
+
+[Service]
+Restart=always
+
+### postgres-db.container ###
+[Container]
+Image=postgres
+Pod=109.pod
+Volume=./pgdata:/var/lib/postgresql/data
+Environment=POSTGRES_PASSWORD=postgres
+Environment=PGDATA=/var/lib/postgresql/data
 
 [Service]
 Restart=always

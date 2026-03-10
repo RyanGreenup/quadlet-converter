@@ -1,4 +1,4 @@
-# appimage-builder.container
+### appimage-builder.container ###
 [Container]
 Image=appimage-builder:qt6-latest
 Volume=.:/source:ro

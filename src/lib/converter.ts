@@ -2,6 +2,12 @@ import type { Service } from './compose/index.js'
 import type { ComposeFile } from './compose/index.js'
 import type { QuadletIR, QuadletEntry } from './quadlet.js'
 
+export interface QuadletFile {
+  filename: string   // e.g. "example.pod", "web.container"
+  ir: QuadletIR
+}
+export type QuadletFileSet = QuadletFile[]
+
 const restartToQuadlet: Record<string, string> = {
   'no': 'no',
   'always': 'always',
@@ -16,7 +22,11 @@ const restartToCompose: Record<string, string> = {
 }
 
 /** Convert a single compose service to QuadletIR. */
-export function composeServiceToQuadletIR(name: string, service: Service): QuadletIR {
+export function composeServiceToQuadletIR(
+  name: string,
+  service: Service,
+  opts?: { omitPorts?: boolean; pod?: string },
+): QuadletIR {
   const container: QuadletEntry[] = []
   const svcSection: QuadletEntry[] = []
 
@@ -24,11 +34,15 @@ export function composeServiceToQuadletIR(name: string, service: Service): Quadl
     container.push({ key: 'Image', value: service.image })
   }
 
+  if (opts?.pod) {
+    container.push({ key: 'Pod', value: opts.pod })
+  }
+
   if (service.network_mode) {
     container.push({ key: 'Network', value: service.network_mode })
   }
 
-  if (service.ports) {
+  if (!opts?.omitPorts && service.ports) {
     for (const port of service.ports) {
       if (typeof port === 'string' || typeof port === 'number') {
         container.push({ key: 'PublishPort', value: String(port) })
@@ -98,6 +112,77 @@ export function composeServiceToQuadletIR(name: string, service: Service): Quadl
   if (svcSection.length) ir['Service'] = svcSection
 
   return ir
+}
+
+/** Extract PublishPort entries from a service's ports. */
+function portEntries(service: Service): QuadletEntry[] {
+  const entries: QuadletEntry[] = []
+  if (!service.ports) return entries
+  for (const port of service.ports) {
+    if (typeof port === 'string' || typeof port === 'number') {
+      entries.push({ key: 'PublishPort', value: String(port) })
+    } else {
+      const parts: string[] = []
+      if (port.host_ip) parts.push(port.host_ip + ':')
+      else parts.push('')
+      if (port.published != null) parts[parts.length - 1] += port.published
+      parts[parts.length - 1] += ':' + (port.target ?? '')
+      if (port.protocol && port.protocol !== 'tcp') {
+        parts[parts.length - 1] += '/' + port.protocol
+      }
+      entries.push({ key: 'PublishPort', value: parts.join('') })
+    }
+  }
+  return entries
+}
+
+/** Convert an entire compose file to a set of quadlet files. */
+export function composeToQuadletFiles(compose: ComposeFile, podName: string): QuadletFileSet {
+  const services = compose.services ?? {}
+  const serviceNames = Object.keys(services)
+
+  if (serviceNames.length === 0) return []
+
+  // Single service: no pod needed
+  if (serviceNames.length === 1) {
+    const name = serviceNames[0]
+    return [{
+      filename: `${name}.container`,
+      ir: composeServiceToQuadletIR(name, services[name]),
+    }]
+  }
+
+  // Multiple services: create a pod + container files
+  const podFile = `${podName}.pod`
+  const files: QuadletFileSet = []
+
+  // Collect all ports from all services for the pod
+  const allPorts: QuadletEntry[] = []
+  for (const name of serviceNames) {
+    allPorts.push(...portEntries(services[name]))
+  }
+
+  const podIR: QuadletIR = {
+    Pod: [{ key: 'PodName', value: podName }],
+  }
+  if (allPorts.length) {
+    podIR.Pod.push(...allPorts)
+  }
+
+  files.push({ filename: podFile, ir: podIR })
+
+  // Container files: omit ports, reference the pod
+  for (const name of serviceNames) {
+    files.push({
+      filename: `${name}.container`,
+      ir: composeServiceToQuadletIR(name, services[name], {
+        omitPorts: true,
+        pod: podFile,
+      }),
+    })
+  }
+
+  return files
 }
 
 /** Convert QuadletIR to a ComposeFile (single service). */

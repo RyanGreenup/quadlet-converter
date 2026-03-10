@@ -1,10 +1,48 @@
-# immich-server.container
+### 73.pod ###
+[Pod]
+PodName=73
+PublishPort=2283:2283
+
+### immich-server.container ###
 [Container]
 Image=ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-PublishPort=2283:2283
+Pod=73.pod
 Volume=${UPLOAD_LOCATION}:/usr/src/app/upload
 Volume=/etc/localtime:/etc/localtime:ro
 ContainerName=immich_server
+
+[Service]
+Restart=always
+
+### immich-machine-learning.container ###
+[Container]
+Image=ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+Pod=73.pod
+Volume=model-cache:/cache
+ContainerName=immich_machine_learning
+
+[Service]
+Restart=always
+
+### redis.container ###
+[Container]
+Image=docker.io/redis:6.2-alpine@sha256:2ba50e1ac3a0ea17b736ce9db2b0a9f6f8b85d4c27d5f5accc6a416d8f42c6d5
+Pod=73.pod
+ContainerName=immich_redis
+
+[Service]
+Restart=always
+
+### database.container ###
+[Container]
+Image=docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0
+Pod=73.pod
+Volume=${DB_DATA_LOCATION}:/var/lib/postgresql/data
+Environment=POSTGRES_PASSWORD=${DB_PASSWORD}
+Environment=POSTGRES_USER=${DB_USERNAME}
+Environment=POSTGRES_DB=${DB_DATABASE_NAME}
+Environment=POSTGRES_INITDB_ARGS=--data-checksums
+ContainerName=immich_postgres
 
 [Service]
 Restart=always

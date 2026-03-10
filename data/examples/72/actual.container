@@ -1,11 +1,33 @@
-# server.container
+### 72.pod ###
+[Pod]
+PodName=72
+PublishPort=47382:8080
+PublishPort=3729:3000
+
+### server.container ###
 [Container]
 Image=yooooomi/your_spotify_server
-PublishPort=47382:8080
+Pod=72.pod
 Environment=API_ENDPOINT=http://localhost:47382
 Environment=CLIENT_ENDPOINT=http://spotify.vale
 Environment=SPOTIFY_PUBLIC=b9b8bc240c8143388344820ca78e9e14
 Environment=SPOTIFY_SECRET=7edc7e7a020643dfba7a105101040d61
+
+[Service]
+Restart=always
+
+### mongo.container ###
+[Container]
+Image=mongo:6
+Pod=72.pod
+Volume=./your_spotify_db:/data/db
+ContainerName=mongo
+
+### web.container ###
+[Container]
+Image=yooooomi/your_spotify_client
+Pod=72.pod
+Environment=API_ENDPOINT=http://localhost:47382
 
 [Service]
 Restart=always

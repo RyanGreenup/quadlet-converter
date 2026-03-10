@@ -1,7 +1,24 @@
-# app.container
+### 117.pod ###
+[Pod]
+PodName=117
+PublishPort=${CAL_PORT}:3000
+
+### app.container ###
 [Container]
 Image=eibrahim/fluid-calendar:latest
-PublishPort=${CAL_PORT}:3000
+Pod=117.pod
+
+[Service]
+Restart=always
+
+### db.container ###
+[Container]
+Image=postgres:16-alpine
+Pod=117.pod
+Volume=postgres_dev_data:/var/lib/postgresql/data
+Environment=POSTGRES_USER=fluid
+Environment=POSTGRES_PASSWORD=fluid
+Environment=POSTGRES_DB=fluid_calendar
 
 [Service]
 Restart=always

@@ -1,8 +1,15 @@
-# clickhouse.container
-[Container]
-Image=clickhouse
+### 27.pod ###
+[Pod]
+PodName=27
 PublishPort=127.0.0.1:${CLICKHOUSE_PORT}:9000
 PublishPort=127.0.0.1:18123:8123
+PublishPort=127.0.0.1:5521:5521
+PublishPort=127.0.0.1:32679:3000
+
+### clickhouse.container ###
+[Container]
+Image=clickhouse
+Pod=27.pod
 Volume=./data/clickhouse:/var/lib/clickhouse:Z
 Volume=./data/configs/users-override.xml:/etc/clickhouse-server/users.d/named-collection-grant.xml:Z
 Volume=./data/configs/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:Z
@@ -19,3 +26,23 @@ ContainerName=some-clickhouse-server
 
 [Service]
 Restart=always
+
+### ch-ui.container ###
+[Container]
+Image=ghcr.io/caioricciuti/ch-ui:latest
+Pod=27.pod
+
+[Service]
+Restart=always
+
+### grafana.container ###
+[Container]
+Image=grafana/grafana
+Pod=27.pod
+Volume=grafana-storage:/var/lib/grafana/
+Environment=GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+Environment=GF_PATHS_DATA=/var/lib/grafana
+Environment=GF_PATHS_HOME=/usr/share/grafana
+Environment=GF_PATHS_LOGS=/var/log/grafana
+Environment=GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+Environment=GF_PATHS_PROVISIONING=/etc/grafana/provisioning

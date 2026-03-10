@@ -1,9 +1,124 @@
-# redis.container
+### 107.pod ###
+[Pod]
+PodName=107
+PublishPort=127.0.0.1:6379:6379
+PublishPort=127.0.0.1:5432:5432
+PublishPort=8088:8088
+PublishPort=8080:8080
+
+### redis.container ###
 [Container]
 Image=redis:7
-PublishPort=127.0.0.1:6379:6379
+Pod=107.pod
 Volume=redis:/data
 ContainerName=superset_cache
 
 [Service]
 Restart=always
+
+### db.container ###
+[Container]
+Image=postgres:14
+Pod=107.pod
+Volume=./db_home:/var/lib/postgresql/data
+Volume=./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+ContainerName=superset_db
+
+[Service]
+Restart=always
+
+### superset.container ###
+[Container]
+Image=apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
+Pod=107.pod
+Volume=./docker:/app/docker
+Volume=./superset:/app/superset
+Volume=./superset-frontend:/app/superset-frontend
+Volume=superset_home:/app/superset_home
+Volume=./tests:/app/tests
+Environment=CYPRESS_CONFIG=${CYPRESS_CONFIG}
+ContainerName=superset_app
+
+[Service]
+Restart=always
+
+### superset-websocket.container ###
+[Container]
+Image=superset-websocket
+Pod=107.pod
+Volume=./superset-websocket:/home/superset-websocket
+Volume=/home/superset-websocket/node_modules
+Volume=/home/superset-websocket/dist
+Environment=PORT=8080
+Environment=REDIS_HOST=redis
+Environment=REDIS_PORT=6379
+Environment=REDIS_SSL=false
+ContainerName=superset_websocket
+
+### superset-init.container ###
+[Container]
+Image=apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
+Pod=107.pod
+Volume=./docker:/app/docker
+Volume=./superset:/app/superset
+Volume=./superset-frontend:/app/superset-frontend
+Volume=superset_home:/app/superset_home
+Volume=./tests:/app/tests
+Environment=CYPRESS_CONFIG=${CYPRESS_CONFIG}
+ContainerName=superset_init
+
+### superset-node.container ###
+[Container]
+Image=node:16
+Pod=107.pod
+Volume=./docker:/app/docker
+Volume=./superset:/app/superset
+Volume=./superset-frontend:/app/superset-frontend
+Volume=superset_home:/app/superset_home
+Volume=./tests:/app/tests
+ContainerName=superset_node
+
+### superset-worker.container ###
+[Container]
+Image=apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
+Pod=107.pod
+Volume=./docker:/app/docker
+Volume=./superset:/app/superset
+Volume=./superset-frontend:/app/superset-frontend
+Volume=superset_home:/app/superset_home
+Volume=./tests:/app/tests
+ContainerName=superset_worker
+
+[Service]
+Restart=always
+
+### superset-worker-beat.container ###
+[Container]
+Image=apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
+Pod=107.pod
+Volume=./docker:/app/docker
+Volume=./superset:/app/superset
+Volume=./superset-frontend:/app/superset-frontend
+Volume=superset_home:/app/superset_home
+Volume=./tests:/app/tests
+ContainerName=superset_worker_beat
+
+[Service]
+Restart=always
+
+### superset-tests-worker.container ###
+[Container]
+Image=apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
+Pod=107.pod
+Network=host
+Volume=./docker:/app/docker
+Volume=./superset:/app/superset
+Volume=./superset-frontend:/app/superset-frontend
+Volume=superset_home:/app/superset_home
+Volume=./tests:/app/tests
+Environment=DATABASE_HOST=localhost
+Environment=DATABASE_DB=test
+Environment=REDIS_CELERY_DB=2
+Environment=REDIS_RESULTS_DB=3
+Environment=REDIS_HOST=localhost
+ContainerName=superset_tests_worker

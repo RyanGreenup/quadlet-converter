@@ -1,7 +1,27 @@
-# mariadb.container
+### 43.pod ###
+[Pod]
+PodName=43
+PublishPort=80:80
+PublishPort=443:443
+
+### mariadb.container ###
 [Container]
 Image=bitnami/mariadb:latest
+Pod=43.pod
 Volume=mariadb-data:/bitnami/mariadb
 Environment=MARIADB_USER=bn_wordpress
 Environment=MARIADB_DATABASE=bitnami_wordpress
+Environment=ALLOW_EMPTY_PASSWORD=yes
+
+### wordpress.container ###
+[Container]
+Image=bitnami/wordpress:latest
+Pod=43.pod
+Volume=wordpress-data:/bitnami/wordpress
+Volume=apache-data:/bitnami/apache
+Volume=php-data:/bitnami/php
+Environment=MARIADB_HOST=mariadb
+Environment=MARIADB_PORT=3306
+Environment=WORDPRESS_DATABASE_USER=bn_wordpress
+Environment=WORDPRESS_DATABASE_NAME=bitnami_wordpress
 Environment=ALLOW_EMPTY_PASSWORD=yes

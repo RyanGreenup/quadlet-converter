@@ -1,5 +1,20 @@
-# web.container
+### 36.pod ###
+[Pod]
+PodName=36
+PublishPort=3030:3000
+PublishPort=80:80
+
+### web.container ###
 [Container]
 Image=centos/httpd
-PublishPort=3030:3000
+Pod=36.pod
 Volume=./app:/src/app
+
+### nginx.container ###
+[Container]
+Image=nginx
+Pod=36.pod
+Volume=/www/public
+
+[Service]
+Restart=always

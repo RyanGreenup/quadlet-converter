@@ -1,4 +1,14 @@
-# db.container
-[Container]
+### 57.pod ###
+[Pod]
+PodName=57
 PublishPort=32789:5432
+PublishPort=3001:3001
+
+### db.container ###
+[Container]
+Pod=57.pod
 Volume=pgdata:/var/lib/postgresql/data
+
+### app.container ###
+[Container]
+Pod=57.pod

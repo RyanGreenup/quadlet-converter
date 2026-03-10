@@ -1,7 +1,12 @@
-# wallabag.container
+### 65.pod ###
+[Pod]
+PodName=65
+PublishPort=5108:80
+
+### wallabag.container ###
 [Container]
 Image=wallabag/wallabag
-PublishPort=5108:80
+Pod=65.pod
 Volume=/opt/wallabag/images:/var/www/wallabag/web/assets/images
 Environment=MYSQL_ROOT_PASSWORD=wallaroot
 Environment=SYMFONY__ENV__DATABASE_DRIVER=pdo_mysql
@@ -19,3 +24,15 @@ Environment=SYMFONY__ENV__SERVER_NAME="Your wallabag instance"
 
 [Service]
 Restart=always
+
+### db.container ###
+[Container]
+Image=mariadb
+Pod=65.pod
+Volume=./data:/var/lib/mysql
+Environment=MYSQL_ROOT_PASSWORD=wallaroot
+
+### redis.container ###
+[Container]
+Image=redis:alpine
+Pod=65.pod

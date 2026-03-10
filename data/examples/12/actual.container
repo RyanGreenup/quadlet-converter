@@ -1,4 +1,4 @@
-# caddy.container
+### caddy.container ###
 [Container]
 Image=caddy
 PublishPort=80:80

@@ -1,9 +1,25 @@
-# mariadb.container
+### 47.pod ###
+[Pod]
+PodName=47
+PublishPort=$DB_PORT
+PublishPort=80:9001
+
+### mariadb.container ###
 [Container]
 Image=centos/mariadb
-PublishPort=$DB_PORT
+Pod=47.pod
 Volume=/var/lib/mysql
 Environment=MYSQL_ROOT_PASSWORD=$ROOT_PASS
 Environment=MYSQL_DATABASE=$DB_NAME
 Environment=MYSQL_PASSWORD=$DB_PASS
 Environment=MYSQL_USER=$DB_USER
+
+### etherpad.container ###
+[Container]
+Image=centos/etherpad
+Pod=47.pod
+Environment=DB_HOST=$DB_HOST
+Environment=DB_DBID=$DB_NAME
+Environment=DB_PASS=$DB_PASS
+Environment=DB_PORT=$DB_PORT
+Environment=DB_USER=$DB_USER

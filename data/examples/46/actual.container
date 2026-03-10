@@ -1,7 +1,37 @@
-# postgresql.container
+### 46.pod ###
+[Pod]
+PodName=46
+PublishPort=$DB_PORT
+PublishPort=30000:80
+PublishPort=30001:443
+PublishPort=30002:22
+PublishPort=$REDIS_PORT
+
+### postgresql.container ###
 [Container]
 Image=swordphilic/postgresql
-PublishPort=$DB_PORT
+Pod=46.pod
 Environment=DB_NAME=$DB_NAME
 Environment=DB_PASS=$DB_PASS
 Environment=DB_USER=$DB_USER
+
+### gitlab.container ###
+[Container]
+Image=swordphilic/gitlab
+Pod=46.pod
+Environment=DB_TYPE=postgres
+Environment=DB_HOST=postgresql
+Environment=DB_PORT=$DB_PORT
+Environment=DB_NAME=$DB_NAME
+Environment=DB_PASS=$DB_PASS
+Environment=DB_USER=$DB_USER
+Environment=REDIS_HOST=redis
+Environment=REDIS_PORT=$REDIS_PORT
+
+[Service]
+Restart=always
+
+### redis.container ###
+[Container]
+Image=swordphilic/redis
+Pod=46.pod

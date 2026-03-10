@@ -1,4 +1,4 @@
-# mediawiki.container
+### mediawiki.container ###
 [Container]
 Image=docker.io/library/mediawiki:stable
 Volume=mediawiki_data:/var/www/html/images

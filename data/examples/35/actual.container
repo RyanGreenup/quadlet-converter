@@ -1,0 +1,15 @@
+### 35.pod ###
+[Pod]
+PodName=35
+PublishPort=5000:5000
+PublishPort=6379
+
+### web.container ###
+[Container]
+Image=tuna/docker-counter23
+Pod=35.pod
+
+### redis.container ###
+[Container]
+Image=redis:3.0
+Pod=35.pod

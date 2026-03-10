@@ -1,8 +1,14 @@
-# nginx.container
-[Container]
-Image=nginx:stable-bookworm
+### 49.pod ###
+[Pod]
+PodName=49
 PublishPort=80:80
 PublishPort=443:443
+PublishPort=4180:4180
+
+### nginx.container ###
+[Container]
+Image=nginx:stable-bookworm
+Pod=49.pod
 Volume=./nginx/nginx-conf/nginx.conf:/etc/nginx/conf.d/default.conf
 Volume=./nginx/nginx-conf/security-headers.conf:/etc/nginx/snippets/security-headers.conf
 Volume=./nginx/nginx-conf/csp.conf:/etc/nginx/snippets/csp.conf
@@ -10,6 +16,101 @@ Volume=./nginx/nginx-conf/oauth2-proxy.conf:/etc/nginx/snippets/oauth2-proxy.con
 Volume=./nginx/certs:/etc/ssl/
 Volume=./media:/usr/share/nginx/html/media
 Volume=wellknown:/usr/share/nginx/html/.well-known
+
+[Service]
+Restart=always
+
+### strapi.container ###
+[Container]
+Image=ghcr.io/weareimpress/sunrice-strapi4/strapi:latest
+Pod=49.pod
+Volume=backups:/home/node/backups
+Environment=DATABASE_CLIENT=postgres
+Environment=DATABASE_NAME=${DATABASE_NAME}
+Environment=DATABASE_HOST=${DATABASE_HOST}
+Environment=DATABASE_PORT=5432
+Environment=DATABASE_USERNAME=${POSTGRES_ROOT_USER}
+Environment=DATABASE_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+Environment=NODE_ENV=${NODE_ENV}
+Environment=HOST=${HOST}
+Environment=PORT=1337
+Environment=PUBLIC_URL=${STRAPI_URL}
+Environment=APP_KEYS=${APP_KEYS}
+Environment=API_TOKEN_SALT=${API_TOKEN_SALT}
+Environment=TRANSFER_TOKEN_SALT=${TRANSFER_TOKEN_SALT}
+Environment=ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+Environment=JWT_SECRET=${JWT_SECRET}
+Environment=AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+Environment=AWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}
+Environment=AWS_REGION=${AWS_REGION}
+Environment=AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+Environment=MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+Environment=REDIS_URL=redis://strapi_redis:6379
+
+[Service]
+Restart=always
+
+### meilisearch.container ###
+[Container]
+Image=getmeili/meilisearch:v1.34.3
+Pod=49.pod
+Volume=meili_data:/meili_data
+Environment=MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+Environment=MEILI_ENV=production
+Environment=MEILI_NO_ANALYTICS=true
+
+[Service]
+Restart=always
+
+### auth_redis.container ###
+[Container]
+Image=redis:latest
+Pod=49.pod
+Volume=auth_redis_cache:/data
+
+### strapi_redis.container ###
+[Container]
+Image=redis:latest
+Pod=49.pod
+Volume=auth_redis_cache:/data
+
+### webhooks.container ###
+[Container]
+Pod=49.pod
+Environment=GITHUB_OWNER=${GITHUB_USER}
+Environment=GITHUB_REPO=${GITHUB_REPO_FRONTEND}
+Environment=GITHUB_TOKEN=${GITHUB_TOKEN}
+
+[Service]
+CPUQuota=100%
+MemoryMax=500M
+Restart=always
+
+### auth.container ###
+[Container]
+Image=quay.io/oauth2-proxy/oauth2-proxy:v7.14.2
+Pod=49.pod
+Environment=OAUTH2_PROXY_UPSTREAMS=http://nginx:80
+Environment=OAUTH2_PROXY_HTTP_ADDRESS=http://auth:4180
+Environment=OAUTH2_REVERSE_PROXY=true
+Environment=OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
+Environment=OAUTH2_PROXY_SESSION_STORE_TYPE=redis
+Environment=OAUTH2_PROXY_REDIS_CONNECTION_URL=redis://auth_redis
+Environment=OAUTH2_PROXY_COOKIE_REFRESH=1h
+Environment=OAUTH2_PROXY_COOKIE_EXPIRE=12h
+Environment=OAUTH2_PROXY_COOKIE_SECURE=true
+Environment=OAUTH2_PROXY_COOKIE_CSRF_EXPIRE=5m
+Environment=OAUTH2_PROXY_COOKIE_CSRF_PER_REQUEST=true
+Environment=OAUTH2_PROXY_SHOW_DEBUG_ON_ERROR=false
+Environment=OAUTH2_PROXY_ERRORS_TO_INFO_LOG=false
+Environment=OAUTH2_PROXY_PROVIDER=${OAUTH2_PROXY_PROVIDER}
+Environment=OAUTH2_PROXY_EMAIL_DOMAINS=*
+Environment=OAUTH2_PROXY_COOKIE_DOMAINS=${OAUTH2_PROXY_COOKIE_DOMAINS}
+Environment=OAUTH2_PROXY_COOKIE_SECRET=${OAUTH2_PROXY_COOKIE_SECRET}
+Environment=OAUTH2_PROXY_CLIENT_ID=${OAUTH2_PROXY_CLIENT_ID}
+Environment=OAUTH2_PROXY_CLIENT_SECRET=${OAUTH2_PROXY_CLIENT_SECRET}
+Environment=OAUTH2_PROXY_AZURE_TENANT=${OAUTH2_PROXY_AZURE_TENANT}
+Environment=OAUTH2_PROXY_OIDC_ISSUER_URL=${OAUTH2_PROXY_OIDC_ISSUER_URL}
 
 [Service]
 Restart=always

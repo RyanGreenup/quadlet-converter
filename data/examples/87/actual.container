@@ -1,4 +1,4 @@
-# syncthing.container
+### syncthing.container ###
 [Container]
 Image=syncthing/syncthing
 Network=host

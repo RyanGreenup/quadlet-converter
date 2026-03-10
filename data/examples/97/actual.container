@@ -1,4 +1,4 @@
-# mediawiki.container
+### mediawiki.container ###
 [Container]
 Image=mediawiki_with_ghostscript_and_vim_latest
 PublishPort=8076:80

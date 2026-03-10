@@ -1,10 +1,26 @@
-# bukuserver.container
+### 69.pod ###
+[Pod]
+PodName=69
+PublishPort=5001:5001
+PublishPort=50018:80
+
+### bukuserver.container ###
 [Container]
 Image=bukuserver/bukuserver
-PublishPort=5001:5001
+Pod=69.pod
 Volume=./data:/root/.local/share/buku
 Environment=BUKUSERVER_PER_PAGE=200
 Environment=BUKUSERVER_OPEN_IN_NEW_TAB=true
+
+[Service]
+Restart=always
+
+### nginx.container ###
+[Container]
+Image=nginx:alpine
+Pod=69.pod
+Volume=./data/nginx:/etc/nginx/conf.d
+Volume=./data/basic_auth:/basic_auth
 
 [Service]
 Restart=always

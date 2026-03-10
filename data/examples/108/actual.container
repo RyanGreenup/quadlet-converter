@@ -1,7 +1,32 @@
-# postgres.container
+### 108.pod ###
+[Pod]
+PodName=108
+PublishPort=37193:3000
+
+### postgres.container ###
 [Container]
 Image=postgres:16-alpine
+Pod=108.pod
 Volume=./data/pgdata:/var/lib/postgresql/data
+
+[Service]
+Restart=always
+
+### linkwarden.container ###
+[Container]
+Image=ghcr.io/linkwarden/linkwarden:latest
+Pod=108.pod
+Volume=./data/lw_data:/data/data
+Environment=DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+
+[Service]
+Restart=always
+
+### meilisearch.container ###
+[Container]
+Image=getmeili/meilisearch:v1.12.8
+Pod=108.pod
+Volume=./data/meili_data:/meili_data
 
 [Service]
 Restart=always

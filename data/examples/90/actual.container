@@ -1,12 +1,51 @@
-# affine.container
+### 90.pod ###
+[Pod]
+PodName=90
+PublishPort=${PORT:-3010}:3010
+
+### affine.container ###
 [Container]
 Image=ghcr.io/toeverything/affine-graphql:${AFFINE_REVISION:-stable}
-PublishPort=${PORT:-3010}:3010
+Pod=90.pod
 Volume=${UPLOAD_LOCATION}:/root/.affine/storage
 Volume=${CONFIG_LOCATION}:/root/.affine/config
 Environment=REDIS_SERVER_HOST=redis
 Environment=DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-affine}
 ContainerName=affine_server
+
+[Service]
+Restart=always
+
+### affine_migration.container ###
+[Container]
+Image=ghcr.io/toeverything/affine-graphql:${AFFINE_REVISION:-stable}
+Pod=90.pod
+Volume=${UPLOAD_LOCATION}:/root/.affine/storage
+Volume=${CONFIG_LOCATION}:/root/.affine/config
+Environment=REDIS_SERVER_HOST=redis
+Environment=DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-affine}
+ContainerName=affine_migration_job
+
+### redis.container ###
+[Container]
+Image=redis
+Pod=90.pod
+ContainerName=affine_redis
+
+[Service]
+Restart=always
+
+### postgres.container ###
+[Container]
+Image=postgres:16
+Pod=90.pod
+Volume=${DB_DATA_LOCATION}:/var/lib/postgresql/data
+Environment=POSTGRES_USER=${DB_USERNAME}
+Environment=POSTGRES_PASSWORD=${DB_PASSWORD}
+Environment=POSTGRES_DB=${DB_DATABASE:-affine}
+Environment=POSTGRES_INITDB_ARGS=--data-checksums
+Environment=POSTGRES_HOST_AUTH_METHOD=trust
+ContainerName=affine_postgres
 
 [Service]
 Restart=always

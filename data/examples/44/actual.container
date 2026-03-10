@@ -1,4 +1,16 @@
-# web.container
+### 44.pod ###
+[Pod]
+PodName=44
+PublishPort=127.0.0.1:5000:5000/tcp
+PublishPort=6379/tcp
+PublishPort=1234:1235/udp
+
+### web.container ###
 [Container]
 Image=tuna/docker-counter23
-PublishPort=127.0.0.1:5000:5000/tcp
+Pod=44.pod
+
+### redis.container ###
+[Container]
+Image=redis:3.0
+Pod=44.pod

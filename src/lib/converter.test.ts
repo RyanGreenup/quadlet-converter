@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
-import { composeServiceToQuadletIR, quadletIRToCompose } from './converter'
+import { composeServiceToQuadletIR, quadletIRToCompose, composeToQuadletFiles } from './converter'
 import type { QuadletIR } from './quadlet'
-import type { Service } from './compose/index'
+import type { Service, ComposeFile } from './compose/index'
 
 describe('composeServiceToQuadletIR', () => {
   test('converts the caddy example', () => {
@@ -119,6 +119,69 @@ describe('quadletIRToCompose', () => {
   test('handles empty IR', () => {
     const compose = quadletIRToCompose({}, 'svc')
     expect(compose).toEqual({ services: { svc: {} } })
+  })
+})
+
+describe('composeToQuadletFiles', () => {
+  test('single service produces one .container file, no pod', () => {
+    const compose: ComposeFile = {
+      services: {
+        'my-caddy': {
+          image: 'caddy:2',
+          ports: ['80:80'],
+        },
+      },
+    }
+    const files = composeToQuadletFiles(compose, 'example')
+    expect(files).toHaveLength(1)
+    expect(files[0].filename).toBe('my-caddy.container')
+    expect(files[0].ir.Container).toContainEqual({ key: 'PublishPort', value: '80:80' })
+  })
+
+  test('multi-service compose produces pod + container files', () => {
+    const compose: ComposeFile = {
+      services: {
+        web: {
+          image: 'tuna/docker-counter23',
+          ports: ['5000:5000'],
+        },
+        redis: {
+          image: 'redis:3.0',
+          ports: ['6379'],
+        },
+      },
+    }
+    const files = composeToQuadletFiles(compose, 'example')
+    expect(files).toHaveLength(3)
+
+    // Pod file
+    const podFile = files[0]
+    expect(podFile.filename).toBe('example.pod')
+    expect(podFile.ir.Pod).toContainEqual({ key: 'PodName', value: 'example' })
+    expect(podFile.ir.Pod).toContainEqual({ key: 'PublishPort', value: '5000:5000' })
+    expect(podFile.ir.Pod).toContainEqual({ key: 'PublishPort', value: '6379' })
+
+    // Web container
+    const webFile = files[1]
+    expect(webFile.filename).toBe('web.container')
+    expect(webFile.ir.Container).toContainEqual({ key: 'Image', value: 'tuna/docker-counter23' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Pod', value: 'example.pod' })
+    // Ports should NOT be on the container
+    const webPorts = (webFile.ir.Container ?? []).filter(e => e.key === 'PublishPort')
+    expect(webPorts).toHaveLength(0)
+
+    // Redis container
+    const redisFile = files[2]
+    expect(redisFile.filename).toBe('redis.container')
+    expect(redisFile.ir.Container).toContainEqual({ key: 'Image', value: 'redis:3.0' })
+    expect(redisFile.ir.Container).toContainEqual({ key: 'Pod', value: 'example.pod' })
+    const redisPorts = (redisFile.ir.Container ?? []).filter(e => e.key === 'PublishPort')
+    expect(redisPorts).toHaveLength(0)
+  })
+
+  test('empty services produces empty file set', () => {
+    const files = composeToQuadletFiles({ services: {} }, 'test')
+    expect(files).toHaveLength(0)
   })
 })
 

@@ -1,4 +1,4 @@
-# quartz.container
+### quartz.container ###
 [Container]
 PublishPort=3818:8080
 Volume=$HOME/Notes/slipbox:/usr/src/app/content

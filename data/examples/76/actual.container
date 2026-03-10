@@ -1,4 +1,4 @@
-# trilium.container
+### trilium.container ###
 [Container]
 Image=triliumnext/notes:latest
 PublishPort=37281:8080

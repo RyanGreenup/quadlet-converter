@@ -1,8 +1,72 @@
-# nginx.container
-[Container]
+### 48.pod ###
+[Pod]
+PodName=48
 PublishPort=80:80
 PublishPort=443:443
+
+### nginx.container ###
+[Container]
+Pod=48.pod
 Volume=wellknown:/usr/share/nginx/html/.well-known
 
 [Service]
+Restart=always
+
+### strapi.container ###
+[Container]
+Image=ghcr.io/weareimpress/nationalintermodal-cms/strapi:latest
+Pod=48.pod
+Volume=media:/opt/app/public/uploads
+Environment=DATABASE_CLIENT=postgres
+Environment=DATABASE_NAME=strapi
+Environment=DATABASE_HOST=${DATABASE_HOST}
+Environment=DATABASE_PORT=5432
+Environment=DATABASE_USERNAME=${POSTGRES_ROOT_USER}
+Environment=DATABASE_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+Environment=NODE_ENV=${NODE_ENV}
+Environment=HOST=${HOST}
+Environment=PORT=1337
+Environment=PUBLIC_URL=${STRAPI_URL}
+Environment=APP_KEYS=${APP_KEYS}
+Environment=API_TOKEN_SALT=${API_TOKEN_SALT}
+Environment=TRANSFER_TOKEN_SALT=${TRANSFER_TOKEN_SALT}
+Environment=ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+Environment=JWT_SECRET=${JWT_SECRET}
+Environment=AWS_ACCESS_KEY_ID=${MEDIA_AWS_ACCESS_KEY_ID}
+Environment=AWS_ACCESS_SECRET=${MEDIA_AWS_ACCESS_SECRET}
+Environment=AWS_REGION=${MEDIA_AWS_REGION}
+Environment=AWS_BUCKET_NAME=${MEDIA_AWS_BUCKET_NAME}
+Environment=STRAPI_TELEMETRY_DISABLED=true
+Environment=STRAPI_DISABLE_REMOTE_DATA_TRANSFER=true
+Environment=BROWSER=false
+
+[Service]
+Restart=always
+
+### strapi_db.container ###
+[Container]
+Image=postgres:16
+Pod=48.pod
+Volume=cms_db_data:/var/lib/postgresql/data
+Environment=PGDATA=/var/lib/postgresql/data/pgdata
+Environment=DATABASE_HOST=${DATABASE_HOST}
+Environment=POSTGRES_DB=strapi
+Environment=POSTGRES_USER=${POSTGRES_ROOT_USER}
+Environment=POSTGRES_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+
+[Service]
+Restart=always
+
+### meilisearch.container ###
+[Container]
+Image=getmeili/meilisearch:v1.8.4
+Pod=48.pod
+Volume=meili_data:/meili_data
+Environment=MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+Environment=MEILI_ENV=production
+Environment=MEILI_NO_ANALYTICS=true
+
+[Service]
+CPUQuota=30%
+MemoryMax=256M
 Restart=always

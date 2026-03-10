@@ -1,11 +1,59 @@
-# immich-server.container
+### 13.pod ###
+[Pod]
+PodName=13
+PublishPort=2283:3001
+
+### immich-server.container ###
 [Container]
 Image=ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-PublishPort=2283:3001
+Pod=13.pod
 Volume=${UPLOAD_LOCATION}:/usr/src/app/upload
 Volume=/etc/localtime:/etc/localtime:ro
 Volume=./uploads:/uploads
 ContainerName=immich_server
+
+[Service]
+Restart=always
+
+### immich-microservices.container ###
+[Container]
+Image=ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+Pod=13.pod
+Volume=${UPLOAD_LOCATION}:/usr/src/app/upload
+Volume=/etc/localtime:/etc/localtime:ro
+ContainerName=immich_microservices
+
+[Service]
+Restart=always
+
+### immich-machine-learning.container ###
+[Container]
+Image=ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+Pod=13.pod
+Volume=./data/model-cache:/cache
+ContainerName=immich_machine_learning
+
+[Service]
+Restart=always
+
+### redis.container ###
+[Container]
+Image=redis:6.2-alpine@sha256:afb290a0a0d0b2bd7537b62ebff1eb84d045c757c1c31ca2ca48c79536c0de82
+Pod=13.pod
+ContainerName=immich_redis
+
+[Service]
+Restart=always
+
+### database.container ###
+[Container]
+Image=tensorchord/pgvecto-rs:pg14-v0.1.11@sha256:0335a1a22f8c5dd1b697f14f079934f5152eaaa216c09b61e293be285491f8ee
+Pod=13.pod
+Volume=./data/pgdata:/var/lib/postgresql/data
+Environment=POSTGRES_PASSWORD=${DB_PASSWORD}
+Environment=POSTGRES_USER=${DB_USERNAME}
+Environment=POSTGRES_DB=${DB_DATABASE_NAME}
+ContainerName=immich_postgres
 
 [Service]
 Restart=always

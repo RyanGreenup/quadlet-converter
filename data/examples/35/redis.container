@@ -1,0 +1,3 @@
+[Container]
+Image=redis:3.0
+Pod=example.pod

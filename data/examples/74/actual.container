@@ -1,8 +1,30 @@
-# database.container
+### 74.pod ###
+[Pod]
+PodName=74
+PublishPort=5432:5432
+PublishPort=42110:42110
+
+### database.container ###
 [Container]
 Image=ankane/pgvector
-PublishPort=5432:5432
+Pod=74.pod
 Volume=./data/khoj_db:/var/lib/postgresql/data/
 Environment=POSTGRES_USER=postgres
 Environment=POSTGRES_PASSWORD=postgres
 Environment=POSTGRES_DB=postgres
+
+### server.container ###
+[Container]
+Image=ghcr.io/khoj-ai/khoj:latest
+Pod=74.pod
+Volume=./data/khoj_config:/root/.khoj/
+Volume=./data/khoj_models:/root/.cache/torch/sentence_transformers
+Environment=POSTGRES_DB=postgres
+Environment=POSTGRES_USER=postgres
+Environment=POSTGRES_PASSWORD=postgres
+Environment=POSTGRES_HOST=database
+Environment=POSTGRES_PORT=5432
+Environment=KHOJ_DJANGO_SECRET_KEY=secret
+Environment=KHOJ_DEBUG=True
+Environment=KHOJ_ADMIN_EMAIL=username@example.com
+Environment=KHOJ_ADMIN_PASSWORD=password

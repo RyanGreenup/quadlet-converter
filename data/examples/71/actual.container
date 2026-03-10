@@ -1,11 +1,25 @@
-# postgres.container
+### 71.pod ###
+[Pod]
+PodName=71
+PublishPort=5802:5802
+
+### postgres.container ###
 [Container]
 Image=postgres
+Pod=71.pod
 Volume=./data:/var/lib/postgresql/data
 Environment=POSTGRES_USER=bkAdmin
 Environment=POSTGRES_PASSWORD=briefkasten
 Environment=POSTGRES_DB=briefkasten
 ContainerName=bk-postgres
+
+[Service]
+Restart=always
+
+### app.container ###
+[Container]
+Pod=71.pod
+ContainerName=bk-app
 
 [Service]
 Restart=always

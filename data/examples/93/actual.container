@@ -1,4 +1,24 @@
-# katex.container
-[Container]
+### 93.pod ###
+[Pod]
+PodName=93
 PublishPort=57359:8080
+PublishPort=3000:3000
+PublishPort=222:22
+
+### katex.container ###
+[Container]
+Pod=93.pod
 ContainerName=katex
+
+### server.container ###
+[Container]
+Pod=93.pod
+Volume=./data:/data
+Volume=/etc/timezone:/etc/timezone:ro
+Volume=/etc/localtime:/etc/localtime:ro
+Environment=USER_UID=1000
+Environment=USER_GID=1000
+ContainerName=gitea
+
+[Service]
+Restart=always
