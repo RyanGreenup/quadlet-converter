@@ -415,7 +415,9 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Unit).toContainEqual({ key: 'Requires', value: 'redis.service' })
   })
 
-  test('converts depends_on (service_healthy)', () => {
+  test('converts depends_on (service_healthy) — After + Requires, no ExecStartPre', () => {
+    // service_healthy is handled via Notify=healthy on the dependency container
+    // (added by composeToQuadletFiles), not by polling in the dependent service
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',
       depends_on: {
@@ -423,13 +425,10 @@ describe('composeServiceToQuadletIR', () => {
       },
     })
     expect(ir.Unit).toContainEqual({ key: 'After', value: 'db.service' })
-    // No Requires for healthy — just After + healthcheck poll
-    const requires = (ir.Unit ?? []).filter(e => e.key === 'Requires')
-    expect(requires).toHaveLength(0)
-    expect(ir.Service).toContainEqual({
-      key: 'ExecStartPre',
-      value: `/bin/bash -c 'for i in $(seq 1 60); do podman healthcheck run db 2>/dev/null && exit 0; sleep 2; done; exit 1'`,
-    })
+    expect(ir.Unit).toContainEqual({ key: 'Requires', value: 'db.service' })
+    // No ExecStartPre polling — Notify=healthy on the dep handles it
+    const execStartPre = (ir.Service ?? []).filter(e => e.key === 'ExecStartPre')
+    expect(execStartPre).toHaveLength(0)
   })
 
   test('converts depends_on (service_completed_successfully)', () => {
@@ -943,6 +942,47 @@ describe('composeServiceToQuadletIR with build option', () => {
     const ir = composeServiceToQuadletIR('myapp', service)
     const imageEntries = ir.Container?.filter(e => e.key === 'Image') ?? []
     expect(imageEntries).toHaveLength(0)
+  })
+
+  test('adds Notify=healthy to containers depended on with service_healthy', () => {
+    const compose: ComposeFile = {
+      services: {
+        app: {
+          image: 'nginx',
+          depends_on: {
+            db: { condition: 'service_healthy' },
+          },
+        },
+        db: {
+          image: 'postgres',
+          healthcheck: { test: ['CMD', 'pg_isready'] },
+        },
+      },
+    }
+    const files = composeToQuadletFiles(compose, 'myapp')
+    const dbFile = files.find(f => f.filename === 'db.container')!
+    expect(dbFile.ir.Container).toContainEqual({ key: 'Notify', value: 'healthy' })
+
+    // app should NOT have Notify=healthy (it's the dependent, not the dependency)
+    const appFile = files.find(f => f.filename === 'app.container')!
+    const appNotify = (appFile.ir.Container ?? []).filter(e => e.key === 'Notify')
+    expect(appNotify).toHaveLength(0)
+  })
+
+  test('does not add Notify=healthy for service_started deps', () => {
+    const compose: ComposeFile = {
+      services: {
+        app: {
+          image: 'nginx',
+          depends_on: ['db'],
+        },
+        db: { image: 'postgres' },
+      },
+    }
+    const files = composeToQuadletFiles(compose, 'myapp')
+    const dbFile = files.find(f => f.filename === 'db.container')!
+    const notify = (dbFile.ir.Container ?? []).filter(e => e.key === 'Notify')
+    expect(notify).toHaveLength(0)
   })
 
   test('composeToQuadletFiles passes build option through', () => {

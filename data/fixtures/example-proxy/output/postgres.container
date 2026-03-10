@@ -8,7 +8,6 @@ Environment=POSTGRES_PASSWORD_FILE=/run/secrets/db_password
 Environment=POSTGRES_DB=myapp
 Environment=PGDATA=/var/lib/postgresql/data/pgdata
 Environment=TZ=Australia/Melbourne
-Network=backend
 ContainerName=postgres
 AddCapability=DAC_OVERRIDE
 AddCapability=SETUID
@@ -31,6 +30,7 @@ HealthStartupInterval=5s
 NoNewPrivileges=true
 Secret=db_password
 PodmanArgs=--ulimit=nofile=65536:65536
+Notify=healthy
 
 [Service]
 CPUQuota=200%

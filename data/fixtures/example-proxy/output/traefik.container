@@ -6,8 +6,6 @@ Volume=traefik-certs:/etc/traefik/acme:Z
 Volume=./traefik.yml:/etc/traefik/traefik.yml:ro,Z
 Volume=./dynamic:/etc/traefik/dynamic:ro,Z
 Environment=TZ=Australia/Melbourne
-Network=proxy
-Network=monitoring
 ContainerName=traefik
 AddCapability=NET_BIND_SERVICE
 DropCapability=ALL

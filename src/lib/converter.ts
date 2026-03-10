@@ -500,15 +500,9 @@ export function composeServiceToQuadletIR(
     for (const { name, condition } of deps) {
       const unit = `${name}.service`
       unitSection.push({ key: 'After', value: unit })
-      if (condition === 'service_started' || condition === 'service_completed_successfully') {
-        unitSection.push({ key: 'Requires', value: unit })
-      }
-      if (condition === 'service_healthy') {
-        svcSection.push({
-          key: 'ExecStartPre',
-          value: `/bin/bash -c 'for i in $(seq 1 60); do podman healthcheck run ${name} 2>/dev/null && exit 0; sleep 2; done; exit 1'`,
-        })
-      }
+      // All conditions get Requires= — for service_healthy, the dependency
+      // container uses Notify=healthy so systemd waits for it automatically.
+      unitSection.push({ key: 'Requires', value: unit })
     }
   }
 
@@ -579,16 +573,30 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
 
   files.push({ filename: podFile, ir: podIR })
 
+  // Collect services that need Notify=healthy (depended on with service_healthy)
+  const healthyDeps = new Set<string>()
+  for (const service of Object.values(services)) {
+    if (service.depends_on && !Array.isArray(service.depends_on)) {
+      for (const [dep, config] of Object.entries(service.depends_on)) {
+        if (config.condition === 'service_healthy') healthyDeps.add(dep)
+      }
+    }
+  }
+
   // Container files: omit ports, reference the pod
   for (const name of serviceNames) {
-    files.push({
-      filename: `${name}.container`,
-      ir: composeServiceToQuadletIR(name, services[name], {
-        omitPorts: true,
-        pod: podFile,
-        build: opts?.build,
-      }),
+    const ir = composeServiceToQuadletIR(name, services[name], {
+      omitPorts: true,
+      pod: podFile,
+      build: opts?.build,
     })
+    // Add Notify=healthy so systemd waits for the healthcheck before
+    // considering the service started (used by service_healthy deps)
+    if (healthyDeps.has(name)) {
+      if (!ir.Container) ir.Container = []
+      ir.Container.push({ key: 'Notify', value: 'healthy' })
+    }
+    files.push({ filename: `${name}.container`, ir })
   }
 
   return files
@@ -868,36 +876,21 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
     }
   }
 
-  // Reverse depends_on from Unit (After/Requires) and Service (ExecStartPre healthcheck)
+  // Reverse depends_on from Unit (After/Requires)
+  // Note: service_healthy is expressed via Notify=healthy on the *dependency*
+  // container, which we can't see from a single IR. All deps become service_started.
   const unitEntries = ir['Unit'] ?? []
   const afterDeps = new Set<string>()
-  const requiresDeps = new Set<string>()
-  const healthyDeps = new Set<string>()
 
   for (const { key, value } of unitEntries) {
     const depName = value.replace(/\.service$/, '')
     if (key === 'After') afterDeps.add(depName)
-    if (key === 'Requires') requiresDeps.add(depName)
-  }
-
-  for (const { key, value } of serviceEntries) {
-    if (key === 'ExecStartPre') {
-      const match = value.match(/podman healthcheck run (\S+)/)
-      if (match) healthyDeps.add(match[1])
-    }
   }
 
   if (afterDeps.size > 0) {
-    type Condition = 'service_started' | 'service_healthy' | 'service_completed_successfully'
-    const depends_on: Record<string, { condition: Condition }> = {}
+    const depends_on: Record<string, { condition: 'service_started' }> = {}
     for (const dep of afterDeps) {
-      if (healthyDeps.has(dep)) {
-        depends_on[dep] = { condition: 'service_healthy' }
-      } else if (requiresDeps.has(dep)) {
-        depends_on[dep] = { condition: 'service_started' }
-      } else {
-        depends_on[dep] = { condition: 'service_started' }
-      }
+      depends_on[dep] = { condition: 'service_started' }
     }
     service.depends_on = depends_on
   }
