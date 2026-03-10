@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { parseQuadlet, serializeQuadlet, type QuadletData } from './quadlet'
+import { parseQuadlet, serializeQuadlet, toQuadletIR, type QuadletData } from './quadlet'
 
 describe('parseQuadlet', () => {
   test('parses sections and key-value pairs', () => {
@@ -86,6 +86,42 @@ describe('serializeQuadlet', () => {
     expect(serializeQuadlet(data)).toBe(
       `[Container]\nImage=nginx\n\n[Service]\nRestart=always\n`
     )
+  })
+})
+
+describe('toQuadletIR', () => {
+  test('converts simple values to entries', () => {
+    const data: QuadletData = {
+      Container: { Image: 'nginx', Network: 'host' },
+    }
+    expect(toQuadletIR(data)).toEqual({
+      Container: [
+        { key: 'Image', value: 'nginx' },
+        { key: 'Network', value: 'host' },
+      ],
+    })
+  })
+
+  test('expands repeated keys into separate entries', () => {
+    const data: QuadletData = {
+      Container: { Volume: ['./a:/a:Z', './b:/b:Z'] },
+    }
+    expect(toQuadletIR(data)).toEqual({
+      Container: [
+        { key: 'Volume', value: './a:/a:Z' },
+        { key: 'Volume', value: './b:/b:Z' },
+      ],
+    })
+  })
+
+  test('handles multiple sections', () => {
+    const data: QuadletData = {
+      Container: { Image: 'nginx' },
+      Service: { Restart: 'always' },
+    }
+    const ir = toQuadletIR(data)
+    expect(Object.keys(ir)).toEqual(['Container', 'Service'])
+    expect(ir.Service).toEqual([{ key: 'Restart', value: 'always' }])
   })
 })
 

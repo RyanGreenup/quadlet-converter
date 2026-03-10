@@ -39,6 +39,34 @@ export function parseQuadlet(text: string): QuadletData {
   return result
 }
 
+// Intermediate representation for the podman/quadlet converter.
+// Use this for programmatic manipulation — repeated keys are uniform entries.
+export interface QuadletEntry {
+  key: string
+  value: string
+}
+
+export type QuadletIR = Record<string, QuadletEntry[]>
+
+// Convert QuadletData to the IR used by the converter.
+export function toQuadletIR(data: QuadletData): QuadletIR {
+  const result: QuadletIR = {}
+  for (const [section, entries] of Object.entries(data)) {
+    const ir: QuadletEntry[] = []
+    for (const [key, value] of Object.entries(entries)) {
+      if (Array.isArray(value)) {
+        for (const v of value) {
+          ir.push({ key, value: v })
+        }
+      } else {
+        ir.push({ key, value })
+      }
+    }
+    result[section] = ir
+  }
+  return result
+}
+
 export function serializeQuadlet(data: QuadletData): string {
   const sections = Object.entries(data)
   const parts: string[] = []

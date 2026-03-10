@@ -3,6 +3,7 @@ import { createCLI } from '@bunli/core'
 import helloCommand from './commands/hello.js'
 import toJsonCommand from './commands/to-json.js'
 import fromJsonCommand from './commands/from-json.js'
+import toIrCommand from './commands/to-ir.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -13,5 +14,6 @@ const cli = await createCLI({
 cli.command(helloCommand)
 cli.command(toJsonCommand)
 cli.command(fromJsonCommand)
+cli.command(toIrCommand)
 
 await cli.run()
