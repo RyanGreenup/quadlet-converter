@@ -46,7 +46,7 @@
 - [X] security_opt seccomp:X → SeccompProfile=X
 - [X] security_opt apparmor:X → PodmanArgs=--security-opt=apparmor=X
 - [X] security_opt (other) → PodmanArgs=--security-opt=<value>
-- [ ] privileged → SecurityLabelDisable (or PodmanArgs=--privileged)
+- [X] privileged → PodmanArgs=--privileged
 - [ ] pid → PidHost (when pid: host)
 - [ ] depends_on (service_started) → After=dep.service + Requires=dep.service [Unit]
 - [ ] depends_on (service_healthy) → After=dep.service [Unit] + ExecStartPre= healthcheck poll [Service]

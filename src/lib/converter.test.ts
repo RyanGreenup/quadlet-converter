@@ -499,6 +499,23 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'SeccompProfile', value: 'profile.json' })
   })
 
+  test('converts privileged to PodmanArgs', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      privileged: true,
+    })
+    expect(ir.Container).toContainEqual({ key: 'PodmanArgs', value: '--privileged' })
+  })
+
+  test('does not emit privileged when false', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      privileged: false,
+    })
+    const podmanArgs = (ir.Container ?? []).filter(e => e.key === 'PodmanArgs')
+    expect(podmanArgs).toHaveLength(0)
+  })
+
   test('converts security_opt apparmor to PodmanArgs', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',

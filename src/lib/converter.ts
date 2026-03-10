@@ -328,6 +328,10 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.privileged) {
+    container.push({ key: 'PodmanArgs', value: '--privileged' })
+  }
+
   // devices → AddDevice (raw device pass-through)
   if (service.devices) {
     for (const dev of service.devices) {
@@ -655,7 +659,9 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         service.security_opt.push(`seccomp:${value}`)
         break
       case 'PodmanArgs':
-        if (value.startsWith('--security-opt=')) {
+        if (value === '--privileged') {
+          service.privileged = true
+        } else if (value.startsWith('--security-opt=')) {
           if (!service.security_opt) service.security_opt = []
           service.security_opt.push(value.slice('--security-opt='.length))
         }
