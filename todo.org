@@ -63,19 +63,19 @@
 - [X] healthcheck.start_interval → HealthStartupInterval
 
 ** Systemd [Service] section mappings
-- [ ] post_start → ExecStartPost= [Service]
-- [ ] pre_stop → ExecStop= [Service]
-- [ ] oom_score_adj → OOMScoreAdjust= [Service]
-- [ ] pids_limit → TasksMax= [Service]
-- [ ] mem_limit → MemoryMax= [Service]
-- [ ] mem_reservation → MemoryReservation= [Service]
-- [ ] mem_swappiness → MemorySwapMax= [Service]
-- [ ] memswap_limit → MemorySwapMax= [Service]
-- [ ] cpu_shares → CPUShares= [Service]
-- [ ] cpu_quota → CPUQuota= [Service]
-- [ ] cpu_period → CPUQuotaPeriodSec= [Service]
-- [ ] cpus → CPUQuota= [Service] (multiply by 100%)
-- [ ] cpuset → AllowedCPUs= [Service]
+- [X] post_start → ExecStartPost= [Service] (via podman exec %n)
+- [X] pre_stop → ExecStop= [Service] (via podman exec %n)
+- [X] oom_score_adj → OOMScoreAdjust= [Service]
+- [X] pids_limit → TasksMax= [Service]
+- [X] mem_limit → MemoryMax= [Service]
+- [X] mem_reservation → MemoryReservation= [Service]
+- [X] mem_swappiness → PodmanArgs=--memory-swappiness (no systemd equiv)
+- [X] memswap_limit → MemorySwapMax= [Service]
+- [X] cpu_shares → CPUShares= [Service]
+- [X] cpu_quota → CPUQuota= [Service]
+- [X] cpu_period → CPUQuotaPeriodSec= [Service]
+- [X] cpus → CPUQuota= [Service] (multiply by 100%)
+- [X] cpuset → AllowedCPUs= [Service]
 
 ** PodmanArgs fallbacks (no direct quadlet key)
 - [ ] ulimits → PodmanArgs=--ulimit

@@ -402,6 +402,59 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  // Group 1: CPU mappings (standalone compose fields)
+  if (service.cpus != null) {
+    const pct = Math.round(parseFloat(String(service.cpus)) * 100)
+    svcSection.push({ key: 'CPUQuota', value: `${pct}%` })
+  }
+  if (service.cpu_shares != null) {
+    svcSection.push({ key: 'CPUShares', value: String(service.cpu_shares) })
+  }
+  if (service.cpu_quota != null) {
+    svcSection.push({ key: 'CPUQuota', value: String(service.cpu_quota) })
+  }
+  if (service.cpu_period != null) {
+    const us = parseFloat(String(service.cpu_period))
+    svcSection.push({ key: 'CPUQuotaPeriodSec', value: String(us / 1_000_000) })
+  }
+  if (service.cpuset) {
+    svcSection.push({ key: 'AllowedCPUs', value: service.cpuset })
+  }
+
+  // Group 2: Memory/resource mappings
+  if (service.mem_limit != null) {
+    svcSection.push({ key: 'MemoryMax', value: String(service.mem_limit) })
+  }
+  if (service.mem_reservation != null) {
+    svcSection.push({ key: 'MemoryReservation', value: String(service.mem_reservation) })
+  }
+  if (service.memswap_limit != null) {
+    svcSection.push({ key: 'MemorySwapMax', value: String(service.memswap_limit) })
+  }
+  if (service.mem_swappiness != null) {
+    container.push({ key: 'PodmanArgs', value: `--memory-swappiness=${service.mem_swappiness}` })
+  }
+  if (service.pids_limit != null) {
+    svcSection.push({ key: 'TasksMax', value: String(service.pids_limit) })
+  }
+  if (service.oom_score_adj != null) {
+    svcSection.push({ key: 'OOMScoreAdjust', value: String(service.oom_score_adj) })
+  }
+
+  // Group 3: Lifecycle hooks
+  if (service.post_start) {
+    for (const hook of service.post_start) {
+      const cmd = Array.isArray(hook.command) ? hook.command.join(' ') : hook.command
+      svcSection.push({ key: 'ExecStartPost', value: `podman exec %n ${cmd}` })
+    }
+  }
+  if (service.pre_stop) {
+    for (const hook of service.pre_stop) {
+      const cmd = Array.isArray(hook.command) ? hook.command.join(' ') : hook.command
+      svcSection.push({ key: 'ExecStop', value: `podman exec %n ${cmd}` })
+    }
+  }
+
   if (service.deploy?.resources?.limits) {
     const limits = service.deploy.resources.limits
     if (limits.cpus != null) {
@@ -716,6 +769,8 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         } else if (value.startsWith('--security-opt=')) {
           if (!service.security_opt) service.security_opt = []
           service.security_opt.push(value.slice('--security-opt='.length))
+        } else if (value.startsWith('--memory-swappiness=')) {
+          service.mem_swappiness = parseInt(value.slice('--memory-swappiness='.length), 10)
         }
         break
       case 'Secret': {
@@ -780,6 +835,45 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         if (!service.deploy.resources.limits) service.deploy.resources.limits = {}
         service.deploy.resources.limits.memory = value
         break
+      case 'CPUShares':
+        service.cpu_shares = parseInt(value, 10)
+        break
+      case 'CPUQuotaPeriodSec': {
+        const sec = parseFloat(value)
+        service.cpu_period = String(Math.round(sec * 1_000_000))
+        break
+      }
+      case 'AllowedCPUs':
+        service.cpuset = value
+        break
+      case 'MemoryReservation':
+        service.mem_reservation = value
+        break
+      case 'MemorySwapMax':
+        service.memswap_limit = value
+        break
+      case 'TasksMax':
+        service.pids_limit = parseInt(value, 10)
+        break
+      case 'OOMScoreAdjust':
+        service.oom_score_adj = parseInt(value, 10)
+        break
+      case 'ExecStartPost': {
+        const postMatch = value.match(/^podman exec %n (.+)$/)
+        if (postMatch) {
+          if (!service.post_start) service.post_start = []
+          service.post_start.push({ command: postMatch[1] })
+        }
+        break
+      }
+      case 'ExecStop': {
+        const stopMatch = value.match(/^podman exec %n (.+)$/)
+        if (stopMatch) {
+          if (!service.pre_stop) service.pre_stop = []
+          service.pre_stop.push({ command: stopMatch[1] })
+        }
+        break
+      }
     }
   }
 
@@ -803,7 +897,8 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
   }
 
   if (afterDeps.size > 0) {
-    const depends_on: Record<string, { condition: string }> = {}
+    type Condition = 'service_started' | 'service_healthy' | 'service_completed_successfully'
+    const depends_on: Record<string, { condition: Condition }> = {}
     for (const dep of afterDeps) {
       if (healthyDeps.has(dep)) {
         depends_on[dep] = { condition: 'service_healthy' }

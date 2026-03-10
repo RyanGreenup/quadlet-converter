@@ -602,6 +602,56 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'NoNewPrivileges', value: 'true' })
   })
 
+  test('converts cpu fields', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      cpus: 0.5,
+      cpu_shares: 512,
+      cpu_quota: 50000,
+      cpu_period: 100000,
+      cpuset: '0-3',
+    })
+    expect(ir.Service).toContainEqual({ key: 'CPUQuota', value: '50%' })
+    expect(ir.Service).toContainEqual({ key: 'CPUShares', value: '512' })
+    expect(ir.Service).toContainEqual({ key: 'CPUQuota', value: '50000' })
+    expect(ir.Service).toContainEqual({ key: 'CPUQuotaPeriodSec', value: '0.1' })
+    expect(ir.Service).toContainEqual({ key: 'AllowedCPUs', value: '0-3' })
+  })
+
+  test('converts memory/resource fields', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      mem_limit: '512m',
+      mem_reservation: '256m',
+      memswap_limit: '1g',
+      pids_limit: 100,
+      oom_score_adj: -500,
+    })
+    expect(ir.Service).toContainEqual({ key: 'MemoryMax', value: '512m' })
+    expect(ir.Service).toContainEqual({ key: 'MemoryReservation', value: '256m' })
+    expect(ir.Service).toContainEqual({ key: 'MemorySwapMax', value: '1g' })
+    expect(ir.Service).toContainEqual({ key: 'TasksMax', value: '100' })
+    expect(ir.Service).toContainEqual({ key: 'OOMScoreAdjust', value: '-500' })
+  })
+
+  test('converts mem_swappiness to PodmanArgs', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      mem_swappiness: 60,
+    })
+    expect(ir.Container).toContainEqual({ key: 'PodmanArgs', value: '--memory-swappiness=60' })
+  })
+
+  test('converts post_start and pre_stop lifecycle hooks', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      post_start: [{ command: '/bin/sh -c "echo started"' }],
+      pre_stop: [{ command: ['/bin/sh', '-c', 'echo stopping'] }],
+    })
+    expect(ir.Service).toContainEqual({ key: 'ExecStartPost', value: 'podman exec %n /bin/sh -c "echo started"' })
+    expect(ir.Service).toContainEqual({ key: 'ExecStop', value: 'podman exec %n /bin/sh -c echo stopping' })
+  })
+
   test('handles service with no optional fields', () => {
     const ir = composeServiceToQuadletIR('empty', {})
     expect(ir).toEqual({})
@@ -723,6 +773,61 @@ describe('quadletIRToCompose', () => {
     expect(compose.services!['svc'].secrets).toEqual([
       { source: 'db_pass', target: '/run/secrets/db', uid: '1000' },
     ])
+  })
+
+  test('converts cpu service entries to compose fields', () => {
+    const ir: QuadletIR = {
+      Service: [
+        { key: 'CPUShares', value: '512' },
+        { key: 'CPUQuotaPeriodSec', value: '0.1' },
+        { key: 'AllowedCPUs', value: '0-3' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    const svc = compose.services!['svc']
+    expect(svc.cpu_shares).toBe(512)
+    expect(svc.cpu_period).toBe('100000')
+    expect(svc.cpuset).toBe('0-3')
+  })
+
+  test('converts memory/resource service entries to compose fields', () => {
+    const ir: QuadletIR = {
+      Service: [
+        { key: 'MemoryReservation', value: '256m' },
+        { key: 'MemorySwapMax', value: '1g' },
+        { key: 'TasksMax', value: '100' },
+        { key: 'OOMScoreAdjust', value: '-500' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    const svc = compose.services!['svc']
+    expect(svc.mem_reservation).toBe('256m')
+    expect(svc.memswap_limit).toBe('1g')
+    expect(svc.pids_limit).toBe(100)
+    expect(svc.oom_score_adj).toBe(-500)
+  })
+
+  test('converts PodmanArgs --memory-swappiness to mem_swappiness', () => {
+    const ir: QuadletIR = {
+      Container: [
+        { key: 'PodmanArgs', value: '--memory-swappiness=60' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].mem_swappiness).toBe(60)
+  })
+
+  test('converts ExecStartPost/ExecStop to lifecycle hooks', () => {
+    const ir: QuadletIR = {
+      Service: [
+        { key: 'ExecStartPost', value: 'podman exec %n /bin/sh -c "echo started"' },
+        { key: 'ExecStop', value: 'podman exec %n /bin/sh -c "echo stopping"' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    const svc = compose.services!['svc']
+    expect(svc.post_start).toEqual([{ command: '/bin/sh -c "echo started"' }])
+    expect(svc.pre_stop).toEqual([{ command: '/bin/sh -c "echo stopping"' }])
   })
 
   test('handles empty IR', () => {
