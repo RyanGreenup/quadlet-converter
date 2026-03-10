@@ -286,6 +286,30 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.healthcheck) {
+    const hc = service.healthcheck
+    if (hc.test) {
+      if (Array.isArray(hc.test)) {
+        const [prefix, ...rest] = hc.test
+        if (prefix === 'CMD' || prefix === 'CMD-SHELL') {
+          container.push({ key: 'HealthCmd', value: rest.join(' ') })
+        } else if (prefix === 'NONE') {
+          container.push({ key: 'HealthCmd', value: 'none' })
+        } else {
+          // No prefix, treat all elements as the command
+          container.push({ key: 'HealthCmd', value: hc.test.join(' ') })
+        }
+      } else {
+        container.push({ key: 'HealthCmd', value: hc.test })
+      }
+    }
+    if (hc.interval) container.push({ key: 'HealthInterval', value: hc.interval })
+    if (hc.retries != null) container.push({ key: 'HealthRetries', value: String(hc.retries) })
+    if (hc.timeout) container.push({ key: 'HealthTimeout', value: hc.timeout })
+    if (hc.start_period) container.push({ key: 'HealthStartPeriod', value: hc.start_period })
+    if (hc.start_interval) container.push({ key: 'HealthStartupInterval', value: hc.start_interval })
+  }
+
   // devices → AddDevice (raw device pass-through)
   if (service.devices) {
     for (const dev of service.devices) {
@@ -543,6 +567,30 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'Annotation':
         if (!service.annotations) service.annotations = [] as string[]
         ;(service.annotations as string[]).push(value)
+        break
+      case 'HealthCmd':
+        if (!service.healthcheck) service.healthcheck = {}
+        service.healthcheck.test = value
+        break
+      case 'HealthInterval':
+        if (!service.healthcheck) service.healthcheck = {}
+        service.healthcheck.interval = value
+        break
+      case 'HealthRetries':
+        if (!service.healthcheck) service.healthcheck = {}
+        service.healthcheck.retries = parseInt(value, 10)
+        break
+      case 'HealthTimeout':
+        if (!service.healthcheck) service.healthcheck = {}
+        service.healthcheck.timeout = value
+        break
+      case 'HealthStartPeriod':
+        if (!service.healthcheck) service.healthcheck = {}
+        service.healthcheck.start_period = value
+        break
+      case 'HealthStartupInterval':
+        if (!service.healthcheck) service.healthcheck = {}
+        service.healthcheck.start_interval = value
         break
       case 'AddDevice':
         if (value.startsWith('/dev/')) {

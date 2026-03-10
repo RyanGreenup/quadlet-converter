@@ -328,6 +328,56 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'Annotation', value: 'com.example.env=prod' })
   })
 
+  test('converts healthcheck (string test)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      healthcheck: {
+        test: 'curl -f http://localhost/ || exit 1',
+        interval: '30s',
+        timeout: '10s',
+        retries: 3,
+        start_period: '5s',
+        start_interval: '2s',
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'HealthCmd', value: 'curl -f http://localhost/ || exit 1' })
+    expect(ir.Container).toContainEqual({ key: 'HealthInterval', value: '30s' })
+    expect(ir.Container).toContainEqual({ key: 'HealthTimeout', value: '10s' })
+    expect(ir.Container).toContainEqual({ key: 'HealthRetries', value: '3' })
+    expect(ir.Container).toContainEqual({ key: 'HealthStartPeriod', value: '5s' })
+    expect(ir.Container).toContainEqual({ key: 'HealthStartupInterval', value: '2s' })
+  })
+
+  test('converts healthcheck (CMD-SHELL array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      healthcheck: {
+        test: ['CMD-SHELL', 'curl -f http://localhost/ || exit 1'],
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'HealthCmd', value: 'curl -f http://localhost/ || exit 1' })
+  })
+
+  test('converts healthcheck (CMD array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      healthcheck: {
+        test: ['CMD', 'curl', '-f', 'http://localhost/'],
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'HealthCmd', value: 'curl -f http://localhost/' })
+  })
+
+  test('converts healthcheck (NONE)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      healthcheck: {
+        test: ['NONE'],
+      },
+    })
+    expect(ir.Container).toContainEqual({ key: 'HealthCmd', value: 'none' })
+  })
+
   test('converts raw devices to AddDevice', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',

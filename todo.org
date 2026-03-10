@@ -49,12 +49,12 @@
   - Containers in the same =.pod= already get implicit ordering via the pod service
 
 ** Healthcheck mappings
-- [ ] healthcheck.test → HealthCmd
-- [ ] healthcheck.interval → HealthInterval
-- [ ] healthcheck.retries → HealthRetries
-- [ ] healthcheck.timeout → HealthTimeout
-- [ ] healthcheck.start_period → HealthStartPeriod
-- [ ] healthcheck.start_interval → HealthStartupInterval
+- [X] healthcheck.test → HealthCmd
+- [X] healthcheck.interval → HealthInterval
+- [X] healthcheck.retries → HealthRetries
+- [X] healthcheck.timeout → HealthTimeout
+- [X] healthcheck.start_period → HealthStartPeriod
+- [X] healthcheck.start_interval → HealthStartupInterval
 
 ** Systemd [Service] section mappings
 - [ ] post_start → ExecStartPost= [Service]
