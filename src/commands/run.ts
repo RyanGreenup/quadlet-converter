@@ -21,6 +21,12 @@ const runCommand = defineCommand({
         short: 'd'
       }
     ),
+    rm: option(
+      z.boolean().default(false),
+      {
+        description: 'Remove containers and volumes after stopping',
+      }
+    ),
   },
   handler: async ({ flags, positional }) => {
     const filePath = positional[0]
@@ -54,6 +60,15 @@ const runCommand = defineCommand({
         stdin: 'inherit',
       })
       const exitCode = await proc.exited
+
+      if (flags.rm) {
+        const down = Bun.spawn(['podman-compose', '-f', tmpFile, 'down', '-v'], {
+          stdout: 'inherit',
+          stderr: 'inherit',
+        })
+        await down.exited
+      }
+
       process.exit(exitCode)
     } finally {
       await import('node:fs/promises').then(fs => fs.unlink(tmpFile).catch(() => {}))
