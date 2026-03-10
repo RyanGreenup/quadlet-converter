@@ -2,6 +2,13 @@ import type { Service } from './compose/index.js'
 import type { ComposeFile } from './compose/index.js'
 import type { QuadletIR, QuadletEntry } from './quadlet.js'
 import { serviceToPodmanArgs, applyPodmanArg } from './podman-args.js'
+import { scaleService } from './scale.js'
+
+export interface ComposeToQuadletOpts {
+  build?: boolean
+  startPort?: number
+  usePod?: boolean
+}
 
 export interface QuadletFile {
   filename: string   // e.g. "example.pod", "web.container"
@@ -518,7 +525,7 @@ export function composeServiceToQuadletIR(
 }
 
 /** Extract PublishPort entries from a service's ports. */
-function portEntries(service: Service): QuadletEntry[] {
+export function portEntries(service: Service): QuadletEntry[] {
   const entries: QuadletEntry[] = []
   if (!service.ports) return entries
   for (const port of service.ports) {
@@ -540,28 +547,49 @@ function portEntries(service: Service): QuadletEntry[] {
 }
 
 /** Convert an entire compose file to a set of quadlet files. */
-export function composeToQuadletFiles(compose: ComposeFile, podName: string, opts?: { build?: boolean }): QuadletFileSet {
+export function composeToQuadletFiles(compose: ComposeFile, podName: string, opts?: ComposeToQuadletOpts): QuadletFileSet {
   const services = compose.services ?? {}
   const serviceNames = Object.keys(services)
 
   if (serviceNames.length === 0) return []
 
-  // Single service: no pod needed
-  if (serviceNames.length === 1) {
-    const name = serviceNames[0]
+  // Partition services into scaled and non-scaled
+  const scaledFiles: QuadletFileSet = []
+  const normalNames: string[] = []
+
+  for (const name of serviceNames) {
+    const service = services[name]
+    const scale = typeof service.scale === 'string' ? parseInt(service.scale, 10) : service.scale
+    if (scale != null && scale > 1) {
+      scaledFiles.push(...scaleService(name, service, scale, {
+        startPort: opts?.startPort,
+        usePod: opts?.usePod,
+        build: opts?.build,
+      }))
+    } else {
+      normalNames.push(name)
+    }
+  }
+
+  // If only scaled services, return them directly
+  if (normalNames.length === 0) return scaledFiles
+
+  // Single non-scaled service and no scaled: no pod needed
+  if (normalNames.length === 1 && scaledFiles.length === 0) {
+    const name = normalNames[0]
     return [{
       filename: `${name}.container`,
       ir: composeServiceToQuadletIR(name, services[name], { build: opts?.build }),
     }]
   }
 
-  // Multiple services: create a pod + container files
+  // Multiple non-scaled services: create a pod + container files
   const podFile = `${podName}.pod`
   const files: QuadletFileSet = []
 
-  // Collect all ports from all services for the pod
+  // Collect all ports from non-scaled services for the pod
   const allPorts: QuadletEntry[] = []
-  for (const name of serviceNames) {
+  for (const name of normalNames) {
     allPorts.push(...portEntries(services[name]))
   }
 
@@ -585,7 +613,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
   }
 
   // Container files: omit ports, reference the pod
-  for (const name of serviceNames) {
+  for (const name of normalNames) {
     const ir = composeServiceToQuadletIR(name, services[name], {
       omitPorts: true,
       pod: podFile,
@@ -600,7 +628,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
     files.push({ filename: `${name}.container`, ir })
   }
 
-  return files
+  return [...files, ...scaledFiles]
 }
 
 /** Convert QuadletIR to a ComposeFile (single service). */

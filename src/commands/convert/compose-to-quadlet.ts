@@ -55,6 +55,18 @@ const composeToQuadletCommand = defineCommand({
         description: 'Generate build recipes for services with build contexts',
       }
     ),
+    'start-port': option(
+      z.coerce.number().optional(),
+      {
+        description: 'Starting host port for scaled instances',
+      }
+    ),
+    'no-pod': option(
+      z.boolean().default(false),
+      {
+        description: 'Generate standalone containers instead of pods for scaled services',
+      }
+    ),
   },
   handler: async ({ flags, positional }) => {
     const filePath = positional[0]
@@ -78,7 +90,11 @@ const composeToQuadletCommand = defineCommand({
       ? path.basename(path.dirname(filePath))
       : basename
 
-    const files = composeToQuadletFiles(compose, podName, { build: flags.build })
+    const files = composeToQuadletFiles(compose, podName, {
+      build: flags.build,
+      startPort: flags['start-port'],
+      usePod: !flags['no-pod'],
+    })
     const secretDefs = extractSecretDefs(compose)
     const buildDefs = flags.build ? extractBuildDefs(compose) : []
 
