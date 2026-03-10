@@ -1,0 +1,49 @@
+[Unit]
+After=postgres.service
+After=redis.service
+
+[Container]
+Image=docker.io/myorg/myapp:1.4.2
+Pod=example-proxy.pod
+Volume=app-data:/app/data:Z
+Volume=app-tmp:/app/tmp:Z
+Environment=DATABASE_URL=postgresql://app:secret@postgres:5432/myapp?sslmode=require
+Environment=REDIS_URL=redis://redis:6379/0
+Environment=RUST_LOG=info
+Environment=TZ=Australia/Melbourne
+Network=proxy
+Network=backend
+ContainerName=app
+DropCapability=ALL
+Label=traefik.enable=true
+Label=traefik.http.routers.app.rule=Host(`app.example.com`)
+Label=traefik.http.routers.app.entrypoints=websecure
+Label=traefik.http.routers.app.tls.certresolver=letsencrypt
+Label=traefik.http.services.app.loadbalancer.server.port=8080
+Label=traefik.http.routers.app.middlewares=security-headers@file,rate-limit@file
+ExposeHostPort=8080
+ReadOnly=true
+Tmpfs=/tmp:noexec,nosuid,size=128m
+LogDriver=json-file
+HealthCmd=curl -fsS http://localhost:8080/health
+HealthInterval=20s
+HealthRetries=5
+HealthTimeout=10s
+HealthStartPeriod=45s
+HealthStartupInterval=5s
+NoNewPrivileges=true
+PodmanArgs=--ulimit=nofile=65536:65536
+
+[Service]
+CPUQuota=150%
+AllowedCPUs=2,3,4,5
+MemoryMax=512m
+MemoryReservation=256m
+MemorySwapMax=1g
+TasksMax=512
+OOMScoreAdjust=-300
+ExecStartPost=podman exec %n /app/bin/migrate
+ExecStop=podman exec %n /app/bin/drain-connections
+Restart=always
+ExecStartPre=/bin/bash -c 'until podman healthcheck run postgres; do sleep 1; done'
+ExecStartPre=/bin/bash -c 'until podman healthcheck run redis; do sleep 1; done'

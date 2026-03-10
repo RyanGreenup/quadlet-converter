@@ -1,0 +1,4 @@
+[Pod]
+PodName=example-proxy
+PublishPort=443:443
+PublishPort=80:80

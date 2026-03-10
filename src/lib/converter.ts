@@ -1,6 +1,7 @@
 import type { Service } from './compose/index.js'
 import type { ComposeFile } from './compose/index.js'
 import type { QuadletIR, QuadletEntry } from './quadlet.js'
+import { serviceToPodmanArgs, applyPodmanArg } from './podman-args.js'
 
 export interface QuadletFile {
   filename: string   // e.g. "example.pod", "web.container"
@@ -321,6 +322,7 @@ export function composeServiceToQuadletIR(
     if (hc.start_interval) container.push({ key: 'HealthStartupInterval', value: hc.start_interval })
   }
 
+  // security_opt PodmanArgs fallback is intentionally inline here (mixes native quadlet keys)
   if (service.security_opt) {
     for (const opt of service.security_opt) {
       if (opt.startsWith('label:type:')) {
@@ -341,10 +343,6 @@ export function composeServiceToQuadletIR(
 
   if (service.pid === 'host') {
     container.push({ key: 'PidHost', value: 'true' })
-  }
-
-  if (service.privileged) {
-    container.push({ key: 'PodmanArgs', value: '--privileged' })
   }
 
   // devices → AddDevice (raw device pass-through)
@@ -515,6 +513,8 @@ export function composeServiceToQuadletIR(
       }
     }
   }
+
+  container.push(...serviceToPodmanArgs(service))
 
   const ir: QuadletIR = {}
   if (unitSection.length) ir['Unit'] = unitSection
@@ -764,14 +764,7 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         if (value === 'true') service.pid = 'host'
         break
       case 'PodmanArgs':
-        if (value === '--privileged') {
-          service.privileged = true
-        } else if (value.startsWith('--security-opt=')) {
-          if (!service.security_opt) service.security_opt = []
-          service.security_opt.push(value.slice('--security-opt='.length))
-        } else if (value.startsWith('--memory-swappiness=')) {
-          service.mem_swappiness = parseInt(value.slice('--memory-swappiness='.length), 10)
-        }
+        applyPodmanArg(service, value)
         break
       case 'Secret': {
         if (!service.secrets) service.secrets = []
