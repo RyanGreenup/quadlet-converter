@@ -1,0 +1,116 @@
+#+TITLE: Compose → Quadlet Converter: Field Mapping Status
+
+* Implemented
+- image → Image
+- network_mode → Network
+- ports → PublishPort
+- volumes → Volume
+- environment → Environment
+- container_name → ContainerName
+- restart → Restart [Service]
+- deploy.resources.limits.cpus → CPUQuota [Service]
+- deploy.resources.limits.memory → MemoryMax [Service]
+
+* TODO Not yet implemented
+** Container section mappings
+- [ ] command → Exec
+- [ ] entrypoint → Entrypoint
+- [X] user → User
+- [ ] working_dir → WorkingDir
+- [ ] hostname → HostName
+- [ ] cap_add → AddCapability
+- [ ] cap_drop → DropCapability
+- [ ] devices → AddDevice
+- [ ] labels → Label
+- [ ] dns → DNS
+- [ ] dns_search → DNSSearch
+- [ ] expose → ExposeHostPort
+- [ ] extra_hosts → AddHost
+- [ ] env_file → EnvironmentFile
+- [ ] networks → Network
+- [ ] read_only → ReadOnly
+- [ ] tmpfs → Tmpfs
+- [ ] shm_size → ShmSize
+- [ ] sysctls → Sysctl
+- [ ] stop_signal → StopSignal
+- [ ] stop_grace_period → StopTimeout
+- [ ] logging → LogDriver
+- [ ] group_add → GroupAdd
+- [ ] userns_mode → UserNS
+- [ ] security_opt → SecurityLabelType / SecurityLabelLevel
+- [ ] privileged → SecurityLabelDisable (or PodmanArgs=--privileged)
+- [ ] pid → PidHost (when pid: host)
+
+** Healthcheck mappings
+- [ ] healthcheck.test → HealthCmd
+- [ ] healthcheck.interval → HealthInterval
+- [ ] healthcheck.retries → HealthRetries
+- [ ] healthcheck.timeout → HealthTimeout
+- [ ] healthcheck.start_period → HealthStartPeriod
+- [ ] healthcheck.start_interval → HealthStartupInterval
+
+** PodmanArgs fallbacks (no direct quadlet key)
+- [ ] ulimits → PodmanArgs=--ulimit
+- [ ] init → PodmanArgs=--init
+- [ ] tty → PodmanArgs=--tty
+- [ ] stdin_open → PodmanArgs=--interactive
+
+* Security checks (=check= command)
+** Implemented
+- [X] Warn if container image runs as root (no USER or USER=root)
+** TODO Not yet implemented
+- [ ] Warn if =privileged: true= is set (full host access)
+- [ ] Warn if =network_mode: host= is used (no network isolation)
+- [ ] Warn if =pid: host= is set (can see all host processes)
+- [ ] Warn if =ipc: host= is set (shared memory with host)
+- [ ] Warn if =security_opt= contains =label:disable= or =apparmor:unconfined=
+- [ ] Warn if sensitive host paths are bind-mounted (=/=, =/etc=, =/var/run/docker.sock=, etc.)
+- [ ] Warn if =cap_add= includes dangerous capabilities (SYS_ADMIN, NET_ADMIN, SYS_PTRACE, etc.)
+- [ ] Warn if no =read_only: true= is set (writable root filesystem)
+- [ ] Warn if no =mem_limit= / =deploy.resources.limits.memory= is set (unbounded memory)
+- [ ] Warn if no =cpus= / =deploy.resources.limits.cpus= is set (unbounded CPU)
+- [ ] Warn if no healthcheck is defined
+- [ ] Warn if =restart: always= without resource limits (crash loop can exhaust host)
+- [ ] Suggest =no-new-privileges= security option if not present
+- [ ] Warn if =userns_mode= is not set (consider user namespace remapping)
+
+* No quadlet equivalent
+These compose fields have no meaningful quadlet mapping:
+- build
+- depends_on
+- extends
+- links
+- profiles
+- scale
+- pull_policy
+- pull_refresh_after
+- configs
+- secrets
+- develop
+- provider
+- models
+- annotations
+- attach
+- blkio_config
+- cgroup / cgroup_parent
+- cpu_count / cpu_percent / cpu_shares / cpu_quota / cpu_period / cpu_rt_period / cpu_rt_runtime / cpus / cpuset
+- credential_spec
+- device_cgroup_rules
+- dns_opt
+- domainname
+- external_links
+- gpus
+- ipc
+- isolation
+- label_file
+- mac_address
+- mem_limit / mem_reservation / mem_swappiness / memswap_limit
+- oom_kill_disable / oom_score_adj
+- pids_limit
+- platform
+- post_start / pre_stop
+- runtime
+- storage_opt
+- uts
+- use_api_socket
+- volumes_from

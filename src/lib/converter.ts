@@ -91,6 +91,10 @@ export function composeServiceToQuadletIR(
     container.push({ key: 'ContainerName', value: service.container_name })
   }
 
+  if (service.user) {
+    container.push({ key: 'User', value: service.user })
+  }
+
   if (service.deploy?.resources?.limits) {
     const limits = service.deploy.resources.limits
     if (limits.cpus != null) {
@@ -213,6 +217,9 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         break
       case 'ContainerName':
         service.container_name = value
+        break
+      case 'User':
+        service.user = value
         break
     }
   }
