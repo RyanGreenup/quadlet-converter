@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { parseCompose } from '../../lib/compose/index.js'
 import { composeToQuadletFiles } from '../../lib/converter.js'
 import { serializeQuadlet } from '../../lib/quadlet.js'
+import { extractBuildDefs, generateBuildJustfile } from '../../lib/build.js'
 import { extractSecretDefs, generateSecretsJustfile } from '../../lib/secrets.js'
 import type { QuadletData } from '../../lib/quadlet.js'
 import type { QuadletIR } from '../../lib/quadlet.js'
@@ -48,6 +49,12 @@ const composeToQuadletCommand = defineCommand({
         description: 'Use sops to decrypt file-based secrets in justfile recipes',
       }
     ),
+    build: option(
+      z.boolean().default(false),
+      {
+        description: 'Generate build recipes for services with build contexts',
+      }
+    ),
   },
   handler: async ({ flags, positional }) => {
     const filePath = positional[0]
@@ -71,8 +78,9 @@ const composeToQuadletCommand = defineCommand({
       ? path.basename(path.dirname(filePath))
       : basename
 
-    const files = composeToQuadletFiles(compose, podName)
+    const files = composeToQuadletFiles(compose, podName, { build: flags.build })
     const secretDefs = extractSecretDefs(compose)
+    const buildDefs = flags.build ? extractBuildDefs(compose) : []
 
     if (flags.output) {
       await mkdir(flags.output, { recursive: true })
@@ -88,6 +96,12 @@ const composeToQuadletCommand = defineCommand({
         await writeFile(outPath, generateSecretsJustfile(secretDefs, { sops: flags.sops }))
         console.log(outPath)
       }
+
+      if (buildDefs.length > 0) {
+        const outPath = path.join(flags.output, 'build.just')
+        await writeFile(outPath, generateBuildJustfile(buildDefs))
+        console.log(outPath)
+      }
     } else {
       for (let i = 0; i < files.length; i++) {
         const { filename, ir } = files[i]
@@ -100,6 +114,12 @@ const composeToQuadletCommand = defineCommand({
         console.log()
         console.log(`### secrets.just ###`)
         process.stdout.write(generateSecretsJustfile(secretDefs, { sops: flags.sops }))
+      }
+
+      if (buildDefs.length > 0) {
+        console.log()
+        console.log(`### build.just ###`)
+        process.stdout.write(generateBuildJustfile(buildDefs))
       }
     }
   }

@@ -765,3 +765,35 @@ describe('round-trip', () => {
     expect(compose.services!['web']).toEqual(service)
   })
 })
+
+describe('composeServiceToQuadletIR with build option', () => {
+  test('uses localhost/<name> when build is set and no image specified', () => {
+    const service: Service = { build: '.' }
+    const ir = composeServiceToQuadletIR('myapp', service, { build: true })
+    expect(ir.Container![0]).toEqual({ key: 'Image', value: 'localhost/myapp' })
+  })
+
+  test('uses explicit image when build is set and image is specified', () => {
+    const service: Service = { build: '.', image: 'registry.io/myapp:v1' }
+    const ir = composeServiceToQuadletIR('myapp', service, { build: true })
+    expect(ir.Container![0]).toEqual({ key: 'Image', value: 'registry.io/myapp:v1' })
+  })
+
+  test('no Image entry when build is false and no image specified', () => {
+    const service: Service = { build: '.' }
+    const ir = composeServiceToQuadletIR('myapp', service)
+    const imageEntries = ir.Container?.filter(e => e.key === 'Image') ?? []
+    expect(imageEntries).toHaveLength(0)
+  })
+
+  test('composeToQuadletFiles passes build option through', () => {
+    const compose: ComposeFile = {
+      services: {
+        app: { build: './app' },
+      },
+    }
+    const files = composeToQuadletFiles(compose, 'test', { build: true })
+    const container = files[0]
+    expect(container.ir.Container![0]).toEqual({ key: 'Image', value: 'localhost/app' })
+  })
+})

@@ -54,12 +54,15 @@ function secondsToDuration(seconds: number): string {
 export function composeServiceToQuadletIR(
   name: string,
   service: Service,
-  opts?: { omitPorts?: boolean; pod?: string },
+  opts?: { omitPorts?: boolean; pod?: string; build?: boolean },
 ): QuadletIR {
   const container: QuadletEntry[] = []
   const svcSection: QuadletEntry[] = []
 
-  if (service.image) {
+  if (opts?.build && service.build) {
+    const image = service.image ?? `localhost/${name}`
+    container.push({ key: 'Image', value: image })
+  } else if (service.image) {
     container.push({ key: 'Image', value: service.image })
   }
 
@@ -457,7 +460,7 @@ function portEntries(service: Service): QuadletEntry[] {
 }
 
 /** Convert an entire compose file to a set of quadlet files. */
-export function composeToQuadletFiles(compose: ComposeFile, podName: string): QuadletFileSet {
+export function composeToQuadletFiles(compose: ComposeFile, podName: string, opts?: { build?: boolean }): QuadletFileSet {
   const services = compose.services ?? {}
   const serviceNames = Object.keys(services)
 
@@ -468,7 +471,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string): Qu
     const name = serviceNames[0]
     return [{
       filename: `${name}.container`,
-      ir: composeServiceToQuadletIR(name, services[name]),
+      ir: composeServiceToQuadletIR(name, services[name], { build: opts?.build }),
     }]
   }
 
@@ -498,6 +501,7 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string): Qu
       ir: composeServiceToQuadletIR(name, services[name], {
         omitPorts: true,
         pod: podFile,
+        build: opts?.build,
       }),
     })
   }
