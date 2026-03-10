@@ -70,6 +70,20 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'DropCapability', value: 'ALL' })
   })
 
+  test('converts dns (string)', () => {
+    const ir = composeServiceToQuadletIR('app', { image: 'nginx', dns: '8.8.8.8' })
+    expect(ir.Container).toContainEqual({ key: 'DNS', value: '8.8.8.8' })
+  })
+
+  test('converts dns (list)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      dns: ['8.8.8.8', '1.1.1.1'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'DNS', value: '8.8.8.8' })
+    expect(ir.Container).toContainEqual({ key: 'DNS', value: '1.1.1.1' })
+  })
+
   test('converts hostname', () => {
     const ir = composeServiceToQuadletIR('app', { image: 'nginx', hostname: 'myhost' })
     expect(ir.Container).toContainEqual({ key: 'HostName', value: 'myhost' })

@@ -123,6 +123,13 @@ export function composeServiceToQuadletIR(
     }
   }
 
+  if (service.dns) {
+    const dnsServers = Array.isArray(service.dns) ? service.dns : [service.dns]
+    for (const d of dnsServers) {
+      container.push({ key: 'DNS', value: d })
+    }
+  }
+
   // devices → AddDevice (raw device pass-through)
   if (service.devices) {
     for (const dev of service.devices) {
@@ -315,6 +322,10 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'DropCapability':
         if (!service.cap_drop) service.cap_drop = []
         service.cap_drop.push(value)
+        break
+      case 'DNS':
+        if (!service.dns) service.dns = [] as string[]
+        ;(service.dns as string[]).push(value)
         break
       case 'AddDevice':
         if (value.startsWith('/dev/')) {

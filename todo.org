@@ -24,7 +24,7 @@
 - [X] cap_drop → DropCapability
 - [X] devices → AddDevice
 - [ ] labels → Label
-- [ ] dns → DNS
+- [X] dns → DNS
 - [ ] dns_search → DNSSearch
 - [ ] expose → ExposeHostPort
 - [ ] extra_hosts → AddHost
