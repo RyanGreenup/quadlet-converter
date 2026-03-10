@@ -1,5 +1,6 @@
 import { defineCommand, option } from '@bunli/core'
 import { z } from 'zod'
+import { parseCompose } from '../../lib/compose/index.js'
 
 const composeCommand = defineCommand({
   name: 'compose',
@@ -10,6 +11,13 @@ const composeCommand = defineCommand({
       {
         description: 'Pretty-print the JSON output',
         short: 'p'
+      }
+    ),
+    validate: option(
+      z.boolean().default(true),
+      {
+        description: 'Validate against the Compose specification schema',
+        short: 'v'
       }
     )
   },
@@ -22,7 +30,14 @@ const composeCommand = defineCommand({
 
     const file = Bun.file(filePath)
     const text = await file.text()
-    const parsed = Bun.YAML.parse(text)
+
+    let parsed: unknown
+    if (flags.validate) {
+      parsed = parseCompose(text)
+    } else {
+      parsed = Bun.YAML.parse(text)
+    }
+
     const indent = flags.pretty ? 2 : undefined
     console.log(JSON.stringify(parsed, null, indent))
   }
