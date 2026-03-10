@@ -106,21 +106,21 @@
 * Security checks (=check= command)
 ** Implemented
 - [X] Warn if container image runs as root (no USER or USER=root)
-** TODO Not yet implemented
-- [ ] Warn if =privileged: true= is set (full host access)
-- [ ] Warn if =network_mode: host= is used (no network isolation)
-- [ ] Warn if =pid: host= is set (can see all host processes)
-- [ ] Warn if =ipc: host= is set (shared memory with host)
-- [ ] Warn if =security_opt= contains =label:disable= or =apparmor:unconfined=
-- [ ] Warn if sensitive host paths are bind-mounted (=/=, =/etc=, =/var/run/docker.sock=, etc.)
-- [ ] Warn if =cap_add= includes dangerous capabilities (SYS_ADMIN, NET_ADMIN, SYS_PTRACE, etc.)
-- [ ] Warn if no =read_only: true= is set (writable root filesystem)
-- [ ] Warn if no =mem_limit= / =deploy.resources.limits.memory= is set (unbounded memory)
-- [ ] Warn if no =cpus= / =deploy.resources.limits.cpus= is set (unbounded CPU)
-- [ ] Warn if no healthcheck is defined
-- [ ] Warn if =restart: always= without resource limits (crash loop can exhaust host)
-- [ ] Suggest =no-new-privileges= security option if not present
-- [ ] Warn if =userns_mode= is not set (consider user namespace remapping)
+** Implemented
+- [X] Warn if =privileged: true= is set (full host access)
+- [X] Warn if =network_mode: host= is used (no network isolation)
+- [X] Warn if =pid: host= is set (can see all host processes)
+- [X] Warn if =ipc: host= is set (shared memory with host)
+- [X] Warn if =security_opt= contains =label:disable= or =apparmor:unconfined=
+- [X] Warn if sensitive host paths are bind-mounted (=/=, =/etc=, =/var/run/docker.sock=, etc.)
+- [X] Warn if =cap_add= includes dangerous capabilities (SYS_ADMIN, NET_ADMIN, SYS_PTRACE, etc.)
+- [X] Warn if no =read_only: true= is set (writable root filesystem)
+- [X] Warn if no =mem_limit= / =deploy.resources.limits.memory= is set (unbounded memory)
+- [X] Warn if no =cpus= / =deploy.resources.limits.cpus= is set (unbounded CPU)
+- [X] Warn if no healthcheck is defined
+- [X] Warn if =restart: always= without resource limits (crash loop can exhaust host)
+- [X] Suggest =no-new-privileges= security option if not present
+- [X] Warn if =userns_mode= is not set (consider user namespace remapping)
 
 * Design notes
 ** Volume name mapping
@@ -217,4 +217,17 @@ These compose fields have no meaningful quadlet mapping:
 - use_api_socket (Docker-specific)
 - cgroup (=host= / =private= namespace selection)
 
+* TODO Fix incorrect systemd resource mappings
+** mem_reservation → MemoryLow= (not MemoryReservation=)
+=MemoryReservation== is not a valid systemd directive and will be silently ignored.
+The correct mapping is =MemoryLow== which provides a soft memory protection guarantee
+(the closest systemd equivalent to Docker's =--memory-reservation=).
+
+** memswap_limit → MemorySwapMax= needs subtraction
+Docker's =memswap_limit= (=--memory-swap=) is *combined memory + swap*, but systemd's
+=MemorySwapMax== controls *swap only* (=memory.swap.max= cgroup attribute).
+The converted value must be =memswap_limit - mem_limit=.
+
+Example: =mem_limit=256m=, =memswap_limit=512m= → =MemorySwapMax=256m= (not 512m).
+When =memswap_limit == mem_limit=, swap is disabled: =MemorySwapMax=0=.
 
