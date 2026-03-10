@@ -38,8 +38,8 @@ PodmanArgs=--ulimit=nofile=65536:65536
 CPUQuota=150%
 AllowedCPUs=2,3,4,5
 MemoryMax=512m
-MemoryReservation=256m
-MemorySwapMax=1g
+MemoryLow=256m
+MemorySwapMax=512m
 TasksMax=512
 OOMScoreAdjust=-300
 ExecStartPost=podman exec app /app/bin/migrate

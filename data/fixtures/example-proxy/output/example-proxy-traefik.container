@@ -37,8 +37,8 @@ PodmanArgs=--ulimit=nproc=4096:4096
 CPUQuota=50%
 AllowedCPUs=0,1
 MemoryMax=256m
-MemoryReservation=128m
-MemorySwapMax=512m
+MemoryLow=128m
+MemorySwapMax=256m
 TasksMax=256
 OOMScoreAdjust=-500
 Restart=always

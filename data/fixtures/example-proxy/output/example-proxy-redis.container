@@ -24,8 +24,8 @@ Notify=healthy
 [Service]
 CPUQuota=50%
 MemoryMax=256m
-MemoryReservation=128m
-MemorySwapMax=256m
+MemoryLow=128m
+MemorySwapMax=0
 TasksMax=128
 OOMScoreAdjust=-700
 Restart=always
