@@ -26,7 +26,7 @@ function convertFile(text: string, file: TreeFile): string {
       const ir = toQuadletIR(data)
       const serviceName = path.basename(file.name, path.extname(file.name))
       const compose = quadletIRToCompose(ir, serviceName)
-      return Bun.YAML.stringify(compose)
+      return Bun.YAML.stringify(compose, null, 2)
     }
   } catch (err) {
     return `Error: ${err instanceof Error ? err.message : String(err)}`
@@ -71,7 +71,7 @@ export function App({ dir }: { dir: string }) {
         </box>
       </box>
       <box height={1} paddingX={1}>
-        <text> j/k: navigate  h/l: collapse/expand  Tab: switch panel  q: quit</text>
+        <text> ↑↓/jk: navigate  ←→/hl: collapse/expand  Enter: activate  *: expand level  Tab: panel  q: quit</text>
       </box>
     </box>
   )

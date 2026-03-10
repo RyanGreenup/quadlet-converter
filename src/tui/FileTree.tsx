@@ -84,6 +84,29 @@ function flatten(
   return rows
 }
 
+// ── ARIA TreeView helpers ────────────────────────────────────
+
+/** Find the parent directory row index for a given row. */
+function findParent(rows: FlatRow[], index: number): number | null {
+  const targetDepth = rows[index].depth
+  if (targetDepth === 0) return null
+  for (let i = index - 1; i >= 0; i--) {
+    if (rows[i].depth < targetDepth) return i
+  }
+  return null
+}
+
+/** Find first row whose name starts with the given character (type-ahead). */
+function findByChar(rows: FlatRow[], startIndex: number, char: string): number | null {
+  const lower = char.toLowerCase()
+  // Search from after cursor to end, then wrap to start
+  for (let offset = 1; offset <= rows.length; offset++) {
+    const i = (startIndex + offset) % rows.length
+    if (rows[i].node.name.toLowerCase().startsWith(lower)) return i
+  }
+  return null
+}
+
 // ── Component ───────────────────────────────────────────────
 
 export interface FileTreeProps {
@@ -100,11 +123,20 @@ export function FileTree({ tree, focused, onSelect }: FileTreeProps) {
 
   const clamp = (i: number) => Math.max(0, Math.min(rows.length - 1, i))
 
-  const toggle = useCallback((dir: TreeDir) => {
+  const expand = useCallback((dirPath: string) => {
     setExpanded(prev => {
+      if (prev.has(dirPath)) return prev
       const next = new Set(prev)
-      if (next.has(dir.path)) next.delete(dir.path)
-      else next.add(dir.path)
+      next.add(dirPath)
+      return next
+    })
+  }, [])
+
+  const collapse = useCallback((dirPath: string) => {
+    setExpanded(prev => {
+      if (!prev.has(dirPath)) return prev
+      const next = new Set(prev)
+      next.delete(dirPath)
       return next
     })
   }, [])
@@ -118,45 +150,129 @@ export function FileTree({ tree, focused, onSelect }: FileTreeProps) {
 
   useKeyboard((key) => {
     if (!focused) return
-    key.preventDefault()
+
+    const row = rows[cursor]
+    if (!row) return
+
+    // ARIA TreeView keyboard interactions
+    // https://www.w3.org/WAI/ARIA/apg/patterns/treeview/#keyboardinteraction
+    //
+    // Down Arrow (j)  — Move to next visible row
+    // Up Arrow (k)    — Move to previous visible row
+    // Right Arrow (l) — On closed dir: open. On open dir: move to first child. On file: no-op.
+    // Left Arrow (h)  — On open dir: close. On child: move to parent dir.
+    // Home (g)        — Move to first row
+    // End (G)         — Move to last row
+    // Enter / Space   — Activate (toggle dir, or select file)
+    // * (asterisk)    — Expand all siblings at this level
+    // Type-ahead      — Single printable character jumps to next matching name
 
     switch (key.name) {
-      case 'j':
+      // ── Vertical movement ──
       case 'down':
+      case 'j':
+        key.preventDefault()
         moveCursor(cursor + 1)
         break
-      case 'k':
+
       case 'up':
+      case 'k':
+        key.preventDefault()
         moveCursor(cursor - 1)
         break
-      case 'g':
-        moveCursor(0)
+
+      // ── Horizontal / expand-collapse ──
+      case 'right':
+      case 'l':
+        key.preventDefault()
+        if (row.node.kind === 'dir') {
+          if (!expanded.has(row.node.path)) {
+            // Closed dir → open it
+            expand(row.node.path)
+          } else {
+            // Open dir → move to first child
+            if (cursor + 1 < rows.length && rows[cursor + 1].depth > row.depth) {
+              moveCursor(cursor + 1)
+            }
+          }
+        }
         break
-      case 'G':
-        moveCursor(rows.length - 1)
+
+      case 'left':
+      case 'h':
+        key.preventDefault()
+        if (row.node.kind === 'dir' && expanded.has(row.node.path)) {
+          // Open dir → close it
+          collapse(row.node.path)
+        } else {
+          // Child node or closed dir → move to parent
+          const parent = findParent(rows, cursor)
+          if (parent != null) moveCursor(parent)
+        }
         break
+
+      // ── Activate ──
       case 'return':
       case 'space':
-      case 'l':
-      case 'right': {
-        const row = rows[cursor]
-        if (!row) break
+        key.preventDefault()
         if (row.node.kind === 'dir') {
-          toggle(row.node)
+          if (expanded.has(row.node.path)) collapse(row.node.path)
+          else expand(row.node.path)
         } else {
           onSelect?.(row.node)
         }
         break
-      }
-      case 'h':
-      case 'left': {
-        const row = rows[cursor]
-        if (!row) break
-        if (row.node.kind === 'dir' && expanded.has(row.node.path)) {
-          toggle(row.node)
+
+      // ── Jump to ends ──
+      case 'home':
+        key.preventDefault()
+        moveCursor(0)
+        break
+
+      case 'end':
+        key.preventDefault()
+        moveCursor(rows.length - 1)
+        break
+
+      default:
+        // g / G as vim Home/End aliases
+        if (key.name === 'g' && !key.shift && !key.ctrl) {
+          key.preventDefault()
+          moveCursor(0)
+          break
+        }
+        if (key.name === 'G' || (key.name === 'g' && key.shift)) {
+          key.preventDefault()
+          moveCursor(rows.length - 1)
+          break
+        }
+
+        // * — expand all sibling directories at this level
+        if (key.sequence === '*') {
+          key.preventDefault()
+          // Find all siblings at this depth
+          const depth = row.depth
+          setExpanded(prev => {
+            const next = new Set(prev)
+            for (const r of rows) {
+              if (r.depth === depth && r.node.kind === 'dir') {
+                next.add(r.node.path)
+              }
+            }
+            return next
+          })
+          break
+        }
+
+        // Type-ahead: single printable character
+        if (key.name.length === 1 && !key.ctrl && !key.meta) {
+          const match = findByChar(rows, cursor, key.name)
+          if (match != null) {
+            key.preventDefault()
+            moveCursor(match)
+          }
         }
         break
-      }
     }
   })
 
