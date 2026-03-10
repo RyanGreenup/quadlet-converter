@@ -112,22 +112,24 @@ const composeToQuadletCommand = defineCommand({
     const buildDefs = flags.build ? extractBuildDefs(compose) : []
 
     if (flags.output) {
-      await mkdir(flags.output, { recursive: true })
+      const outDir = path.join(flags.output, podName)
+      await mkdir(outDir, { recursive: true })
+      console.log(outDir)
 
       for (const { filename, ir } of files) {
-        const outPath = path.join(flags.output, filename)
+        const outPath = path.join(outDir, filename)
         await writeFile(outPath, serializeQuadlet(irToQuadletData(ir)))
         console.log(outPath)
       }
 
       if (secretDefs.length > 0) {
-        const outPath = path.join(flags.output, 'secrets.just')
+        const outPath = path.join(outDir, 'secrets.just')
         await writeFile(outPath, generateSecretsJustfile(secretDefs, { sops: flags.sops }))
         console.log(outPath)
       }
 
       if (buildDefs.length > 0) {
-        const outPath = path.join(flags.output, 'build.just')
+        const outPath = path.join(outDir, 'build.just')
         await writeFile(outPath, generateBuildJustfile(buildDefs))
         console.log(outPath)
       }

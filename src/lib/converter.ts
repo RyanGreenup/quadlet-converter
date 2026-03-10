@@ -697,8 +697,14 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
         }
       }
 
+      // Set ContainerName to the compose service name so DNS resolution works
+      if (!ir.Container) ir.Container = []
+      const hasContainerName = ir.Container.some(e => e.key === 'ContainerName')
+      if (!hasContainerName) {
+        ir.Container.push({ key: 'ContainerName', value: name })
+      }
+
       if (healthyDeps.has(name)) {
-        if (!ir.Container) ir.Container = []
         ir.Container.push({ key: 'Notify', value: 'healthy' })
       }
 
