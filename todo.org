@@ -78,26 +78,26 @@
 - [X] cpuset → AllowedCPUs= [Service]
 
 ** PodmanArgs fallbacks (no direct quadlet key)
-- [ ] ulimits → PodmanArgs=--ulimit
-- [ ] init → PodmanArgs=--init
-- [ ] tty → PodmanArgs=--tty
-- [ ] stdin_open → PodmanArgs=--interactive
-- [ ] pull_policy → PodmanArgs=--pull=
-- [ ] ipc → PodmanArgs=--ipc
-- [ ] mac_address → PodmanArgs=--mac-address
-- [ ] oom_kill_disable → PodmanArgs=--oom-kill-disable
-- [ ] volumes_from → PodmanArgs=--volumes-from
-- [ ] dns_opt → PodmanArgs=--dns-option
-- [ ] domainname → PodmanArgs=--domainname
-- [ ] uts → PodmanArgs=--uts
-- [ ] runtime → PodmanArgs=--runtime
-- [ ] blkio_config → PodmanArgs=--blkio-weight / --device-read-bps / etc.
-- [ ] cgroup_parent → PodmanArgs=--cgroup-parent
-- [ ] device_cgroup_rules → PodmanArgs=--device-cgroup-rule
-- [ ] label_file → PodmanArgs=--label-file
-- [ ] storage_opt → PodmanArgs=--storage-opt
+- [X] ulimits → PodmanArgs=--ulimit
+- [X] init → PodmanArgs=--init
+- [X] tty → PodmanArgs=--tty
+- [X] stdin_open → PodmanArgs=--interactive
+- [X] pull_policy → PodmanArgs=--pull=
+- [X] ipc → PodmanArgs=--ipc
+- [X] mac_address → PodmanArgs=--mac-address
+- [X] oom_kill_disable → PodmanArgs=--oom-kill-disable
+- [X] volumes_from → PodmanArgs=--volumes-from
+- [X] dns_opt → PodmanArgs=--dns-option
+- [X] domainname → PodmanArgs=--domainname
+- [X] uts → PodmanArgs=--uts
+- [X] runtime → PodmanArgs=--runtime
+- [X] blkio_config → PodmanArgs=--blkio-weight / --device-read-bps / etc.
+- [X] cgroup_parent → PodmanArgs=--cgroup-parent
+- [X] device_cgroup_rules → PodmanArgs=--device-cgroup-rule
+- [X] label_file → PodmanArgs=--label-file
+- [X] storage_opt → PodmanArgs=--storage-opt
 - [X] gpus → AddDevice= (CDI format)
-- [ ] cpu_count / cpu_percent / cpu_rt_period / cpu_rt_runtime → PodmanArgs
+- [X] cpu_count / cpu_percent / cpu_rt_period / cpu_rt_runtime → PodmanArgs
 
 ** Other mappable fields
 - [X] secrets → Secret=
