@@ -19,7 +19,7 @@ export function extractSecretDefs(compose: ComposeFile): SecretDef[] {
 }
 
 /** Generate justfile content with podman secret CRUD recipes. */
-export function generateSecretsJustfile(secrets: SecretDef[]): string {
+export function generateSecretsJustfile(secrets: SecretDef[], opts?: { sops?: boolean }): string {
   if (secrets.length === 0) return ''
 
   const lines: string[] = []
@@ -28,7 +28,11 @@ export function generateSecretsJustfile(secrets: SecretDef[]): string {
     lines.push(`# Create secret '${secret.name}'`)
     if (secret.file) {
       lines.push(`create-secret-${secret.name}:`)
-      lines.push(`    podman secret create ${secret.name} ${secret.file}`)
+      if (opts?.sops) {
+        lines.push(`    sops -d ${secret.file} | podman secret create ${secret.name} -`)
+      } else {
+        lines.push(`    podman secret create ${secret.name} ${secret.file}`)
+      }
     } else if (secret.environment) {
       lines.push(`create-secret-${secret.name}:`)
       lines.push(`    printenv ${secret.environment} | podman secret create ${secret.name} -`)

@@ -40,8 +40,8 @@
 - [X] group_add → GroupAdd
 - [X] userns_mode → UserNS
 - [X] security_opt label:type:X → SecurityLabelType=X
-- [ ] security_opt label:level:X → SecurityLabelLevel=X
-- [ ] security_opt label:disable → SecurityLabelDisable=true
+- [X] security_opt label:level:X → SecurityLabelLevel=X
+- [X] security_opt label:disable → SecurityLabelDisable=true
 - [ ] security_opt no-new-privileges → NoNewPrivileges=true
 - [ ] security_opt seccomp:X → SeccompProfile=X
 - [ ] security_opt apparmor:X → PodmanArgs=--security-opt=apparmor=X

@@ -467,6 +467,31 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'SecurityLabelType', value: 'container_t' })
   })
 
+  test('converts security_opt label:level', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['label:level:s0:c100,c200'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'SecurityLabelLevel', value: 's0:c100,c200' })
+  })
+
+  test('converts security_opt label:disable', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['label:disable'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'SecurityLabelDisable', value: 'true' })
+  })
+
+  test('converts multiple security_opt entries', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      security_opt: ['label:type:container_t', 'label:level:s0:c100,c200'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'SecurityLabelType', value: 'container_t' })
+    expect(ir.Container).toContainEqual({ key: 'SecurityLabelLevel', value: 's0:c100,c200' })
+  })
+
   test('handles service with no optional fields', () => {
     const ir = composeServiceToQuadletIR('empty', {})
     expect(ir).toEqual({})

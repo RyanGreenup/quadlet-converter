@@ -42,6 +42,12 @@ const composeToQuadletCommand = defineCommand({
         short: 'o',
       }
     ),
+    sops: option(
+      z.boolean().default(false),
+      {
+        description: 'Use sops to decrypt file-based secrets in justfile recipes',
+      }
+    ),
   },
   handler: async ({ flags, positional }) => {
     const filePath = positional[0]
@@ -79,7 +85,7 @@ const composeToQuadletCommand = defineCommand({
 
       if (secretDefs.length > 0) {
         const outPath = path.join(flags.output, 'secrets.just')
-        await writeFile(outPath, generateSecretsJustfile(secretDefs))
+        await writeFile(outPath, generateSecretsJustfile(secretDefs, { sops: flags.sops }))
         console.log(outPath)
       }
     } else {
@@ -93,7 +99,7 @@ const composeToQuadletCommand = defineCommand({
       if (secretDefs.length > 0) {
         console.log()
         console.log(`### secrets.just ###`)
-        process.stdout.write(generateSecretsJustfile(secretDefs))
+        process.stdout.write(generateSecretsJustfile(secretDefs, { sops: flags.sops }))
       }
     }
   }

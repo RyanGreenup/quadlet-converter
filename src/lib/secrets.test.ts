@@ -96,4 +96,20 @@ describe('generateSecretsJustfile', () => {
   test('returns empty string for no secrets', () => {
     expect(generateSecretsJustfile([])).toBe('')
   })
+
+  test('file-based with sops uses sops -d pipe', () => {
+    const output = generateSecretsJustfile([{ name: 'db_pass', file: './db_pass.txt' }], { sops: true })
+    expect(output).toContain('sops -d ./db_pass.txt | podman secret create db_pass -')
+    expect(output).not.toContain('podman secret create db_pass ./db_pass.txt')
+  })
+
+  test('env-based with sops is unchanged', () => {
+    const output = generateSecretsJustfile([{ name: 'api_key', environment: 'API_KEY' }], { sops: true })
+    expect(output).toContain('printenv API_KEY | podman secret create api_key -')
+  })
+
+  test('external with sops is unchanged', () => {
+    const output = generateSecretsJustfile([{ name: 'session', external: true }], { sops: true })
+    expect(output).toContain('skipping creation')
+  })
 })
