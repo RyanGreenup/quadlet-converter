@@ -1,0 +1,9 @@
+# redis.container
+[Container]
+Image=redis:7
+PublishPort=127.0.0.1:6379:6379
+Volume=redis:/data
+ContainerName=superset_cache
+
+[Service]
+Restart=always

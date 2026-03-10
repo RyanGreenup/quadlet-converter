@@ -1,0 +1,8 @@
+# dokuwiki.container
+[Container]
+Image=lscr.io/linuxserver/dokuwiki:latest
+Volume=./config:/config:Z
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ=Etc/UTC
+ContainerName=dokuwiki

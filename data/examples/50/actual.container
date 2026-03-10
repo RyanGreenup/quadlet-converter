@@ -1,0 +1,16 @@
+# caddy.container
+[Container]
+Image=caddy
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=443:443/udp
+PublishPort=8823:8823
+PublishPort=127.0.0.1:2077:2077
+Volume=./Caddyfile:/etc/caddy/Caddyfile
+Volume=./srv:/srv
+Volume=./caddy_data:/data
+Volume=./caddy_config:/config
+Volume=./mtls:/etc/caddy/mtls:ro
+
+[Service]
+Restart=always

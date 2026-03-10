@@ -1,0 +1,12 @@
+# windows.container
+[Container]
+Image=dockurr/windows
+PublishPort=8006:8006
+PublishPort=3389:3389/tcp
+PublishPort=3389:3389/udp
+Volume=./windows:/storage
+Environment=VERSION=11
+ContainerName=windows
+
+[Service]
+Restart=always

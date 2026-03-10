@@ -1,0 +1,12 @@
+# postgres.container
+[Container]
+Image=docker.io/library/postgres:18
+PublishPort=127.0.0.1:5432:5432
+Volume=postgres_data:/var/lib/postgresql
+Environment=POSTGRES_USER=${POSTGRES_USER}
+Environment=POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+Environment=POSTGRES_DB=${POSTGRES_DB}
+ContainerName=postgres
+
+[Service]
+Restart=always

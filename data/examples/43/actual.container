@@ -1,0 +1,7 @@
+# mariadb.container
+[Container]
+Image=bitnami/mariadb:latest
+Volume=mariadb-data:/bitnami/mariadb
+Environment=MARIADB_USER=bn_wordpress
+Environment=MARIADB_DATABASE=bitnami_wordpress
+Environment=ALLOW_EMPTY_PASSWORD=yes

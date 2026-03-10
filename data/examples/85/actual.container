@@ -1,0 +1,14 @@
+# rocketchat.container
+[Container]
+Image=${IMAGE:-registry.rocket.chat/rocketchat/rocket.chat}:${RELEASE:-latest}
+PublishPort=${BIND_IP:-0.0.0.0}:${HOST_PORT:-3000}:${PORT:-3000}
+Environment=MONGO_URL=${MONGO_URL:-mongodb://${MONGODB_ADVERTISED_HOSTNAME:-mongodb}:${MONGODB_INITIAL_PRIMARY_PORT_NUMBER:-27017}/${MONGODB_DATABASE:-rocketchat}?replicaSet=${MONGODB_REPLICA_SET_NAME:-rs0}}
+Environment=MONGO_OPLOG_URL=${MONGO_OPLOG_URL:-mongodb://${MONGODB_ADVERTISED_HOSTNAME:-mongodb}:${MONGODB_INITIAL_PRIMARY_PORT_NUMBER:-27017}/local?replicaSet=${MONGODB_REPLICA_SET_NAME:-rs0}}
+Environment=ROOT_URL=${ROOT_URL:-http://localhost:${HOST_PORT:-3000}}
+Environment=PORT=${PORT:-3000}
+Environment=DEPLOY_METHOD=docker
+Environment=DEPLOY_PLATFORM=${DEPLOY_PLATFORM:-}
+Environment=REG_TOKEN=${REG_TOKEN:-}
+
+[Service]
+Restart=always

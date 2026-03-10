@@ -1,0 +1,9 @@
+# siyuan.container
+[Container]
+Image=b3log/siyuan
+PublishPort=6806:6806
+Volume=/siyuan/workspace:/siyuan/workspace
+Environment=TZ="Australia/Sydney"
+
+[Service]
+Restart=always

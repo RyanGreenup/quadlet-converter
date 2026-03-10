@@ -1,0 +1,12 @@
+# grafana.container
+[Container]
+Image=grafana/grafana:latest-ubuntu
+PublishPort=32679:3000
+Volume=grafana-storage:/var/lib/grafana
+Volume=grafana-config:/etc/grafana/
+Environment=GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+Environment=GF_PATHS_DATA=/var/lib/grafana
+Environment=GF_PATHS_HOME=/usr/share/grafana
+Environment=GF_PATHS_LOGS=/var/log/grafana
+Environment=GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+Environment=GF_PATHS_PROVISIONING=/etc/grafana/provisioning

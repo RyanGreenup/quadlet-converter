@@ -1,0 +1,13 @@
+# vscodium.container
+[Container]
+Image=lscr.io/linuxserver/vscodium:latest
+PublishPort=3003:3000
+PublishPort=3004:3001
+Volume=./config:/config
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ=Etc/UTC
+ContainerName=vscodium
+
+[Service]
+Restart=always

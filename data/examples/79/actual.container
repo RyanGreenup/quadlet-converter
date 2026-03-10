@@ -1,0 +1,14 @@
+# anki_sync_server.container
+[Container]
+Image=kuklinistvan/anki-sync-server
+PublishPort=0.0.0.0:27701:27701
+Volume=${ANKISYNCD_DATA_ROOT:-../instances/anki_sync_server}:/srv/ankisyncd
+Environment=ANKISYNCD_PORT=${ANKISYNCD_PORT:-27701}
+Environment=ANKISYNCD_BASE_URL=${ANKISYNCD_BASE_URL:-/sync/}
+Environment=ANKISYNCD_BASE_MEDIA_URL=${ANKISYNCD_BASE_MEDIA_URL:-/msync/}
+Environment=ANKISYNCD_AUTH_DB_PATH=${ANKISYNCD_AUTH_DB_PATH:-./auth.db}
+Environment=ANKISYNCD_SESSION_DB_PATH=${ANKISYNCD_SESSION_DB_PATH:-./session.db}
+ContainerName=anki_sync_server
+
+[Service]
+Restart=always

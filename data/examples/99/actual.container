@@ -1,0 +1,11 @@
+# trilium.container
+[Container]
+Image=triliumnext/notes:latest
+PublishPort=37281:8080
+Volume=./data/trilium-data/:/home/node/trilium-data
+Volume=/etc/timezone:/etc/timezone:ro
+Volume=/etc/localtime:/etc/localtime:ro
+Environment=TRILIUM_DATA_DIR=/home/node/trilium-data
+
+[Service]
+Restart=always

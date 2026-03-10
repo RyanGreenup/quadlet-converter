@@ -1,0 +1,10 @@
+# dokuwiki.container
+[Container]
+Image=lscr.io/linuxserver/dokuwiki:latest
+PublishPort=8923:80
+Volume=./config:/config
+Environment=TZ=Etc/UTC
+ContainerName=dokuwiki
+
+[Service]
+Restart=always

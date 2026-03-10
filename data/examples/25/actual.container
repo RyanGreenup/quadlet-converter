@@ -1,0 +1,13 @@
+# clickhouse.container
+[Container]
+Image=clickhouse
+Volume=clickhouse-data:/var/lib/clickhouse
+Volume=clickhouse-config:/etc/clickhouse-server/users.d
+Environment=CLICKHOUSE_USER=user
+Environment=CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
+Environment=CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+Environment=PGSSLCERT=/tmp/postgresql.crt
+ContainerName=some-clickhouse-server
+
+[Service]
+Restart=always

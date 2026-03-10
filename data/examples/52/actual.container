@@ -1,0 +1,7 @@
+# webdav.container
+[Container]
+PublishPort=0.0.0.0:${PORT}:${PORT}
+Volume=/home/ryan/Agenda:/home/user/share/Agenda
+
+[Service]
+Restart=always

@@ -1,0 +1,19 @@
+# bookstack.container
+[Container]
+Image=lscr.io/linuxserver/bookstack:version-v25.02
+PublishPort=6875:80
+Volume=./bookstack_app_data:/config
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ=Etc/UTC
+Environment=APP_URL=http://bookstack.vale
+Environment=APP_KEY=base64:3qjlIoUX4Tw6fUQgZcxMbz6lb8+dAzqpvItqHvahW1c=
+Environment=DB_HOST=mariadb
+Environment=DB_PORT=3306
+Environment=DB_DATABASE=bookstack
+Environment=DB_USERNAME=bookstack
+Environment=DB_PASSWORD=bookstack8432
+ContainerName=bookstack
+
+[Service]
+Restart=always

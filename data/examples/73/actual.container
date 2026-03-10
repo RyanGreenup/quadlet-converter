@@ -1,0 +1,10 @@
+# immich-server.container
+[Container]
+Image=ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+PublishPort=2283:2283
+Volume=${UPLOAD_LOCATION}:/usr/src/app/upload
+Volume=/etc/localtime:/etc/localtime:ro
+ContainerName=immich_server
+
+[Service]
+Restart=always

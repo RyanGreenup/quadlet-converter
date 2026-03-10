@@ -1,0 +1,12 @@
+# jupyter.container
+[Container]
+Image=localhost/r
+Network=host
+Volume=/home/ryan/:/home/ryan
+Volume=/home/ryan/.local/share/virtualenvs:/home/ryan/.local/share/virtualenvs
+Environment=PUID=1000
+Environment=PGID=1000
+ContainerName=jupyter
+
+[Service]
+Restart=always

@@ -1,0 +1,16 @@
+# dropbox-photo-sync.container
+[Container]
+Volume=./.env:/app/.env:Z
+Environment=PYTHONUNBUFFERED=1
+Environment=PGHOST=${PGHOST}
+Environment=PGPORT=${PGPORT:-5432}
+Environment=PGUSER=${PGUSER}
+Environment=PGPASSWORD=${PGPASSWORD}
+Environment=PGDATABASE=${PGDATABASE}
+Environment=APP_KEY=${APP_KEY}
+Environment=APP_SECRET=${APP_SECRET}
+Environment=GENERATED_ACCESS_TOKEN=${GENERATED_ACCESS_TOKEN}
+Environment=REFRESH_TOKEN=${REFRESH_TOKEN}
+
+[Service]
+Restart=always

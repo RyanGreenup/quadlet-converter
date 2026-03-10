@@ -1,0 +1,21 @@
+# clickhouse.container
+[Container]
+Image=clickhouse
+PublishPort=127.0.0.1:${CLICKHOUSE_PORT}:9000
+PublishPort=127.0.0.1:18123:8123
+Volume=./data/clickhouse:/var/lib/clickhouse:Z
+Volume=./data/configs/users-override.xml:/etc/clickhouse-server/users.d/named-collection-grant.xml:Z
+Volume=./data/configs/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:Z
+Volume=./data/configs/low-memory-users.xml:/etc/clickhouse-server/users.d/low-memory.xml:Z
+Environment=CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+Environment=CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+Environment=PGHOST=${PGHOST}
+Environment=PGPORT=${PGPORT}
+Environment=PGDATABASE=${PGDATABASE}
+Environment=PGUSER=${PGUSER}
+Environment=PGPASSWORD=${PGPASSWORD}
+Environment=PGSSLCERT=/tmp/postgresql.crt
+ContainerName=some-clickhouse-server
+
+[Service]
+Restart=always

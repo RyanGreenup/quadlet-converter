@@ -1,0 +1,9 @@
+# slash.container
+[Container]
+Image=yourselfhosted/slash:latest
+PublishPort=5231:5231
+Volume=slash:/var/opt/slash
+ContainerName=slash
+
+[Service]
+Restart=always

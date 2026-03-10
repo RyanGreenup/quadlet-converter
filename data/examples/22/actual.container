@@ -1,0 +1,18 @@
+# dynamo-sync.container
+[Container]
+Volume=./data:/app/data:Z
+Volume=./models:/app/models:Z
+Volume=./load:/app/load:Z
+Volume=./.env:/app/.env:Z
+Environment=AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-ap-southeast-2}
+Environment=AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+Environment=AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+Environment=AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+Environment=PGHOST=${PGHOST}
+Environment=PGPORT=${PGPORT:-5432}
+Environment=PGUSER=${PGUSER}
+Environment=PGPASSWORD=${PGPASSWORD}
+Environment=PGDATABASE=${PGDATABASE}
+
+[Service]
+Restart=always

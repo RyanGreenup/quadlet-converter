@@ -1,0 +1,8 @@
+# lilium.container
+[Container]
+PublishPort=${PORT}:${PORT}
+Volume=./.data:/app/.data:Z
+ContainerName=lilium
+
+[Service]
+Restart=always

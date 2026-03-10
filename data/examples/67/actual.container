@@ -1,0 +1,10 @@
+# servas.container
+[Container]
+Image=beromir/servas
+PublishPort=${APP_PORT}:80
+Volume=./.env:/var/www/html/.env
+Volume=servas-db-sqlite:/var/www/html/database/sqlite
+ContainerName=servas
+
+[Service]
+Restart=always

@@ -1,0 +1,15 @@
+# nginx.container
+[Container]
+Image=nginx:stable-bookworm
+PublishPort=80:80
+PublishPort=443:443
+Volume=./nginx/nginx-conf/nginx.conf:/etc/nginx/conf.d/default.conf
+Volume=./nginx/nginx-conf/security-headers.conf:/etc/nginx/snippets/security-headers.conf
+Volume=./nginx/nginx-conf/csp.conf:/etc/nginx/snippets/csp.conf
+Volume=./nginx/nginx-conf/oauth2-proxy.conf:/etc/nginx/snippets/oauth2-proxy.conf
+Volume=./nginx/certs:/etc/ssl/
+Volume=./media:/usr/share/nginx/html/media
+Volume=wellknown:/usr/share/nginx/html/.well-known
+
+[Service]
+Restart=always

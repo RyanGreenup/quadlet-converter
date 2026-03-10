@@ -1,0 +1,8 @@
+# database.container
+[Container]
+Image=ankane/pgvector
+PublishPort=5432:5432
+Volume=./data/khoj_db:/var/lib/postgresql/data/
+Environment=POSTGRES_USER=postgres
+Environment=POSTGRES_PASSWORD=postgres
+Environment=POSTGRES_DB=postgres

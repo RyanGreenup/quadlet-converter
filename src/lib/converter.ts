@@ -77,6 +77,17 @@ export function composeServiceToQuadletIR(name: string, service: Service): Quadl
     container.push({ key: 'ContainerName', value: service.container_name })
   }
 
+  if (service.deploy?.resources?.limits) {
+    const limits = service.deploy.resources.limits
+    if (limits.cpus != null) {
+      const pct = Math.round(parseFloat(String(limits.cpus)) * 100)
+      svcSection.push({ key: 'CPUQuota', value: `${pct}%` })
+    }
+    if (limits.memory) {
+      svcSection.push({ key: 'MemoryMax', value: limits.memory })
+    }
+  }
+
   if (service.restart) {
     const mapped = restartToQuadlet[service.restart] ?? service.restart
     svcSection.push({ key: 'Restart', value: mapped })
@@ -125,6 +136,20 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
     switch (key) {
       case 'Restart':
         service.restart = restartToCompose[value] ?? value
+        break
+      case 'CPUQuota': {
+        if (!service.deploy) service.deploy = {}
+        if (!service.deploy.resources) service.deploy.resources = {}
+        if (!service.deploy.resources.limits) service.deploy.resources.limits = {}
+        const pct = parseFloat(value)
+        service.deploy.resources.limits.cpus = String(pct / 100)
+        break
+      }
+      case 'MemoryMax':
+        if (!service.deploy) service.deploy = {}
+        if (!service.deploy.resources) service.deploy.resources = {}
+        if (!service.deploy.resources.limits) service.deploy.resources.limits = {}
+        service.deploy.resources.limits.memory = value
         break
     }
   }

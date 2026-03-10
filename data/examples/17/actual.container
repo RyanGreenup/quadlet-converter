@@ -1,0 +1,13 @@
+# server.container
+[Container]
+PublishPort=3000:3000
+PublishPort=222:22
+Volume=./data:/data
+Volume=/etc/timezone:/etc/timezone:ro
+Volume=/etc/localtime:/etc/localtime:ro
+Environment=USER_UID=1000
+Environment=USER_GID=1000
+ContainerName=gitea
+
+[Service]
+Restart=always

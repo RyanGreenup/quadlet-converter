@@ -1,0 +1,13 @@
+# helloworld-qml.container
+[Container]
+Image=helloworld-qml:latest
+Network=host
+Volume=/tmp/.X11-unix:/tmp/.X11-unix:rw
+Volume=${HOME}/.Xauthority:/home/appuser/.Xauthority:ro
+Volume=${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}:rw
+Environment=DISPLAY=${DISPLAY}
+Environment=QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-xcb}
+Environment=QT_X11_NO_MITSHM=1
+Environment=WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+Environment=XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/1000}
+ContainerName=helloworld-qml

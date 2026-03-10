@@ -1,0 +1,9 @@
+# appimage-builder.container
+[Container]
+Image=appimage-builder:qt6-latest
+Volume=.:/source:ro
+Volume=./build-appimage:/build
+Volume=./appimage-output:/output
+Environment=QT_QPA_PLATFORM=offscreen
+Environment=QT_DEBUG_PLUGINS=0
+ContainerName=appimage-builder

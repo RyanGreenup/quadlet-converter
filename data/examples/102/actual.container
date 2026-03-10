@@ -1,0 +1,12 @@
+# affine.container
+[Container]
+Image=ghcr.io/toeverything/affine-graphql:${AFFINE_REVISION:-stable}
+PublishPort=${PORT:-3010}:3010
+Volume=${UPLOAD_LOCATION}:/root/.affine/storage
+Volume=${CONFIG_LOCATION}:/root/.affine/config
+Environment=REDIS_SERVER_HOST=redis
+Environment=DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-affine}
+ContainerName=affine_server
+
+[Service]
+Restart=always

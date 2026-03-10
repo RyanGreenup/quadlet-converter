@@ -1,0 +1,4 @@
+# db.container
+[Container]
+PublishPort=32789:5432
+Volume=pgdata:/var/lib/postgresql/data

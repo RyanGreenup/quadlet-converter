@@ -1,0 +1,15 @@
+# airsonic-advanced.container
+[Container]
+Image=lscr.io/linuxserver/airsonic-advanced:latest
+PublishPort=4040:4040
+Volume=./airsonic_data/config:/config
+Volume=/media/Media8TB/Media/Music/:/music
+Volume=/media/Media8TB/Media/Music/Playlists:/playlists
+Volume=/media/Media8TB/Media/Podcasts:/podcasts
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ=Australia/Sydney
+ContainerName=airsonic-advanced
+
+[Service]
+Restart=always

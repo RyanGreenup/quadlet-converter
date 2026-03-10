@@ -1,0 +1,8 @@
+# tabby.container
+[Container]
+Image=tabbyml/tabby
+PublishPort=7652:8080
+Volume=$HOME/.tabby:/data
+
+[Service]
+Restart=always

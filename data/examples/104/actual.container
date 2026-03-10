@@ -1,0 +1,7 @@
+# app.container
+[Container]
+Image=eibrahim/fluid-calendar:latest
+PublishPort=3000:3000
+
+[Service]
+Restart=always

@@ -1,0 +1,8 @@
+# namenode.container
+[Container]
+Image=bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8
+PublishPort=50070:50070
+Volume=namenode:/hadoop/dfs/name
+Volume=$UPLOAD_FOLDER:/tmp/superset_uploads
+Environment=CLUSTER_NAME=test
+ContainerName=namenode

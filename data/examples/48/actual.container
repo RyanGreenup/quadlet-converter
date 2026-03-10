@@ -1,0 +1,8 @@
+# nginx.container
+[Container]
+PublishPort=80:80
+PublishPort=443:443
+Volume=wellknown:/usr/share/nginx/html/.well-known
+
+[Service]
+Restart=always

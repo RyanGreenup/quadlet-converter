@@ -35,6 +35,20 @@ describe('composeServiceToQuadletIR', () => {
     })
   })
 
+  test('converts deploy resource limits to CPUQuota and MemoryMax', () => {
+    const service: Service = {
+      image: 'caddy:2',
+      deploy: {
+        resources: {
+          limits: { cpus: '1.0', memory: '512M' },
+        },
+      },
+    }
+    const ir = composeServiceToQuadletIR('svc', service)
+    expect(ir.Service).toContainEqual({ key: 'CPUQuota', value: '100%' })
+    expect(ir.Service).toContainEqual({ key: 'MemoryMax', value: '512M' })
+  })
+
   test('converts environment variables', () => {
     const service: Service = {
       image: 'nginx',
@@ -83,6 +97,21 @@ describe('quadletIRToCompose', () => {
           ],
           restart: 'unless-stopped',
         },
+      },
+    })
+  })
+
+  test('converts CPUQuota and MemoryMax to deploy resource limits', () => {
+    const ir: QuadletIR = {
+      Service: [
+        { key: 'CPUQuota', value: '100%' },
+        { key: 'MemoryMax', value: '512M' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    expect(compose.services!['svc'].deploy).toEqual({
+      resources: {
+        limits: { cpus: '1', memory: '512M' },
       },
     })
   })

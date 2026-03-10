@@ -1,0 +1,14 @@
+# metabase-app.container
+[Container]
+Image=metabase/metabase
+PublishPort=3007:3000
+Volume=./metabase-data:/metabase-data
+Environment=MB_DB_TYPE=postgres
+Environment=MB_DB_DBNAME=metabaseappdb
+Environment=MB_DB_PORT=5432
+Environment=MB_DB_USER=postgres
+Environment=MB_DB_PASS=postgres
+Environment=MB_DB_HOST=postgres-db
+
+[Service]
+Restart=always

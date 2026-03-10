@@ -1,0 +1,11 @@
+# postgres.container
+[Container]
+Image=postgres
+Volume=./data:/var/lib/postgresql/data
+Environment=POSTGRES_USER=bkAdmin
+Environment=POSTGRES_PASSWORD=briefkasten
+Environment=POSTGRES_DB=briefkasten
+ContainerName=bk-postgres
+
+[Service]
+Restart=always

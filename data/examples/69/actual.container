@@ -1,0 +1,10 @@
+# bukuserver.container
+[Container]
+Image=bukuserver/bukuserver
+PublishPort=5001:5001
+Volume=./data:/root/.local/share/buku
+Environment=BUKUSERVER_PER_PAGE=200
+Environment=BUKUSERVER_OPEN_IN_NEW_TAB=true
+
+[Service]
+Restart=always

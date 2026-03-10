@@ -1,0 +1,21 @@
+# mediawiki.container
+[Container]
+Image=mediawiki_with_ghostscript_and_vim_latest
+PublishPort=8076:80
+Volume=./images:/var/www/html/images
+Volume=./sqlite_db:/var/www/data
+Volume=./assets/SimpleMathJax:/var/www/html/extensions/SimpleMathJax
+Volume=./assets/PDFEmbed:/var/www/html/extensions/PDFEmbed
+Volume=./assets/EmbedVideo-v2.9.0:/var/www/html/extensions/EmbedVideo
+Volume=./assets/Mandeltree.svg:/var/www/html/resources/assets/change-your-logo.svg
+Volume=./assets/php-custom.ini:/usr/local/etc/php/conf.d/php-custom.ini
+Volume=./assets/composer_extensions/extensions/Network/:/var/www/html/extensions/Network
+Volume=./assets/composer_extensions/vendor/professional-wiki/:/var/www/html/vendor/professional-wiki
+Volume=./assets/skins/skin-tyrian:/var/www/html/skins/Tyrian
+Volume=./assets/skins/medik/:/var/www/html/skins/Medik
+Volume=./assets/HideSection/:/var/www/html/extensions/HideSection
+Volume=./LocalSettings.php:/var/www/html/LocalSettings.php
+Volume=./upload:/upload
+
+[Service]
+Restart=always

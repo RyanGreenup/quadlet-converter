@@ -1,0 +1,9 @@
+# mariadb.container
+[Container]
+Image=centos/mariadb
+PublishPort=$DB_PORT
+Volume=/var/lib/mysql
+Environment=MYSQL_ROOT_PASSWORD=$ROOT_PASS
+Environment=MYSQL_DATABASE=$DB_NAME
+Environment=MYSQL_PASSWORD=$DB_PASS
+Environment=MYSQL_USER=$DB_USER

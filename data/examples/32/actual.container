@@ -1,0 +1,14 @@
+# webdav.container
+[Container]
+PublishPort=0.0.0.0:4918:4918
+Volume=./path/to/data:/data
+Volume=/home/ryan/Sync/Projects/solid-js/lilium_dev/.data:/data
+Environment=WEBDAV_DATABASE=/data/notes.sqlite
+Environment=WEBDAV_PORT=4918
+Environment=WEBDAV_USERNAME=${WEBDAV_USERNAME}
+Environment=WEBDAV_PASSWORD=${WEBDAV_PASSWORD}
+Environment=WEBDAV_USER_ID=${WEBDAV_USER_ID}
+ContainerName=webdav-server
+
+[Service]
+Restart=always

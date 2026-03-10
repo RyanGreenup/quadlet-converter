@@ -1,0 +1,9 @@
+# clickhouse.container
+[Container]
+Image=clickhouse
+PublishPort=19000:9000
+PublishPort=18123:8123
+Volume=./data/clickhouse/data:/var/lib/clickhouse/
+Environment=CLICKHOUSE_USER=user
+Environment=CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
+ContainerName=some-clickhouse-server

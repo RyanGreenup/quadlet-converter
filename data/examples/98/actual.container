@@ -1,0 +1,7 @@
+# postgres.container
+[Container]
+Image=postgres:16-alpine
+Volume=./data/pgdata:/var/lib/postgresql/data
+
+[Service]
+Restart=always

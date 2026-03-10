@@ -1,0 +1,3 @@
+# note-directory-classifier.container
+[Container]
+Volume=./data:/data

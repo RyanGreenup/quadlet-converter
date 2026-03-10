@@ -1,0 +1,4 @@
+# redis-master.container
+[Container]
+Image=registry.k8s.io/redis:e2e
+PublishPort=6379

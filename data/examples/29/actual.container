@@ -1,0 +1,14 @@
+# clickhouse.container
+[Container]
+Image=clickhouse
+PublishPort=19000:9000
+Volume=./data/clickhouse:/var/lib/clickhouse
+Volume=./data/configs/users-override.xml:/etc/clickhouse-server/users.d/named-collection-grant.xml
+Environment=CLICKHOUSE_USER=user
+Environment=CLICKHOUSE_PASSWORD=sadflkjdslkfj3298
+Environment=CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+Environment=PGSSLCERT=/tmp/postgresql.crt
+ContainerName=some-clickhouse-server
+
+[Service]
+Restart=always

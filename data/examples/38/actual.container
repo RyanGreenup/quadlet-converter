@@ -1,0 +1,5 @@
+# httpd.container
+[Container]
+Image=docker.io/fedora/apache
+PublishPort=80
+Volume=/var/www/html
