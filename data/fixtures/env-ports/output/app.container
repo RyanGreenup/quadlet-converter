@@ -1,0 +1,12 @@
+[Unit]
+After=db.service
+After=redis.service
+Requires=db.service
+Requires=redis.service
+
+[Container]
+Image=node:22-alpine
+Pod=env-ports.pod
+Environment=PORT=${APP_PORT}
+Environment=DATABASE_URL=postgresql://user:pass@db:${DB_PORT}/mydb
+Environment=REDIS_URL=redis://redis:${REDIS_PORT}/0

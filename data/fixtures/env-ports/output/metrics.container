@@ -1,0 +1,3 @@
+[Container]
+Image=prom/prometheus:latest
+Pod=env-ports.pod

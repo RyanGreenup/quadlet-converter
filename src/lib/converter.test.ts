@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { composeServiceToQuadletIR, quadletIRToCompose, composeToQuadletFiles } from './converter'
+import { composeServiceToQuadletIR, quadletIRToCompose, composeToQuadletFiles, detectUnresolvedVariables } from './converter'
 import type { Service, ComposeFile } from './compose/index'
 
 describe('composeServiceToQuadletIR', () => {
@@ -861,5 +861,59 @@ describe('composeServiceToQuadletIR with build option', () => {
     const files = composeToQuadletFiles(compose, 'test', { build: true })
     const container = files[0]
     expect(container.ir.Container![0]).toEqual({ key: 'Image', value: 'localhost/app' })
+  })
+})
+
+describe('detectUnresolvedVariables', () => {
+  test('detects ${VAR} in ports', () => {
+    const compose: ComposeFile = {
+      services: {
+        web: { image: 'nginx', ports: ['${HTTP_PORT}:80'] },
+      },
+    }
+    const vars = detectUnresolvedVariables(compose)
+    expect(vars).toHaveLength(1)
+    expect(vars[0]).toEqual({ service: 'web', field: 'ports', value: '${HTTP_PORT}:80' })
+  })
+
+  test('detects $VAR (no braces) in environment', () => {
+    const compose: ComposeFile = {
+      services: {
+        app: { image: 'node', environment: ['PORT=$APP_PORT'] },
+      },
+    }
+    const vars = detectUnresolvedVariables(compose)
+    expect(vars).toHaveLength(1)
+    expect(vars[0].field).toBe('environment')
+  })
+
+  test('returns empty for compose files with no variables', () => {
+    const compose: ComposeFile = {
+      services: {
+        web: { image: 'nginx', ports: ['80:80'], environment: ['FOO=bar'] },
+      },
+    }
+    expect(detectUnresolvedVariables(compose)).toHaveLength(0)
+  })
+
+  test('detects variables in image field', () => {
+    const compose: ComposeFile = {
+      services: {
+        app: { image: '${REGISTRY}/myapp:${TAG}' },
+      },
+    }
+    const vars = detectUnresolvedVariables(compose)
+    expect(vars).toEqual([{ service: 'app', field: 'image', value: '${REGISTRY}/myapp:${TAG}' }])
+  })
+
+  test('detects variables in volumes', () => {
+    const compose: ComposeFile = {
+      services: {
+        app: { image: 'nginx', volumes: ['${DATA_DIR}:/data:Z'] },
+      },
+    }
+    const vars = detectUnresolvedVariables(compose)
+    expect(vars).toHaveLength(1)
+    expect(vars[0].field).toBe('volumes')
   })
 })

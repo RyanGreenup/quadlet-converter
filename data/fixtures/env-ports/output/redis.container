@@ -1,0 +1,3 @@
+[Container]
+Image=redis:7-alpine
+Pod=env-ports.pod

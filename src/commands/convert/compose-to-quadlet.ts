@@ -1,7 +1,7 @@
 import { defineCommand, option } from '@bunli/core'
 import { z } from 'zod'
 import { parseCompose } from '../../lib/compose/index.js'
-import { composeToQuadletFiles } from '../../lib/converter.js'
+import { composeToQuadletFiles, detectUnresolvedVariables } from '../../lib/converter.js'
 import { serializeQuadlet, irToQuadletData } from '../../lib/quadlet.js'
 import { extractBuildDefs, generateBuildJustfile } from '../../lib/build.js'
 import { extractSecretDefs, generateSecretsJustfile } from '../../lib/secrets.js'
@@ -58,6 +58,17 @@ const composeToQuadletCommand = defineCommand({
     if (!compose.services || Object.keys(compose.services).length === 0) {
       console.error('Error: no services found in compose file')
       process.exit(1)
+    }
+
+    const unresolvedVars = detectUnresolvedVariables(compose)
+    if (unresolvedVars.length > 0) {
+      console.warn('Warning: compose file contains unresolved variable references.')
+      console.warn('  Compose variable interpolation (${VAR}) is not performed by this tool.')
+      console.warn('  The following values will be emitted as literal strings:\n')
+      for (const { service, field, value } of unresolvedVars) {
+        console.warn(`    ${service}.${field}: ${value}`)
+      }
+      console.warn()
     }
 
     // Derive pod name from the compose filename (without extension)

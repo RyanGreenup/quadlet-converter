@@ -1,0 +1,4 @@
+[Container]
+Image=nginx:alpine
+Pod=env-ports.pod
+Environment=BACKEND_URL=http://app:${APP_PORT}

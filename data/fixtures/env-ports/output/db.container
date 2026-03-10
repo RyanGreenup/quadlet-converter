@@ -1,0 +1,4 @@
+[Container]
+Image=postgres:17-alpine
+Pod=env-ports.pod
+Environment=POSTGRES_PASSWORD=secret

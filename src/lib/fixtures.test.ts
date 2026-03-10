@@ -37,6 +37,54 @@ describe('fixtures/sops-compose.yml', () => {
   })
 })
 
+describe('fixtures/env-ports', () => {
+  const loadFixture = async () => {
+    const text = await Bun.file('data/fixtures/env-ports/docker-compose.yml').text()
+    return parseCompose(text)
+  }
+
+  test('${VAR} port references pass through as literal strings', async () => {
+    const compose = await loadFixture()
+    const files = composeToQuadletFiles(compose, 'env-ports')
+
+    // Should use a pod (single-network: no networks defined)
+    const pod = files.find(f => f.filename === 'env-ports.pod')!
+    expect(pod).toBeDefined()
+
+    // Port entries on the pod contain uninterpolated ${...} tokens
+    const ports = pod.ir.Pod!.filter(e => e.key === 'PublishPort')
+    expect(ports).toContainEqual({ key: 'PublishPort', value: '${HTTP_PORT}:80' })
+    expect(ports).toContainEqual({ key: 'PublishPort', value: '${HTTPS_PORT}:443' })
+    expect(ports).toContainEqual({ key: 'PublishPort', value: '${APP_PORT}:${APP_PORT}' })
+    expect(ports).toContainEqual({ key: 'PublishPort', value: '${DB_PORT}:5432' })
+    expect(ports).toContainEqual({ key: 'PublishPort', value: '${REDIS_PORT}:6379' })
+    expect(ports).toContainEqual({ key: 'PublishPort', value: '${METRICS_PORT}:9090' })
+  })
+
+  test('${VAR} in environment values pass through as literals', async () => {
+    const compose = await loadFixture()
+    const files = composeToQuadletFiles(compose, 'env-ports')
+
+    const app = files.find(f => f.filename === 'app.container')!
+    const envs = app.ir.Container!.filter(e => e.key === 'Environment')
+    expect(envs).toContainEqual({ key: 'Environment', value: 'PORT=${APP_PORT}' })
+    expect(envs).toContainEqual({ key: 'Environment', value: 'DATABASE_URL=postgresql://user:pass@db:${DB_PORT}/mydb' })
+    expect(envs).toContainEqual({ key: 'Environment', value: 'REDIS_URL=redis://redis:${REDIS_PORT}/0' })
+  })
+
+  test('containers reference the pod, not individual ports', async () => {
+    const compose = await loadFixture()
+    const files = composeToQuadletFiles(compose, 'env-ports')
+
+    for (const name of ['web', 'app', 'db', 'redis', 'metrics']) {
+      const f = files.find(f => f.filename === `${name}.container`)!
+      expect(f.ir.Container).toContainEqual({ key: 'Pod', value: 'env-ports.pod' })
+      const ports = (f.ir.Container ?? []).filter(e => e.key === 'PublishPort')
+      expect(ports).toHaveLength(0)
+    }
+  })
+})
+
 describe('fixtures/secrets-compose.yml', () => {
   const loadFixture = async () => {
     const text = await Bun.file('data/fixtures/secrets-compose.yml').text()

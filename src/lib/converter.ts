@@ -544,6 +544,61 @@ export function portEntries(service: Service): QuadletEntry[] {
   return entries
 }
 
+const VARIABLE_RE = /\$\{[^}]+\}|\$[A-Za-z_][A-Za-z0-9_]*/
+
+export interface UnresolvedVariable {
+  service: string
+  field: string
+  value: string
+}
+
+/** Scan a compose file for unresolved ${VAR} / $VAR references in service fields. */
+export function detectUnresolvedVariables(compose: ComposeFile): UnresolvedVariable[] {
+  const results: UnresolvedVariable[] = []
+  for (const [name, service] of Object.entries(compose.services ?? {})) {
+    const check = (field: string, val: unknown) => {
+      if (typeof val === 'string' && VARIABLE_RE.test(val)) {
+        results.push({ service: name, field, value: val })
+      }
+    }
+
+    if (service.ports) {
+      for (const port of service.ports) {
+        if (typeof port === 'string' || typeof port === 'number') {
+          check('ports', String(port))
+        } else {
+          if (port.published != null) check('ports.published', String(port.published))
+          if (port.target != null) check('ports.target', String(port.target))
+          if (port.host_ip) check('ports.host_ip', port.host_ip)
+        }
+      }
+    }
+
+    if (service.environment) {
+      if (Array.isArray(service.environment)) {
+        for (const env of service.environment) check('environment', String(env))
+      } else {
+        for (const [k, v] of Object.entries(service.environment)) {
+          if (v != null) check('environment', `${k}=${v}`)
+        }
+      }
+    }
+
+    check('image', service.image)
+
+    if (service.volumes) {
+      for (const vol of service.volumes) {
+        if (typeof vol === 'string') check('volumes', vol)
+        else {
+          if (vol.source) check('volumes.source', vol.source)
+          if (vol.target) check('volumes.target', vol.target)
+        }
+      }
+    }
+  }
+  return results
+}
+
 /** Convert an entire compose file to a set of quadlet files. */
 export function composeToQuadletFiles(compose: ComposeFile, podName: string, opts?: ComposeToQuadletOpts): QuadletFileSet {
   const services = compose.services ?? {}
