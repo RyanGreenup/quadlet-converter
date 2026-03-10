@@ -106,6 +106,10 @@ export function checkService(name: string, service: Service): CheckResult[] {
     results.push({ id: 'restart-no-limits', severity: 'warning', message: `${name}: restart "always" without resource limits risks crash loops exhausting host` })
   }
 
+  if (service.pids_limit != null && service.deploy?.resources?.limits?.pids != null) {
+    results.push({ id: 'pids-conflict', severity: 'warning', message: `${name}: pids_limit and deploy.resources.limits.pids are both set — compose will reject this. Move pids_limit into deploy.resources.limits.pids` })
+  }
+
   // SELinux volume labels
   for (const vol of service.volumes ?? []) {
     const source = typeof vol === 'string' ? vol.split(':')[0] : vol.source ?? ''

@@ -227,6 +227,20 @@ describe('suggestions', () => {
     expect(ids(checkService('s', { ...minimal, security_opt: ['no-new-privileges:true'] }))).not.toContain('no-new-privileges')
   })
 
+  test('warns when pids_limit and deploy.resources.limits.pids both set', () => {
+    const svc: Service = { ...minimal, pids_limit: 50, deploy: { resources: { limits: { pids: 100 } } } }
+    expect(ids(checkService('s', svc))).toContain('pids-conflict')
+  })
+
+  test('no pids conflict when only pids_limit set', () => {
+    expect(ids(checkService('s', { ...minimal, pids_limit: 50 }))).not.toContain('pids-conflict')
+  })
+
+  test('no pids conflict when only deploy pids set', () => {
+    const svc: Service = { ...minimal, deploy: { resources: { limits: { pids: 50 } } } }
+    expect(ids(checkService('s', svc))).not.toContain('pids-conflict')
+  })
+
   test('suggests userns_mode when not set', () => {
     expect(ids(checkService('s', minimal))).toContain('no-userns')
   })
