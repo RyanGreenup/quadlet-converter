@@ -42,5 +42,5 @@ MemorySwapMax=1g
 TasksMax=512
 OOMScoreAdjust=-300
 ExecStartPost=podman exec app /app/bin/migrate
-ExecStop=podman exec app /app/bin/drain-connections
+ExecStopPre=podman exec app /app/bin/drain-connections
 Restart=always

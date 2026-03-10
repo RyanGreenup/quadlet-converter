@@ -9,12 +9,12 @@ Environment=POSTGRES_DB=myapp
 Environment=PGDATA=/var/lib/postgresql/data/pgdata
 Environment=TZ=Australia/Melbourne
 ContainerName=postgres
+DropCapability=ALL
 AddCapability=DAC_OVERRIDE
 AddCapability=SETUID
 AddCapability=SETGID
 AddCapability=FOWNER
 AddCapability=CHOWN
-DropCapability=ALL
 ReadOnly=true
 Tmpfs=/tmp:noexec,nosuid,size=256m
 Tmpfs=/run/postgresql:size=64m
@@ -40,5 +40,5 @@ MemoryReservation=512m
 MemorySwapMax=2g
 TasksMax=256
 OOMScoreAdjust=-900
-ExecStop=podman exec postgres su-exec postgres pg_ctl stop -m fast
+ExecStopPre=podman exec postgres su-exec postgres pg_ctl stop -m fast
 Restart=always

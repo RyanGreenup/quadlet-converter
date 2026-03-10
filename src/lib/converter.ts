@@ -448,7 +448,7 @@ export function composeServiceToQuadletIR(
   if (service.pre_stop) {
     for (const hook of service.pre_stop) {
       const cmd = Array.isArray(hook.command) ? hook.command.join(' ') : hook.command
-      svcSection.push({ key: 'ExecStop', value: `podman exec ${name} ${cmd}` })
+      svcSection.push({ key: 'ExecStopPre', value: `podman exec ${name} ${cmd}` })
     }
   }
 
@@ -866,7 +866,7 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         }
         break
       }
-      case 'ExecStop': {
+      case 'ExecStopPre': {
         const stopMatch = value.match(/^podman exec \S+ (.+)$/)
         if (stopMatch) {
           if (!service.pre_stop) service.pre_stop = []

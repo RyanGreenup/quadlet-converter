@@ -665,7 +665,7 @@ describe('composeServiceToQuadletIR', () => {
       pre_stop: [{ command: ['/bin/sh', '-c', 'echo stopping'] }],
     })
     expect(ir.Service).toContainEqual({ key: 'ExecStartPost', value: 'podman exec app /bin/sh -c "echo started"' })
-    expect(ir.Service).toContainEqual({ key: 'ExecStop', value: 'podman exec app /bin/sh -c echo stopping' })
+    expect(ir.Service).toContainEqual({ key: 'ExecStopPre', value: 'podman exec app /bin/sh -c echo stopping' })
   })
 
   test('handles service with no optional fields', () => {
@@ -833,11 +833,11 @@ describe('quadletIRToCompose', () => {
     expect(compose.services!['svc'].mem_swappiness).toBe(60)
   })
 
-  test('converts ExecStartPost/ExecStop to lifecycle hooks', () => {
+  test('converts ExecStartPost/ExecStopPre to lifecycle hooks', () => {
     const ir: QuadletIR = {
       Service: [
         { key: 'ExecStartPost', value: 'podman exec svc /bin/sh -c "echo started"' },
-        { key: 'ExecStop', value: 'podman exec svc /bin/sh -c "echo stopping"' },
+        { key: 'ExecStopPre', value: 'podman exec svc /bin/sh -c "echo stopping"' },
       ],
     }
     const compose = quadletIRToCompose(ir, 'svc')
