@@ -78,6 +78,22 @@ describe('composeServiceToQuadletIR', () => {
     expect(ir.Container).toContainEqual({ key: 'WorkingDir', value: '/app/src' })
   })
 
+  test('converts command (string)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      command: 'nginx -g "daemon off;"',
+    })
+    expect(ir.Container).toContainEqual({ key: 'Exec', value: 'nginx -g "daemon off;"' })
+  })
+
+  test('converts command (array)', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      command: ['nginx', '-g', 'daemon off;'],
+    })
+    expect(ir.Container).toContainEqual({ key: 'Exec', value: 'nginx -g daemon off;' })
+  })
+
   test('converts entrypoint (string)', () => {
     const ir = composeServiceToQuadletIR('app', {
       image: 'nginx',

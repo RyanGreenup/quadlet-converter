@@ -13,7 +13,7 @@
 
 * TODO Not yet implemented
 ** Container section mappings
-- [ ] command → Exec
+- [X] command → Exec
 - [ ] build
   - We should have a flag that will build the image upon request and use the prefixed `localhost`  (unless alt is specified if appropriate ?? ) and use that image name.
 - [X] entrypoint → Entrypoint
