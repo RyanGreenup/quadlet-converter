@@ -1,31 +1,11 @@
-import { defineCommand, option } from '@bunli/core'
-import { z } from 'zod'
+import { defineGroup } from '@bunli/core'
+import quadletCommand from './to-json/quadlet.js'
+import composeCommand from './to-json/compose.js'
 
-const toJsonCommand = defineCommand({
+const toJsonGroup = defineGroup({
   name: 'to-json',
-  description: 'Convert a YAML file to JSON',
-  options: {
-    pretty: option(
-      z.boolean().default(true),
-      {
-        description: 'Pretty-print the JSON output',
-        short: 'p'
-      }
-    )
-  },
-  handler: async ({ flags, positional }) => {
-    const filePath = positional[0]
-    if (!filePath) {
-      console.error('Error: please provide a YAML file path')
-      process.exit(1)
-    }
-
-    const file = Bun.file(filePath)
-    const text = await file.text()
-    const parsed = Bun.YAML.parse(text)
-    const indent = flags.pretty ? 2 : undefined
-    console.log(JSON.stringify(parsed, null, indent))
-  }
+  description: 'Convert files to JSON',
+  commands: [quadletCommand, composeCommand]
 })
 
-export default toJsonCommand
+export default toJsonGroup
