@@ -664,10 +664,27 @@ describe('composeServiceToQuadletIR', () => {
       oom_score_adj: -500,
     })
     expect(ir.Service).toContainEqual({ key: 'MemoryMax', value: '512m' })
-    expect(ir.Service).toContainEqual({ key: 'MemoryReservation', value: '256m' })
-    expect(ir.Service).toContainEqual({ key: 'MemorySwapMax', value: '1g' })
+    expect(ir.Service).toContainEqual({ key: 'MemoryLow', value: '256m' })
+    expect(ir.Service).toContainEqual({ key: 'MemorySwapMax', value: '512m' })
     expect(ir.Service).toContainEqual({ key: 'TasksMax', value: '100' })
     expect(ir.Service).toContainEqual({ key: 'OOMScoreAdjust', value: '-500' })
+  })
+
+  test('memswap_limit equal to mem_limit produces MemorySwapMax=0', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      mem_limit: '512m',
+      memswap_limit: '512m',
+    })
+    expect(ir.Service).toContainEqual({ key: 'MemorySwapMax', value: '0' })
+  })
+
+  test('memswap_limit without mem_limit passes through raw value', () => {
+    const ir = composeServiceToQuadletIR('app', {
+      image: 'nginx',
+      memswap_limit: '1g',
+    })
+    expect(ir.Service).toContainEqual({ key: 'MemorySwapMax', value: '1g' })
   })
 
   test('converts mem_swappiness to PodmanArgs', () => {

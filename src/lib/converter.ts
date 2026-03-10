@@ -3,6 +3,7 @@ import type { ComposeFile } from './compose/index.js'
 import type { QuadletIR, QuadletEntry } from './quadlet.js'
 import { serviceToPodmanArgs } from './podman-args.js'
 import { scaleService } from './scale.js'
+import { parseBytes, formatBytes } from './bytes.js'
 import { analyzeNetworks, composeNetworkToQuadletIR } from './networks.js'
 
 export { quadletIRToCompose } from './reverse.js'
@@ -419,10 +420,15 @@ export function composeServiceToQuadletIR(
     svcSection.push({ key: 'MemoryMax', value: String(service.mem_limit) })
   }
   if (service.mem_reservation != null) {
-    svcSection.push({ key: 'MemoryReservation', value: String(service.mem_reservation) })
+    svcSection.push({ key: 'MemoryLow', value: String(service.mem_reservation) })
   }
   if (service.memswap_limit != null) {
-    svcSection.push({ key: 'MemorySwapMax', value: String(service.memswap_limit) })
+    if (service.mem_limit != null) {
+      const swap = parseBytes(service.memswap_limit) - parseBytes(service.mem_limit)
+      svcSection.push({ key: 'MemorySwapMax', value: swap <= 0 ? '0' : formatBytes(swap) })
+    } else {
+      svcSection.push({ key: 'MemorySwapMax', value: String(service.memswap_limit) })
+    }
   }
   if (service.mem_swappiness != null) {
     container.push({ key: 'PodmanArgs', value: `--memory-swappiness=${service.mem_swappiness}` })

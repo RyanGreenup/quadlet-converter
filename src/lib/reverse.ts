@@ -2,6 +2,7 @@ import type { Service } from './compose/index.js'
 import type { ComposeFile } from './compose/index.js'
 import type { QuadletIR } from './quadlet.js'
 import { applyPodmanArg } from './podman-args.js'
+import { parseBytes, formatBytes } from './bytes.js'
 
 const restartToCompose: Record<string, string> = {
   'no': 'no',
@@ -230,6 +231,7 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
     }
   }
 
+  let rawMemorySwapMax: string | undefined
   for (const { key, value } of serviceEntries) {
     switch (key) {
       case 'Restart':
@@ -260,11 +262,11 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
       case 'AllowedCPUs':
         service.cpuset = value
         break
-      case 'MemoryReservation':
+      case 'MemoryLow':
         service.mem_reservation = value
         break
       case 'MemorySwapMax':
-        service.memswap_limit = value
+        rawMemorySwapMax = value
         break
       case 'TasksMax':
         service.pids_limit = parseInt(value, 10)
@@ -288,6 +290,20 @@ export function quadletIRToCompose(ir: QuadletIR, serviceName: string): ComposeF
         }
         break
       }
+    }
+  }
+
+  // Compute memswap_limit (combined memory+swap) from MemorySwapMax (swap-only)
+  if (rawMemorySwapMax != null) {
+    const memValue = service.deploy?.resources?.limits?.memory ?? (service.mem_limit != null ? String(service.mem_limit) : undefined)
+    if (rawMemorySwapMax === '0' && memValue != null) {
+      service.memswap_limit = memValue
+    } else if (memValue != null) {
+      const memMax = parseBytes(memValue)
+      const swapMax = parseBytes(rawMemorySwapMax)
+      service.memswap_limit = formatBytes(memMax + swapMax)
+    } else {
+      service.memswap_limit = rawMemorySwapMax
     }
   }
 

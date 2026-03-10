@@ -137,8 +137,9 @@ describe('quadletIRToCompose', () => {
   test('converts memory/resource service entries to compose fields', () => {
     const ir: QuadletIR = {
       Service: [
-        { key: 'MemoryReservation', value: '256m' },
-        { key: 'MemorySwapMax', value: '1g' },
+        { key: 'MemoryLow', value: '256m' },
+        { key: 'MemoryMax', value: '512m' },
+        { key: 'MemorySwapMax', value: '512m' },
         { key: 'TasksMax', value: '100' },
         { key: 'OOMScoreAdjust', value: '-500' },
       ],
@@ -149,6 +150,29 @@ describe('quadletIRToCompose', () => {
     expect(svc.memswap_limit).toBe('1g')
     expect(svc.pids_limit).toBe(100)
     expect(svc.oom_score_adj).toBe(-500)
+  })
+
+  test('converts MemorySwapMax=0 with MemoryMax to memswap_limit equal to mem_limit', () => {
+    const ir: QuadletIR = {
+      Service: [
+        { key: 'MemoryMax', value: '512m' },
+        { key: 'MemorySwapMax', value: '0' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    const svc = compose.services!['svc']
+    expect(svc.memswap_limit).toBe('512m')
+  })
+
+  test('converts MemorySwapMax without MemoryMax as pass-through', () => {
+    const ir: QuadletIR = {
+      Service: [
+        { key: 'MemorySwapMax', value: '1g' },
+      ],
+    }
+    const compose = quadletIRToCompose(ir, 'svc')
+    const svc = compose.services!['svc']
+    expect(svc.memswap_limit).toBe('1g')
   })
 
   test('converts PodmanArgs --memory-swappiness to mem_swappiness', () => {
