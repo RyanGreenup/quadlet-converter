@@ -42,3 +42,6 @@ TasksMax=256
 OOMScoreAdjust=-900
 ExecStopPre=podman exec postgres su-exec postgres pg_ctl stop -m fast
 Restart=always
+
+[Install]
+WantedBy=default.target

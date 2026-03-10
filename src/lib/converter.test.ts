@@ -31,7 +31,28 @@ describe('composeServiceToQuadletIR', () => {
       Service: [
         { key: 'Restart', value: 'always' },
       ],
+      Install: [
+        { key: 'WantedBy', value: 'default.target' },
+      ],
     })
+  })
+
+  test('restart: no does not emit Install section', () => {
+    const service: Service = { image: 'nginx', restart: 'no' }
+    const ir = composeServiceToQuadletIR('svc', service)
+    expect(ir.Install).toBeUndefined()
+  })
+
+  test('restart: on-failure emits Install WantedBy=default.target', () => {
+    const service: Service = { image: 'nginx', restart: 'on-failure' }
+    const ir = composeServiceToQuadletIR('svc', service)
+    expect(ir.Install).toEqual([{ key: 'WantedBy', value: 'default.target' }])
+  })
+
+  test('no restart set does not emit Install section', () => {
+    const service: Service = { image: 'nginx' }
+    const ir = composeServiceToQuadletIR('svc', service)
+    expect(ir.Install).toBeUndefined()
   })
 
   test('converts deploy resource limits to CPUQuota and MemoryMax', () => {
@@ -746,6 +767,7 @@ describe('round-trip', () => {
     }
 
     const ir = composeServiceToQuadletIR('web', service)
+    expect(ir.Install).toEqual([{ key: 'WantedBy', value: 'default.target' }])
     const compose = quadletIRToCompose(ir, 'web')
 
     expect(compose.services!['web']).toEqual(service)

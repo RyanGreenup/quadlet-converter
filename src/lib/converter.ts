@@ -509,6 +509,9 @@ export function composeServiceToQuadletIR(
   if (unitSection.length) ir['Unit'] = unitSection
   if (container.length) ir['Container'] = container
   if (svcSection.length) ir['Service'] = svcSection
+  if (service.restart && service.restart !== 'no') {
+    ir['Install'] = [{ key: 'WantedBy', value: 'default.target' }]
+  }
 
   return ir
 }

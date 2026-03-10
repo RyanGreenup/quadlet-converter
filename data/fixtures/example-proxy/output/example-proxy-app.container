@@ -45,3 +45,6 @@ OOMScoreAdjust=-300
 ExecStartPost=podman exec app /app/bin/migrate
 ExecStopPre=podman exec app /app/bin/drain-connections
 Restart=always
+
+[Install]
+WantedBy=default.target

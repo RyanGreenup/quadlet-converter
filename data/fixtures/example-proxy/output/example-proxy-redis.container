@@ -29,3 +29,6 @@ MemorySwapMax=256m
 TasksMax=128
 OOMScoreAdjust=-700
 Restart=always
+
+[Install]
+WantedBy=default.target

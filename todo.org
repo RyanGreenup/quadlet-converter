@@ -217,21 +217,8 @@ These compose fields have no meaningful quadlet mapping:
 - use_api_socket (Docker-specific)
 - cgroup (=host= / =private= namespace selection)
 
-* TODO Fix incorrect systemd resource mappings
-** mem_reservation → MemoryLow= (not MemoryReservation=)
-=MemoryReservation== is not a valid systemd directive and will be silently ignored.
-The correct mapping is =MemoryLow== which provides a soft memory protection guarantee
-(the closest systemd equivalent to Docker's =--memory-reservation=).
 
-** memswap_limit → MemorySwapMax= needs subtraction
-Docker's =memswap_limit= (=--memory-swap=) is *combined memory + swap*, but systemd's
-=MemorySwapMax== controls *swap only* (=memory.swap.max= cgroup attribute).
-The converted value must be =memswap_limit - mem_limit=.
-
-Example: =mem_limit=256m=, =memswap_limit=512m= → =MemorySwapMax=256m= (not 512m).
-When =memswap_limit == mem_limit=, swap is disabled: =MemorySwapMax=0=.
-
-** TODO Emit [Install] section for restart policy
+** DONE Emit [Install] section for restart policy
 Docker's =restart:= maps to both =[Service] Restart== and =[Install] WantedBy==.
 Without the =[Install]= section, services won't auto-start on boot.
 
@@ -246,3 +233,17 @@ Without the =[Install]= section, services won't auto-start on boot.
 =systemctl stop= keeps the service stopped until next boot (when =WantedBy== kicks in),
 which approximates =unless-stopped= behaviour.
 
+
+* TODO Fix incorrect systemd resource mappings
+** mem_reservation → MemoryLow= (not MemoryReservation=)
+=MemoryReservation== is not a valid systemd directive and will be silently ignored.
+The correct mapping is =MemoryLow== which provides a soft memory protection guarantee
+(the closest systemd equivalent to Docker's =--memory-reservation=).
+
+** memswap_limit → MemorySwapMax= needs subtraction
+Docker's =memswap_limit= (=--memory-swap=) is *combined memory + swap*, but systemd's
+=MemorySwapMax== controls *swap only* (=memory.swap.max= cgroup attribute).
+The converted value must be =memswap_limit - mem_limit=.
+
+Example: =mem_limit=256m=, =memswap_limit=512m= → =MemorySwapMax=256m= (not 512m).
+When =memswap_limit == mem_limit=, swap is disabled: =MemorySwapMax=0=.
