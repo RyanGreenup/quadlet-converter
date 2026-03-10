@@ -3,6 +3,11 @@ convert-secrets-fixture:
     rm -rf data/fixtures/secrets-output
     bun run src/index.ts convert compose-to-quadlet -o data/fixtures/secrets-output data/fixtures/secrets-compose.yml
 
+# Convert the sops fixture to individual files in data/fixtures/sops-output/
+convert-sops-fixture:
+    rm -rf data/fixtures/sops-output
+    bun run src/index.ts convert compose-to-quadlet --sops -o data/fixtures/sops-output data/fixtures/sops-compose.yml
+
 # Tag and push a release (e.g., just release 0.2.0)
 release version:
     git tag "v{{version}}"

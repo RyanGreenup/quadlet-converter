@@ -1,0 +1,22 @@
+services:
+  app:
+    image: myapp:latest
+    ports:
+      - "8080:8080"
+    secrets:
+      - db_password
+      - api_token
+
+  worker:
+    image: myapp-worker:latest
+    secrets:
+      - db_password
+      - queue_auth
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.enc.yaml
+  api_token:
+    file: ./secrets/api_token.enc.yaml
+  queue_auth:
+    environment: QUEUE_AUTH
