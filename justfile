@@ -1,3 +1,8 @@
+# Build and install the CLI globally via bun
+install:
+    bun run build
+    bun link
+
 # Convert the secrets fixture to individual files in data/fixtures/secrets-output/
 convert-secrets-fixture:
     rm -rf data/fixtures/secrets-output
