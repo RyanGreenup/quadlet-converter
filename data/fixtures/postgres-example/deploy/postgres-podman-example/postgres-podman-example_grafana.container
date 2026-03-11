@@ -1,12 +1,12 @@
 [Unit]
-After=postgres-example-prometheus.service
-Requires=postgres-example-prometheus.service
+After=postgres-podman-example_prometheus.service
+Requires=postgres-podman-example_prometheus.service
 
 [Container]
 Image=docker.io/grafana/grafana:11.5
 PublishPort=127.0.0.1:3000:3000
-Volume=grafana_data:/var/lib/grafana:Z
-Network=postgres-example-monitoring.network
+Volume=postgres-podman-example_grafana_data.volume:/var/lib/grafana:Z
+Network=postgres-podman-example_monitoring.network
 DropCapability=ALL
 ReadOnly=true
 Tmpfs=/tmp
@@ -15,6 +15,7 @@ HealthInterval=15s
 HealthRetries=3
 HealthTimeout=5s
 NoNewPrivileges=true
+NetworkAlias=grafana
 
 [Service]
 CPUQuota=100%

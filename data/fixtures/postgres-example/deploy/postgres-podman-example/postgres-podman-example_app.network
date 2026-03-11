@@ -1,0 +1,3 @@
+[Network]
+NetworkName=postgres-podman-example_app
+Internal=true

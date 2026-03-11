@@ -1,0 +1,35 @@
+[Container]
+Image=docker.io/library/redis:7-alpine
+Volume=example-proxy_redis-data.volume:/data:Z
+Environment=TZ=Australia/Melbourne
+Network=example-proxy_backend.network
+ContainerName=redis
+Exec=redis-server --maxmemory 200mb --maxmemory-policy allkeys-lru --save "" --appendonly no --protected-mode yes --bind 0.0.0.0 --tcp-backlog 511
+
+DropCapability=ALL
+ReadOnly=true
+Tmpfs=/tmp:noexec,nosuid,size=32m
+Sysctl=net.core.somaxconn=512
+LogDriver=json-file
+HealthCmd=redis-cli ping
+HealthInterval=10s
+HealthRetries=3
+HealthTimeout=5s
+HealthStartPeriod=15s
+HealthStartupInterval=3s
+NoNewPrivileges=true
+PodmanArgs=--memory-swappiness=0
+NetworkAlias=redis
+Notify=healthy
+
+[Service]
+CPUQuota=50%
+MemoryMax=256m
+MemoryLow=128m
+MemorySwapMax=0
+TasksMax=128
+OOMScoreAdjust=-700
+Restart=always
+
+[Install]
+WantedBy=default.target

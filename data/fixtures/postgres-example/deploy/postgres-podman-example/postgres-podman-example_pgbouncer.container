@@ -1,14 +1,14 @@
 [Unit]
-After=postgres-example-postgres.service
-Requires=postgres-example-postgres.service
+After=postgres-podman-example_postgres.service
+Requires=postgres-podman-example_postgres.service
 
 [Container]
 Image=docker.io/edoburu/pgbouncer:v1.24.0-p0
-Volume=pg_socket:/var/run/postgresql:z
-Volume=pgbouncer_socket:/tmp/pgbouncer:Z
+Volume=postgres-podman-example_pg_socket.volume:/var/run/postgresql:z
+Volume=postgres-podman-example_pgbouncer_socket.volume:/tmp/pgbouncer:Z
 Volume=/var/home/ryan/Sync/journals/2026/03/10/quadlet-serde-tool/quadlet-serde/data/fixtures/postgres-example/config/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:Z,ro
 Volume=/var/home/ryan/Sync/journals/2026/03/10/quadlet-serde-tool/quadlet-serde/data/fixtures/postgres-example/config/pgbouncer/entrypoint.sh:/entrypoint.sh:Z,ro
-Network=postgres-example-app.network
+Network=postgres-podman-example_app.network
 User=postgres
 Entrypoint=/entrypoint.sh
 DropCapability=ALL
@@ -20,6 +20,7 @@ HealthRetries=5
 HealthTimeout=5s
 NoNewPrivileges=true
 Secret=pgcat_password
+NetworkAlias=pgbouncer
 
 [Service]
 CPUQuota=200%

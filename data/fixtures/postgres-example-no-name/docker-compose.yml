@@ -1,4 +1,3 @@
-name: postgres-podman-example
 services:
   postgres:
     image: docker.io/library/postgres:17

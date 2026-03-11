@@ -5,6 +5,9 @@ import { serviceToPodmanArgs } from './podman-args.js'
 import { scaleService } from './scale.js'
 import { parseBytes, formatBytes } from './bytes.js'
 import { analyzeNetworks, composeNetworkToQuadletIR } from './networks.js'
+import { canUseNetworkAlias } from './network-alias.js'
+import { projectResourceName, isNamedVolume } from './naming.js'
+import { composeVolumeToQuadletIR } from './volumes.js'
 
 export { quadletIRToCompose } from './reverse.js'
 
@@ -665,8 +668,25 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
         if (generatedNetworks.has(net)) continue
         generatedNetworks.add(net)
         const networkDef = composeNetworks[net]
-        const ir = composeNetworkToQuadletIR(net, networkDef)
-        if (ir) files.push({ filename: `${podName}-${net}.network`, ir })
+        const ir = composeNetworkToQuadletIR(podName, net, networkDef)
+        if (ir) files.push({ filename: `${projectResourceName(podName, net)}.network`, ir })
+      }
+    }
+
+    // Generate .volume files for named volumes
+    const composeVolumes = compose.volumes ?? {}
+    const generatedVolumes = new Set<string>()
+    for (const name of normalNames) {
+      const svc = services[name]
+      if (!svc.volumes) continue
+      for (const vol of svc.volumes) {
+        const source = typeof vol === 'string' ? vol.split(':')[0] : vol.source ?? ''
+        if (!isNamedVolume(source)) continue
+        if (generatedVolumes.has(source)) continue
+        generatedVolumes.add(source)
+        const volumeDef = composeVolumes[source]
+        const ir = composeVolumeToQuadletIR(podName, source, volumeDef)
+        if (ir) files.push({ filename: `${projectResourceName(podName, source)}.volume`, ir })
       }
     }
 
@@ -680,7 +700,15 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
       if (ir.Container) {
         for (const entry of ir.Container) {
           if (entry.key === 'Network' && generatedNetworks.has(entry.value)) {
-            entry.value = `${podName}-${entry.value}.network`
+            entry.value = `${projectResourceName(podName, entry.value)}.network`
+          }
+          // Rewrite Volume= sources for generated named volumes
+          if (entry.key === 'Volume') {
+            const parts = entry.value.split(':')
+            if (parts.length >= 2 && generatedVolumes.has(parts[0])) {
+              parts[0] = `${projectResourceName(podName, parts[0])}.volume`
+              entry.value = parts.join(':')
+            }
           }
         }
       }
@@ -691,24 +719,23 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
           if (entry.key === 'After' || entry.key === 'Requires') {
             const depName = entry.value.replace(/\.service$/, '')
             if (normalNameSet.has(depName)) {
-              entry.value = `${podName}-${depName}.service`
+              entry.value = `${projectResourceName(podName, depName)}.service`
             }
           }
         }
       }
 
-      // Set ContainerName to the compose service name so DNS resolution works
+      // Add NetworkAlias so the container is DNS-resolvable by the compose service name
       if (!ir.Container) ir.Container = []
-      const hasContainerName = ir.Container.some(e => e.key === 'ContainerName')
-      if (!hasContainerName) {
-        ir.Container.push({ key: 'ContainerName', value: name })
+      if (canUseNetworkAlias(services[name])) {
+        ir.Container.push({ key: 'NetworkAlias', value: name })
       }
 
       if (healthyDeps.has(name)) {
         ir.Container.push({ key: 'Notify', value: 'healthy' })
       }
 
-      files.push({ filename: `${podName}-${name}.container`, ir })
+      files.push({ filename: `${projectResourceName(podName, name)}.container`, ir })
     }
 
     return [...files, ...scaledFiles]
@@ -733,6 +760,23 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
 
   files.push({ filename: podFile, ir: podIR })
 
+  // Generate .volume files for named volumes
+  const composeVolumes = compose.volumes ?? {}
+  const generatedVolumes = new Set<string>()
+  for (const name of normalNames) {
+    const svc = services[name]
+    if (!svc.volumes) continue
+    for (const vol of svc.volumes) {
+      const source = typeof vol === 'string' ? vol.split(':')[0] : vol.source ?? ''
+      if (!isNamedVolume(source)) continue
+      if (generatedVolumes.has(source)) continue
+      generatedVolumes.add(source)
+      const volumeDef = composeVolumes[source]
+      const ir = composeVolumeToQuadletIR(podName, source, volumeDef)
+      if (ir) files.push({ filename: `${projectResourceName(podName, source)}.volume`, ir })
+    }
+  }
+
   // Container files: omit ports, reference the pod
   for (const name of normalNames) {
     const ir = composeServiceToQuadletIR(name, services[name], {
@@ -740,6 +784,20 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
       pod: podFile,
       build: opts?.build,
     })
+
+    // Rewrite Volume= sources for generated named volumes
+    if (ir.Container) {
+      for (const entry of ir.Container) {
+        if (entry.key === 'Volume') {
+          const parts = entry.value.split(':')
+          if (parts.length >= 2 && generatedVolumes.has(parts[0])) {
+            parts[0] = `${projectResourceName(podName, parts[0])}.volume`
+            entry.value = parts.join(':')
+          }
+        }
+      }
+    }
+
     // Add Notify=healthy so systemd waits for the healthcheck before
     // considering the service started (used by service_healthy deps)
     if (healthyDeps.has(name)) {

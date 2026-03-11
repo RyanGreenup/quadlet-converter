@@ -1,4 +1,5 @@
 import type { Service } from './compose/service.js'
+import { isNamedVolume } from './naming.js'
 
 export type Severity = 'warning' | 'suggestion'
 
@@ -28,8 +29,7 @@ export function getBindMountSources(service: Service): { source: string; display
   const results: { source: string; display: string }[] = []
   for (const vol of service.volumes) {
     const source = typeof vol === 'string' ? vol.split(':')[0] : vol.source ?? ''
-    const isBind = source.startsWith('.') || source.startsWith('/') || source.startsWith('~')
-    if (!isBind) continue
+    if (isNamedVolume(source)) continue
     const display = typeof vol === 'string' ? vol : [vol.source, vol.target].filter(Boolean).join(':')
     results.push({ source, display })
   }
@@ -113,8 +113,7 @@ export function checkService(name: string, service: Service): CheckResult[] {
   // SELinux volume labels
   for (const vol of service.volumes ?? []) {
     const source = typeof vol === 'string' ? vol.split(':')[0] : vol.source ?? ''
-    const isBind = source.startsWith('.') || source.startsWith('/') || source.startsWith('~')
-    if (!isBind) continue
+    if (isNamedVolume(source)) continue
     const display = typeof vol === 'string' ? vol : [vol.source, vol.target].filter(Boolean).join(':')
     const hasLabel = typeof vol === 'string'
       ? /:[zZ]$/.test(vol) || /:[^:]*[zZ][^:]*$/.test(vol)

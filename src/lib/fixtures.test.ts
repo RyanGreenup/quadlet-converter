@@ -121,9 +121,13 @@ describe('fixtures/secrets-compose.yml', () => {
     const compose = await loadFixture()
     const files = composeToQuadletFiles(compose, 'myapp')
 
-    // Multi-service: pod + 2 containers
-    expect(files).toHaveLength(3)
+    // Multi-service: pod + 1 volume + 2 containers
+    expect(files).toHaveLength(4)
     expect(files[0].filename).toBe('myapp.pod')
+
+    // Volume file for pgdata
+    const volumeFile = files.find(f => f.filename === 'myapp_pgdata.volume')!
+    expect(volumeFile.ir.Volume).toContainEqual({ key: 'VolumeName', value: 'myapp_pgdata' })
 
     // Web container secrets
     const webFile = files.find(f => f.filename === 'web.container')!

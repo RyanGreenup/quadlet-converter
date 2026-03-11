@@ -1,0 +1,3 @@
+[Network]
+NetworkName=postgres-example-no-name_monitoring
+Internal=true

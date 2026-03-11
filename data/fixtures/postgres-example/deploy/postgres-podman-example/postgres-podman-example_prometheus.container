@@ -1,8 +1,8 @@
 [Container]
 Image=docker.io/prom/prometheus:v3.2.0
 Volume=/var/home/ryan/Sync/journals/2026/03/10/quadlet-serde-tool/quadlet-serde/data/fixtures/postgres-example/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
-Volume=prometheus_data:/prometheus:Z
-Network=postgres-example-monitoring.network
+Volume=postgres-podman-example_prometheus_data.volume:/prometheus:Z
+Network=postgres-podman-example_monitoring.network
 DropCapability=ALL
 ReadOnly=true
 Tmpfs=/tmp
@@ -11,6 +11,7 @@ HealthInterval=15s
 HealthRetries=3
 HealthTimeout=5s
 NoNewPrivileges=true
+NetworkAlias=prometheus
 Notify=healthy
 
 [Service]

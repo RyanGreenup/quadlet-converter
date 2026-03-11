@@ -29,33 +29,33 @@ describe('multi-network conversion', () => {
     expect(filenames).not.toContain('myapp.pod')
 
     // Network files
-    expect(filenames).toContain('myapp-frontend.network')
-    expect(filenames).toContain('myapp-backend.network')
+    expect(filenames).toContain('myapp_frontend.network')
+    expect(filenames).toContain('myapp_backend.network')
 
     // Prefixed container files
-    expect(filenames).toContain('myapp-web.container')
-    expect(filenames).toContain('myapp-api.container')
+    expect(filenames).toContain('myapp_web.container')
+    expect(filenames).toContain('myapp_api.container')
 
     // Backend network should have Internal=true
-    const backendNet = files.find(f => f.filename === 'myapp-backend.network')!
+    const backendNet = files.find(f => f.filename === 'myapp_backend.network')!
     expect(backendNet.ir.Network).toContainEqual({ key: 'Internal', value: 'true' })
 
     // Web container keeps its ports
-    const webFile = files.find(f => f.filename === 'myapp-web.container')!
+    const webFile = files.find(f => f.filename === 'myapp_web.container')!
     expect(webFile.ir.Container).toContainEqual({ key: 'PublishPort', value: '80:80' })
 
     // Web container has network references
-    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'myapp-frontend.network' })
-    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'myapp-backend.network' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'myapp_frontend.network' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Network', value: 'myapp_backend.network' })
 
     // No Pod= on containers
     const webPod = (webFile.ir.Container ?? []).filter(e => e.key === 'Pod')
     expect(webPod).toHaveLength(0)
 
     // Api container depends_on uses prefixed service name
-    const apiFile = files.find(f => f.filename === 'myapp-api.container')!
-    expect(apiFile.ir.Unit).toContainEqual({ key: 'After', value: 'myapp-web.service' })
-    expect(apiFile.ir.Unit).toContainEqual({ key: 'Requires', value: 'myapp-web.service' })
+    const apiFile = files.find(f => f.filename === 'myapp_api.container')!
+    expect(apiFile.ir.Unit).toContainEqual({ key: 'After', value: 'myapp_web.service' })
+    expect(apiFile.ir.Unit).toContainEqual({ key: 'Requires', value: 'myapp_web.service' })
   })
 
   test('single network across services still uses pod', () => {
@@ -68,7 +68,7 @@ describe('multi-network conversion', () => {
     const files = composeToQuadletFiles(compose, 'myapp')
     const filenames = files.map(f => f.filename)
     expect(filenames).toContain('myapp.pod')
-    expect(filenames).not.toContain('myapp-web.container')
+    expect(filenames).not.toContain('myapp_web.container')
   })
 
   test('no networks across services still uses pod', () => {
@@ -96,8 +96,8 @@ describe('multi-network conversion', () => {
     }
     const files = composeToQuadletFiles(compose, 'myapp')
     const filenames = files.map(f => f.filename)
-    expect(filenames).not.toContain('myapp-ext.network')
-    expect(filenames).toContain('myapp-internal.network')
+    expect(filenames).not.toContain('myapp_ext.network')
+    expect(filenames).toContain('myapp_internal.network')
   })
 
   test('multi-network adds Notify=healthy to dependency containers', () => {
@@ -116,7 +116,7 @@ describe('multi-network conversion', () => {
       },
     }
     const files = composeToQuadletFiles(compose, 'myapp')
-    const dbFile = files.find(f => f.filename === 'myapp-db.container')!
+    const dbFile = files.find(f => f.filename === 'myapp_db.container')!
     expect(dbFile.ir.Container).toContainEqual({ key: 'Notify', value: 'healthy' })
   })
 
@@ -135,7 +135,7 @@ describe('multi-network conversion', () => {
       },
     }
     const files = composeToQuadletFiles(compose, 'test')
-    const netFile = files.find(f => f.filename === 'test-mynet.network')!
+    const netFile = files.find(f => f.filename === 'test_mynet.network')!
     expect(netFile.ir.Network).toContainEqual({ key: 'Subnet', value: '172.20.0.0/24' })
     expect(netFile.ir.Network).toContainEqual({ key: 'Gateway', value: '172.20.0.1' })
   })

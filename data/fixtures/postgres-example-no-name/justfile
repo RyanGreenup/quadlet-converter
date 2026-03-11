@@ -1,0 +1,86 @@
+compose := "podman-compose"
+
+# Sync sops-encrypted secrets into podman secrets
+secrets-sync:
+    sops -d --extract '["postgres"]["password"]' secrets.yaml | podman secret create --replace postgres_password -
+    sops -d --extract '["pgcat"]["pool_password"]' secrets.yaml | podman secret create --replace pgcat_password -
+
+# Bring up all services (depends_on handles ordering)
+up: secrets-sync
+    {{ compose }} up -d
+
+# Tear down all services
+down:
+    {{ compose }} down
+
+# Connect to postgres via the unix socket, bypassing pgbouncer
+psql *args:
+    podman exec -it postgres-container_postgres_1 psql -U postgres {{args}} postgres
+
+# Attach postgres to duckdb via the unix socket
+duckdb *args:
+    #!/usr/bin/env sh
+    socket_dir=$(podman volume inspect postgres-container_pg_socket -f '{{"{{"}}.Mountpoint{{"}}"}}')
+    duckdb {{args}} -cmd "INSTALL postgres; LOAD postgres; ATTACH 'host=${socket_dir} user=postgres dbname=postgres' AS pg (TYPE POSTGRES);"
+
+# Dump the postgres database via the unix socket, bypassing pgbouncer
+pg_dump *args:
+    podman exec -i postgres-container_postgres_1 pg_dump -U postgres {{args}} postgres
+
+
+# Sops
+age_key_dir := env("XDG_CONFIG_HOME", env("HOME") / ".config") / "sops" / "age"
+age_key_file := age_key_dir / "keys.txt"
+
+# Show the current age public key
+show-age-key:
+    @if [ ! -f "{{ age_key_file }}" ]; then echo "No age key found at {{ age_key_file }}"; exit 1; fi
+    grep 'public key:' "{{ age_key_file }}" | awk '{print $NF}'
+
+# Create an age key (skips if one already exists)
+create-age-key:
+    @if [ -f "{{ age_key_file }}" ]; then echo "Age key already exists at {{ age_key_file }}"; exit 0; fi
+    mkdir -p "{{ age_key_dir }}"
+    age-keygen -o "{{ age_key_file }}"
+    @echo "Created age key at {{ age_key_file }}"
+
+# Delete the age key
+delete-age-key:
+    @if [ ! -f "{{ age_key_file }}" ]; then echo "No age key found"; exit 0; fi
+    rm "{{ age_key_file }}"
+    @echo "Deleted age key"
+
+# Rotate the age key (deletes old, creates new)
+rotate-age-key: delete-age-key create-age-key
+
+# Print the .sops.yaml config snippet for this key
+sops-config:
+    #!/usr/bin/env sh
+    pubkey=$(grep 'public key:' "{{ age_key_file }}" | awk '{print $NF}')
+    cat <<EOF
+    creation_rules:
+      - age: >-
+          ${pubkey}
+    EOF
+
+# Encrypt a plaintext file with sops+age
+encrypt file:
+    sops -e -i "{{ file }}"
+
+# Decrypt a sops-encrypted file to stdout
+decrypt file:
+    sops -d "{{ file }}"
+
+# Edit a sops-encrypted file in-place (decrypts, opens $EDITOR, re-encrypts)
+edit file:
+    sops "{{ file }}"
+
+
+
+generate-quadlet:
+    #!/usr/bin/env sh
+    set -eu
+    f=$(realpath docker-compose.yml)
+    d=$(realpath ./deploy)
+    echo "$d"
+    cd "$(mktemp -d)" && panlet convert compose-to-quadlet --sops --no-pod -o "$d" "$f"

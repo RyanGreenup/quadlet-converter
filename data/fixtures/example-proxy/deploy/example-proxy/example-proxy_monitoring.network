@@ -1,0 +1,5 @@
+[Network]
+NetworkName=example-proxy_monitoring
+Driver=bridge
+Internal=true
+Subnet=172.20.2.0/24

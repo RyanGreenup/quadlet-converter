@@ -13,6 +13,21 @@ convert-sops-fixture:
     rm -rf data/fixtures/sops-output
     bun run src/index.ts convert compose-to-quadlet --sops -o data/fixtures/sops-output data/fixtures/sops-compose.yml
 
+# Regenerate all fixture outputs from their docker-compose.yml sources
+regenerate-fixtures:
+    rm -rf data/fixtures/env-ports/output
+    bun run src/index.ts convert compose-to-quadlet -o data/fixtures/env-ports/output data/fixtures/env-ports/docker-compose.yml
+    rm -rf data/fixtures/postgres-example/deploy
+    bun run src/index.ts convert compose-to-quadlet --sops -o data/fixtures/postgres-example/deploy data/fixtures/postgres-example/docker-compose.yml
+    rm -rf data/fixtures/postgres-example-no-name/deploy
+    bun run src/index.ts convert compose-to-quadlet --sops -o data/fixtures/postgres-example-no-name/deploy data/fixtures/postgres-example-no-name/docker-compose.yml
+    rm -rf data/fixtures/example-proxy/deploy
+    bun run src/index.ts convert compose-to-quadlet --sops -o data/fixtures/example-proxy/deploy data/fixtures/example-proxy/docker-compose.yml
+    rm -rf data/fixtures/secrets-output
+    bun run src/index.ts convert compose-to-quadlet -o data/fixtures/secrets-output data/fixtures/secrets-compose.yml
+    rm -rf data/fixtures/sops-output
+    bun run src/index.ts convert compose-to-quadlet --sops -o data/fixtures/sops-output data/fixtures/sops-compose.yml
+
 # Strip large files (dist/) from git history
 purge-dist:
     uvx git-filter-repo --invert-paths --path dist/

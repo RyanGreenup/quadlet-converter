@@ -1,0 +1,26 @@
+[Unit]
+After=postgres-example-no-name_prometheus.service
+Requires=postgres-example-no-name_prometheus.service
+
+[Container]
+Image=docker.io/grafana/grafana:11.5
+PublishPort=127.0.0.1:3000:3000
+Volume=postgres-example-no-name_grafana_data.volume:/var/lib/grafana:Z
+Network=postgres-example-no-name_monitoring.network
+DropCapability=ALL
+ReadOnly=true
+Tmpfs=/tmp
+HealthCmd=wget -qO- http://127.0.0.1:3000/api/health
+HealthInterval=15s
+HealthRetries=3
+HealthTimeout=5s
+NoNewPrivileges=true
+NetworkAlias=grafana
+
+[Service]
+CPUQuota=100%
+MemoryMax=256m
+Restart=always
+
+[Install]
+WantedBy=default.target
