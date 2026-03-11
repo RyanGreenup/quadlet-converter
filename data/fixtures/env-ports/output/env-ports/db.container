@@ -4,3 +4,4 @@ Pod=env-ports.pod
 Environment=POSTGRES_PASSWORD=secret
 Label=io.podman.quadlet.project=env-ports
 Label=io.podman.quadlet.service=db
+AutoUpdate=registry

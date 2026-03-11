@@ -23,6 +23,7 @@ Secret=pgcat_password
 NetworkAlias=pgbouncer
 Label=io.podman.quadlet.project=postgres-podman-example
 Label=io.podman.quadlet.service=pgbouncer
+AutoUpdate=registry
 
 [Service]
 CPUQuota=200%

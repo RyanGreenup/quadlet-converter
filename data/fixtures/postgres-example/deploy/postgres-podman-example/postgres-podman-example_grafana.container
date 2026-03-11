@@ -18,6 +18,7 @@ NoNewPrivileges=true
 NetworkAlias=grafana
 Label=io.podman.quadlet.project=postgres-podman-example
 Label=io.podman.quadlet.service=grafana
+AutoUpdate=registry
 
 [Service]
 CPUQuota=100%

@@ -19,6 +19,7 @@ Secret=pgcat_password
 Notify=healthy
 Label=io.podman.quadlet.project=postgres-example-no-name
 Label=io.podman.quadlet.service=postgres
+AutoUpdate=registry
 
 [Service]
 CPUQuota=400%

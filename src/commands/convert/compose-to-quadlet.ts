@@ -43,6 +43,12 @@ const composeToQuadletCommand = defineCommand({
         description: 'Generate standalone containers instead of pods for scaled services',
       }
     ),
+    'no-auto-update': option(
+      z.boolean().default(false),
+      {
+        description: 'Disable AutoUpdate=registry on generated containers',
+      }
+    ),
   },
   handler: async ({ flags, positional }) => {
     const filePath = positional[0]
@@ -107,6 +113,7 @@ const composeToQuadletCommand = defineCommand({
       build: flags.build,
       startPort: flags['start-port'],
       usePod: !flags['no-pod'],
+      autoUpdate: !flags['no-auto-update'],
     })
     const secretDefs = extractSecretDefs(compose)
     const buildDefs = flags.build ? extractBuildDefs(compose) : []

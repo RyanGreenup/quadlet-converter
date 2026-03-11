@@ -12,3 +12,4 @@ Environment=DATABASE_URL=postgresql://user:pass@db:${DB_PORT}/mydb
 Environment=REDIS_URL=redis://redis:${REDIS_PORT}/0
 Label=io.podman.quadlet.project=env-ports
 Label=io.podman.quadlet.service=app
+AutoUpdate=registry

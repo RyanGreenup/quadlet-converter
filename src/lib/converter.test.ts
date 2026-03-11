@@ -803,6 +803,23 @@ describe('composeToQuadletFiles', () => {
     expect(apiFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.service=api' })
   })
 
+  test('containers include AutoUpdate=registry by default', () => {
+    const compose: ComposeFile = {
+      services: { web: { image: 'nginx', ports: ['80:80'] } },
+    }
+    const files = composeToQuadletFiles(compose, 'test')
+    expect(files[0].ir.Container).toContainEqual({ key: 'AutoUpdate', value: 'registry' })
+  })
+
+  test('AutoUpdate is omitted when autoUpdate: false', () => {
+    const compose: ComposeFile = {
+      services: { web: { image: 'nginx', ports: ['80:80'] } },
+    }
+    const files = composeToQuadletFiles(compose, 'test', { autoUpdate: false })
+    const autoUpdate = (files[0].ir.Container ?? []).filter(e => e.key === 'AutoUpdate')
+    expect(autoUpdate).toHaveLength(0)
+  })
+
   test('empty services produces empty file set', () => {
     const files = composeToQuadletFiles({ services: {} }, 'test')
     expect(files).toHaveLength(0)

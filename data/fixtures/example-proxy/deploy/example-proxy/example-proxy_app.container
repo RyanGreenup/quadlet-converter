@@ -36,6 +36,7 @@ HealthStartupInterval=5s
 NoNewPrivileges=true
 PodmanArgs=--ulimit=nofile=65536:65536
 NetworkAlias=app
+AutoUpdate=registry
 
 [Service]
 CPUQuota=150%

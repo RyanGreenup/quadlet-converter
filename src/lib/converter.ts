@@ -15,6 +15,7 @@ export interface ComposeToQuadletOpts {
   build?: boolean
   startPort?: number
   usePod?: boolean
+  autoUpdate?: boolean
 }
 
 export interface QuadletFile {
@@ -639,6 +640,9 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
       { key: 'Label', value: `io.podman.quadlet.project=${podName}` },
       { key: 'Label', value: `io.podman.quadlet.service=${name}` },
     )
+    if (opts?.autoUpdate !== false) {
+      ir.Container.push({ key: 'AutoUpdate', value: 'registry' })
+    }
     return [{
       filename: `${name}.container`,
       ir,
@@ -745,6 +749,9 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
         { key: 'Label', value: `io.podman.quadlet.project=${podName}` },
         { key: 'Label', value: `io.podman.quadlet.service=${name}` },
       )
+      if (opts?.autoUpdate !== false) {
+        ir.Container.push({ key: 'AutoUpdate', value: 'registry' })
+      }
 
       files.push({ filename: `${projectResourceName(podName, name)}.container`, ir })
     }
@@ -820,6 +827,9 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
       { key: 'Label', value: `io.podman.quadlet.project=${podName}` },
       { key: 'Label', value: `io.podman.quadlet.service=${name}` },
     )
+    if (opts?.autoUpdate !== false) {
+      ir.Container.push({ key: 'AutoUpdate', value: 'registry' })
+    }
     files.push({ filename: `${name}.container`, ir })
   }
 

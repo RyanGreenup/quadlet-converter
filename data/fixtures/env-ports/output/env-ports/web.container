@@ -4,3 +4,4 @@ Pod=env-ports.pod
 Environment=BACKEND_URL=http://app:${APP_PORT}
 Label=io.podman.quadlet.project=env-ports
 Label=io.podman.quadlet.service=web
+AutoUpdate=registry

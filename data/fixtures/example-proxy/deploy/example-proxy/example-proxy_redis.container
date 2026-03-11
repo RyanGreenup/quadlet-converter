@@ -23,6 +23,7 @@ NetworkAlias=redis
 Notify=healthy
 Label=io.podman.quadlet.project=example-proxy
 Label=io.podman.quadlet.service=redis
+AutoUpdate=registry
 
 [Service]
 CPUQuota=50%

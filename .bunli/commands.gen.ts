@@ -10,6 +10,7 @@ import Deploy from '../src/commands/deploy.js'
 import Exec from '../src/commands/exec.js'
 import Find from '../src/commands/find.js'
 import FromJson from '../src/commands/from-json.js'
+import GenerateGithubActions from '../src/commands/generate-github-actions.js'
 import Hello from '../src/commands/hello.js'
 import Log from '../src/commands/log.js'
 import Ps from '../src/commands/ps.js'
@@ -21,7 +22,7 @@ import Undeploy from '../src/commands/undeploy.js'
 import VolumePath from '../src/commands/volume-path.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'hello', 'log', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
+const names = ['check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'generate-github-actions', 'hello', 'log', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
@@ -31,6 +32,7 @@ const modules: Record<GeneratedNames, Command<any>> = {
   'exec': Exec,
   'find': Find,
   'from-json': FromJson,
+  'generate-github-actions': GenerateGithubActions,
   'hello': Hello,
   'log': Log,
   'ps': Ps,
@@ -111,6 +113,15 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         }
       ],
       path: './src/commands/from-json'
+    },
+  'generate-github-actions': {
+      name: 'generate-github-actions',
+      description: 'Generate GitHub Actions workflow for building container images',
+      options: {
+        'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output file path (default: .github/workflows/build-images.yml)', short: 'o', fileType: 'file', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'registry': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Container registry (default: ghcr.io)', short: 'r', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' }
+      },
+      path: './src/commands/generate-github-actions'
     },
   'hello': {
       name: 'hello',

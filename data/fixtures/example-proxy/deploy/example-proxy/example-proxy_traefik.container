@@ -35,6 +35,7 @@ NoNewPrivileges=true
 PodmanArgs=--ulimit=nofile=65536:65536
 PodmanArgs=--ulimit=nproc=4096:4096
 NetworkAlias=traefik
+AutoUpdate=registry
 
 [Service]
 CPUQuota=50%

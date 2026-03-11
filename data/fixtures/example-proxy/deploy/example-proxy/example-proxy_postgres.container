@@ -34,6 +34,7 @@ NetworkAlias=postgres
 Notify=healthy
 Label=io.podman.quadlet.project=example-proxy
 Label=io.podman.quadlet.service=postgres
+AutoUpdate=registry
 
 [Service]
 CPUQuota=200%

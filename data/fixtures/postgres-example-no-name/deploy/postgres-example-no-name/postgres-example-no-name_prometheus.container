@@ -15,6 +15,7 @@ NetworkAlias=prometheus
 Notify=healthy
 Label=io.podman.quadlet.project=postgres-example-no-name
 Label=io.podman.quadlet.service=prometheus
+AutoUpdate=registry
 
 [Service]
 CPUQuota=100%
