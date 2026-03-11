@@ -4,6 +4,7 @@
 import type { Command, CLI, GeneratedOptionMeta, RegisteredCommands, CommandOptions, GeneratedCommandMeta } from '@bunli/core'
 import { createGeneratedHelpers, registerGeneratedStore } from '@bunli/core'
 
+import AutoUpdate from '../src/commands/auto-update.js'
 import Check from '../src/commands/check.js'
 import Convert from '../src/commands/convert.js'
 import Deploy from '../src/commands/deploy.js'
@@ -22,10 +23,11 @@ import Undeploy from '../src/commands/undeploy.js'
 import VolumePath from '../src/commands/volume-path.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'generate-github-actions', 'hello', 'log', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
+const names = ['auto-update', 'check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'generate-github-actions', 'hello', 'log', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
+  'auto-update': AutoUpdate,
   'check': Check,
   'convert': Convert,
   'deploy': Deploy,
@@ -45,6 +47,15 @@ const modules: Record<GeneratedNames, Command<any>> = {
 } as const
 
 const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
+  'auto-update': {
+      name: 'auto-update',
+      description: 'Enable the podman auto-update timer',
+      options: {
+        'system': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Enable system-wide instead of per-user', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":255,"end":260,"loc":{"start":{"line":9,"column":26,"index":255},"end":{"line":9,"column":31,"index":260}},"value":false}}]}, validator: '(val) => true' },
+        'dry-run': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Check for available updates without applying them', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":384,"end":389,"loc":{"start":{"line":13,"column":26,"index":384},"end":{"line":13,"column":31,"index":389}},"value":false}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/auto-update'
+    },
   'check': {
       name: 'check',
       description: 'Check a compose file for potential issues',
@@ -62,7 +73,8 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
             'sops': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use sops to decrypt file-based secrets in justfile recipes', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":918,"end":923,"loc":{"start":{"line":23,"column":26,"index":918},"end":{"line":23,"column":31,"index":923}},"value":false}}]}, validator: '(val) => true' },
             'build': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate build recipes for services with build contexts', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1077,"end":1082,"loc":{"start":{"line":29,"column":26,"index":1077},"end":{"line":29,"column":31,"index":1082}},"value":false}}]}, validator: '(val) => true' },
             'start-port': { type: 'z.coerce.number.optional', required: false, hasDefault: false, description: 'Starting host port for scaled instances', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
-            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1385,"end":1390,"loc":{"start":{"line":41,"column":26,"index":1385},"end":{"line":41,"column":31,"index":1390}},"value":false}}]}, validator: '(val) => true' }
+            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1385,"end":1390,"loc":{"start":{"line":41,"column":26,"index":1385},"end":{"line":41,"column":31,"index":1390}},"value":false}}]}, validator: '(val) => true' },
+            'no-auto-update': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Disable AutoUpdate=registry on generated containers', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1563,"end":1568,"loc":{"start":{"line":47,"column":26,"index":1563},"end":{"line":47,"column":31,"index":1568}},"value":false}}]}, validator: '(val) => true' }
           },
           path: './src/commands/convert/compose-to-quadlet'
         },
