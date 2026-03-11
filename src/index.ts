@@ -17,6 +17,7 @@ import undeployCommand from './commands/undeploy.js'
 import logCommand from './commands/log.js'
 import generateGitHubActionsCommand from './commands/generate-github-actions.js'
 import autoUpdateCommand from './commands/auto-update.js'
+import secretsGroup from './commands/secrets.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -41,5 +42,6 @@ cli.command(undeployCommand)
 cli.command(logCommand)
 cli.command(generateGitHubActionsCommand)
 cli.command(autoUpdateCommand)
+cli.command(secretsGroup)
 
 await cli.run()

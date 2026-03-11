@@ -6,7 +6,7 @@ import { serializeQuadlet, irToQuadletData } from '../../lib/quadlet.js'
 import { extractBuildDefs, generateBuildJustfile } from '../../lib/build.js'
 import { extractSecretDefs, generateSecretsJustfile } from '../../lib/secrets.js'
 import path from 'node:path'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { cp, mkdir, writeFile } from 'node:fs/promises'
 
 const composeToQuadletCommand = defineCommand({
   name: 'compose-to-quadlet',
@@ -119,6 +119,25 @@ const composeToQuadletCommand = defineCommand({
       const outPath = path.join(outDir, 'build.just')
       await writeFile(outPath, generateBuildJustfile(buildDefs))
       console.log(outPath)
+    }
+
+    // Copy bind-mount sources (./relative paths) from the compose directory
+    // into the output directory so Quadlet can resolve them at runtime.
+    const relativeSources = new Set<string>()
+    for (const { ir } of files) {
+      for (const entry of ir.Container ?? []) {
+        if (entry.key === 'Volume' && entry.value.startsWith('./')) {
+          const source = entry.value.split(':')[0]
+          relativeSources.add(source)
+        }
+      }
+    }
+    for (const source of relativeSources) {
+      const srcPath = path.resolve(composeDir, source)
+      const destPath = path.join(outDir, source)
+      await mkdir(path.dirname(destPath), { recursive: true })
+      await cp(srcPath, destPath, { recursive: true })
+      console.log(destPath)
     }
   }
 })

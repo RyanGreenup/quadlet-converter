@@ -16,6 +16,7 @@ import Hello from '../src/commands/hello.js'
 import Log from '../src/commands/log.js'
 import Ps from '../src/commands/ps.js'
 import Run from '../src/commands/run.js'
+import Secrets from '../src/commands/secrets.js'
 import ToIr from '../src/commands/to-ir.js'
 import ToJson from '../src/commands/to-json.js'
 import Tui from '../src/commands/tui.js'
@@ -23,7 +24,7 @@ import Undeploy from '../src/commands/undeploy.js'
 import VolumePath from '../src/commands/volume-path.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['auto-update', 'check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'generate-github-actions', 'hello', 'log', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
+const names = ['auto-update', 'check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'generate-github-actions', 'hello', 'log', 'ps', 'run', 'secrets', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
@@ -39,6 +40,7 @@ const modules: Record<GeneratedNames, Command<any>> = {
   'log': Log,
   'ps': Ps,
   'run': Run,
+  'secrets': Secrets,
   'to-ir': ToIr,
   'to-json': ToJson,
   'tui': Tui,
@@ -70,11 +72,11 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
           description: 'Convert a Docker Compose file to Quadlet unit file(s)',
           options: {
             'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output directory (default: deploy/ next to compose file)', short: 'o', fileType: 'directory', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
-            'sops': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use sops to decrypt file-based secrets in justfile recipes', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":918,"end":923,"loc":{"start":{"line":23,"column":26,"index":918},"end":{"line":23,"column":31,"index":923}},"value":false}}]}, validator: '(val) => true' },
-            'build': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate build recipes for services with build contexts', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1077,"end":1082,"loc":{"start":{"line":29,"column":26,"index":1077},"end":{"line":29,"column":31,"index":1082}},"value":false}}]}, validator: '(val) => true' },
+            'sops': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use sops to decrypt file-based secrets in justfile recipes', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":922,"end":927,"loc":{"start":{"line":23,"column":26,"index":922},"end":{"line":23,"column":31,"index":927}},"value":false}}]}, validator: '(val) => true' },
+            'build': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate build recipes for services with build contexts', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1081,"end":1086,"loc":{"start":{"line":29,"column":26,"index":1081},"end":{"line":29,"column":31,"index":1086}},"value":false}}]}, validator: '(val) => true' },
             'start-port': { type: 'z.coerce.number.optional', required: false, hasDefault: false, description: 'Starting host port for scaled instances', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
-            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1385,"end":1390,"loc":{"start":{"line":41,"column":26,"index":1385},"end":{"line":41,"column":31,"index":1390}},"value":false}}]}, validator: '(val) => true' },
-            'no-auto-update': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Disable AutoUpdate=registry on generated containers', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1563,"end":1568,"loc":{"start":{"line":47,"column":26,"index":1563},"end":{"line":47,"column":31,"index":1568}},"value":false}}]}, validator: '(val) => true' }
+            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1389,"end":1394,"loc":{"start":{"line":41,"column":26,"index":1389},"end":{"line":41,"column":31,"index":1394}},"value":false}}]}, validator: '(val) => true' },
+            'no-auto-update': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Disable AutoUpdate=registry on generated containers', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1567,"end":1572,"loc":{"start":{"line":47,"column":26,"index":1567},"end":{"line":47,"column":31,"index":1572}},"value":false}}]}, validator: '(val) => true' }
           },
           path: './src/commands/convert/compose-to-quadlet'
         },
@@ -172,6 +174,11 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'rm': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Remove containers and volumes after stopping', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":678,"end":683,"loc":{"start":{"line":25,"column":26,"index":678},"end":{"line":25,"column":31,"index":683}},"value":false}}]}, validator: '(val) => true' }
       },
       path: './src/commands/run'
+    },
+  'secrets': {
+      name: 'secrets',
+      description: 'Manage podman secrets',
+      path: './src/commands/secrets'
     },
   'to-ir': {
       name: 'to-ir',
