@@ -11,6 +11,7 @@ import Exec from '../src/commands/exec.js'
 import Find from '../src/commands/find.js'
 import FromJson from '../src/commands/from-json.js'
 import Hello from '../src/commands/hello.js'
+import Log from '../src/commands/log.js'
 import Ps from '../src/commands/ps.js'
 import Run from '../src/commands/run.js'
 import ToIr from '../src/commands/to-ir.js'
@@ -20,7 +21,7 @@ import Undeploy from '../src/commands/undeploy.js'
 import VolumePath from '../src/commands/volume-path.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'hello', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
+const names = ['check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'hello', 'log', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
@@ -31,6 +32,7 @@ const modules: Record<GeneratedNames, Command<any>> = {
   'find': Find,
   'from-json': FromJson,
   'hello': Hello,
+  'log': Log,
   'ps': Ps,
   'run': Run,
   'to-ir': ToIr,
@@ -118,6 +120,15 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'excited': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Add excitement!', short: 'e', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":364,"end":369,"loc":{"start":{"line":16,"column":26,"index":364},"end":{"line":16,"column":31,"index":369}},"value":false}}]}, validator: '(val) => true' }
       },
       path: './src/commands/hello'
+    },
+  'log': {
+      name: 'log',
+      description: 'Follow journald logs for a deployed project',
+      options: {
+        'system': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use system scope instead of user', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":654,"end":659,"loc":{"start":{"line":24,"column":26,"index":654},"end":{"line":24,"column":31,"index":659}},"value":false}}]}, validator: '(val) => true' },
+        'follow': { type: 'z.boolean.default', required: true, hasDefault: true, default: true, description: 'Follow log output (default: true)', short: 'f', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":774,"end":778,"loc":{"start":{"line":28,"column":26,"index":774},"end":{"line":28,"column":30,"index":778}},"value":true}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/log'
     },
   'ps': {
       name: 'ps',
