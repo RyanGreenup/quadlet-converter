@@ -1,0 +1,22 @@
+name: build-example
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Containerfile
+      args:
+        NODE_VERSION: "22"
+    image: ghcr.io/myorg/myapp-api:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+
+  worker:
+    build: ./worker
+    image: ghcr.io/myorg/myapp-worker:latest
+    restart: unless-stopped
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    restart: unless-stopped

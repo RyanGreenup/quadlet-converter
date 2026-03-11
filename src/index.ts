@@ -15,6 +15,7 @@ import volumePathCommand from './commands/volume-path.js'
 import deployCommand from './commands/deploy.js'
 import undeployCommand from './commands/undeploy.js'
 import logCommand from './commands/log.js'
+import generateGitHubActionsCommand from './commands/generate-github-actions.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -37,5 +38,6 @@ cli.command(volumePathCommand)
 cli.command(deployCommand)
 cli.command(undeployCommand)
 cli.command(logCommand)
+cli.command(generateGitHubActionsCommand)
 
 await cli.run()
