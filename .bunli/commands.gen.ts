@@ -6,6 +6,9 @@ import { createGeneratedHelpers, registerGeneratedStore } from '@bunli/core'
 
 import Check from '../src/commands/check.js'
 import Convert from '../src/commands/convert.js'
+import Deploy from '../src/commands/deploy.js'
+import Exec from '../src/commands/exec.js'
+import Find from '../src/commands/find.js'
 import FromJson from '../src/commands/from-json.js'
 import Hello from '../src/commands/hello.js'
 import Ps from '../src/commands/ps.js'
@@ -13,21 +16,28 @@ import Run from '../src/commands/run.js'
 import ToIr from '../src/commands/to-ir.js'
 import ToJson from '../src/commands/to-json.js'
 import Tui from '../src/commands/tui.js'
+import Undeploy from '../src/commands/undeploy.js'
+import VolumePath from '../src/commands/volume-path.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['check', 'convert', 'from-json', 'hello', 'ps', 'run', 'to-ir', 'to-json', 'tui'] as const
+const names = ['check', 'convert', 'deploy', 'exec', 'find', 'from-json', 'hello', 'ps', 'run', 'to-ir', 'to-json', 'tui', 'undeploy', 'volume-path'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
   'check': Check,
   'convert': Convert,
+  'deploy': Deploy,
+  'exec': Exec,
+  'find': Find,
   'from-json': FromJson,
   'hello': Hello,
   'ps': Ps,
   'run': Run,
   'to-ir': ToIr,
   'to-json': ToJson,
-  'tui': Tui
+  'tui': Tui,
+  'undeploy': Undeploy,
+  'volume-path': VolumePath
 } as const
 
 const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
@@ -44,11 +54,11 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
           name: 'compose-to-quadlet',
           description: 'Convert a Docker Compose file to Quadlet unit file(s)',
           options: {
-            'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output directory (writes individual files instead of stdout)', short: 'o', fileType: 'directory', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
-            'sops': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use sops to decrypt file-based secrets in justfile recipes', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":922,"end":927,"loc":{"start":{"line":23,"column":26,"index":922},"end":{"line":23,"column":31,"index":927}},"value":false}}]}, validator: '(val) => true' },
-            'build': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate build recipes for services with build contexts', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1081,"end":1086,"loc":{"start":{"line":29,"column":26,"index":1081},"end":{"line":29,"column":31,"index":1086}},"value":false}}]}, validator: '(val) => true' },
+            'output': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Output directory (default: deploy/ next to compose file)', short: 'o', fileType: 'directory', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+            'sops': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Use sops to decrypt file-based secrets in justfile recipes', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":918,"end":923,"loc":{"start":{"line":23,"column":26,"index":918},"end":{"line":23,"column":31,"index":923}},"value":false}}]}, validator: '(val) => true' },
+            'build': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate build recipes for services with build contexts', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1077,"end":1082,"loc":{"start":{"line":29,"column":26,"index":1077},"end":{"line":29,"column":31,"index":1082}},"value":false}}]}, validator: '(val) => true' },
             'start-port': { type: 'z.coerce.number.optional', required: false, hasDefault: false, description: 'Starting host port for scaled instances', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
-            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1389,"end":1394,"loc":{"start":{"line":41,"column":26,"index":1389},"end":{"line":41,"column":31,"index":1394}},"value":false}}]}, validator: '(val) => true' }
+            'no-pod': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Generate standalone containers instead of pods for scaled services', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1385,"end":1390,"loc":{"start":{"line":41,"column":26,"index":1385},"end":{"line":41,"column":31,"index":1390}},"value":false}}]}, validator: '(val) => true' }
           },
           path: './src/commands/convert/compose-to-quadlet'
         },
@@ -62,6 +72,31 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         }
       ],
       path: './src/commands/convert'
+    },
+  'deploy': {
+      name: 'deploy',
+      description: 'Install quadlet units and start services',
+      options: {
+        'system': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Deploy system-wide instead of per-user', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1073,"end":1078,"loc":{"start":{"line":36,"column":26,"index":1073},"end":{"line":36,"column":31,"index":1078}},"value":false}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/deploy'
+    },
+  'exec': {
+      name: 'exec',
+      description: 'Execute a command in a running container by service name',
+      options: {
+        'project': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Filter by project name', short: 'p', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'interactive': { type: 'z.boolean.default', required: true, hasDefault: true, default: true, description: 'Allocate a TTY (default: true)', short: 'i', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":443,"end":447,"loc":{"start":{"line":14,"column":26,"index":443},"end":{"line":14,"column":30,"index":447}},"value":true}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/exec'
+    },
+  'find': {
+      name: 'find',
+      description: 'Find a running container by service name',
+      options: {
+        'project': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Filter by project name', short: 'p', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' }
+      },
+      path: './src/commands/find'
     },
   'from-json': {
       name: 'from-json',
@@ -150,6 +185,22 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'dir': { type: 'z.string.default', required: true, hasDefault: true, default: ".", description: 'Directory to browse', short: 'd', fileType: 'directory', schema: {"type":"zod","method":"default","args":[{"type":"literal","value":"."}]}, validator: '(val) => true' }
       },
       path: './src/commands/tui'
+    },
+  'undeploy': {
+      name: 'undeploy',
+      description: 'Stop services, remove quadlet units, and reload systemd',
+      options: {
+        'system': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Undeploy system-wide instead of per-user', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":1136,"end":1141,"loc":{"start":{"line":39,"column":26,"index":1136},"end":{"line":39,"column":31,"index":1141}},"value":false}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/undeploy'
+    },
+  'volume-path': {
+      name: 'volume-path',
+      description: 'Get the mountpoint of a volume by name, trying prefixed variants',
+      options: {
+        'project': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Project name to try as prefix', short: 'p', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' }
+      },
+      path: './src/commands/volume-path'
     }
 } as const
 

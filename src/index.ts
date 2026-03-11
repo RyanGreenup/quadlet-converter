@@ -9,6 +9,11 @@ import runCommand from './commands/run.js'
 import checkCommand from './commands/check.js'
 import tuiCommand from './commands/tui.js'
 import psCommand from './commands/ps.js'
+import findCommand from './commands/find.js'
+import execCommand from './commands/exec.js'
+import volumePathCommand from './commands/volume-path.js'
+import deployCommand from './commands/deploy.js'
+import undeployCommand from './commands/undeploy.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -25,5 +30,10 @@ cli.command(runCommand)
 cli.command(checkCommand)
 cli.command(tuiCommand)
 cli.command(psCommand)
+cli.command(findCommand)
+cli.command(execCommand)
+cli.command(volumePathCommand)
+cli.command(deployCommand)
+cli.command(undeployCommand)
 
 await cli.run()
