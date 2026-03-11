@@ -15,7 +15,7 @@ const composeToQuadletCommand = defineCommand({
     output: option(
       z.string().optional(),
       {
-        description: 'Output directory (writes individual files instead of stdout)',
+        description: 'Output directory (default: deploy/ next to compose file)',
         short: 'o',
       }
     ),
@@ -111,47 +111,27 @@ const composeToQuadletCommand = defineCommand({
     const secretDefs = extractSecretDefs(compose)
     const buildDefs = flags.build ? extractBuildDefs(compose) : []
 
-    if (flags.output) {
-      const outDir = path.join(flags.output, podName)
-      await mkdir(outDir, { recursive: true })
-      console.log(outDir)
+    const outputBase = flags.output ?? path.join(composeDir, 'deploy')
+    const outDir = path.join(outputBase, podName)
+    await mkdir(outDir, { recursive: true })
+    console.log(outDir)
 
-      for (const { filename, ir } of files) {
-        const outPath = path.join(outDir, filename)
-        await writeFile(outPath, serializeQuadlet(irToQuadletData(ir)))
-        console.log(outPath)
-      }
+    for (const { filename, ir } of files) {
+      const outPath = path.join(outDir, filename)
+      await writeFile(outPath, serializeQuadlet(irToQuadletData(ir)))
+      console.log(outPath)
+    }
 
-      if (secretDefs.length > 0) {
-        const outPath = path.join(outDir, 'secrets.just')
-        await writeFile(outPath, generateSecretsJustfile(secretDefs, { sops: flags.sops }))
-        console.log(outPath)
-      }
+    if (secretDefs.length > 0) {
+      const outPath = path.join(outDir, 'secrets.just')
+      await writeFile(outPath, generateSecretsJustfile(secretDefs, { sops: flags.sops }))
+      console.log(outPath)
+    }
 
-      if (buildDefs.length > 0) {
-        const outPath = path.join(outDir, 'build.just')
-        await writeFile(outPath, generateBuildJustfile(buildDefs))
-        console.log(outPath)
-      }
-    } else {
-      for (let i = 0; i < files.length; i++) {
-        const { filename, ir } = files[i]
-        if (i > 0) console.log()
-        console.log(`### ${filename} ###`)
-        process.stdout.write(serializeQuadlet(irToQuadletData(ir)))
-      }
-
-      if (secretDefs.length > 0) {
-        console.log()
-        console.log(`### secrets.just ###`)
-        process.stdout.write(generateSecretsJustfile(secretDefs, { sops: flags.sops }))
-      }
-
-      if (buildDefs.length > 0) {
-        console.log()
-        console.log(`### build.just ###`)
-        process.stdout.write(generateBuildJustfile(buildDefs))
-      }
+    if (buildDefs.length > 0) {
+      const outPath = path.join(outDir, 'build.just')
+      await writeFile(outPath, generateBuildJustfile(buildDefs))
+      console.log(outPath)
     }
   }
 })

@@ -8,13 +8,14 @@ import Check from '../src/commands/check.js'
 import Convert from '../src/commands/convert.js'
 import FromJson from '../src/commands/from-json.js'
 import Hello from '../src/commands/hello.js'
+import Ps from '../src/commands/ps.js'
 import Run from '../src/commands/run.js'
 import ToIr from '../src/commands/to-ir.js'
 import ToJson from '../src/commands/to-json.js'
 import Tui from '../src/commands/tui.js'
 
 // Narrow list of command names to avoid typeof-cycles in types
-const names = ['check', 'convert', 'from-json', 'hello', 'run', 'to-ir', 'to-json', 'tui'] as const
+const names = ['check', 'convert', 'from-json', 'hello', 'ps', 'run', 'to-ir', 'to-json', 'tui'] as const
 type GeneratedNames = typeof names[number]
 
 const modules: Record<GeneratedNames, Command<any>> = {
@@ -22,6 +23,7 @@ const modules: Record<GeneratedNames, Command<any>> = {
   'convert': Convert,
   'from-json': FromJson,
   'hello': Hello,
+  'ps': Ps,
   'run': Run,
   'to-ir': ToIr,
   'to-json': ToJson,
@@ -81,6 +83,16 @@ const metadata: Record<GeneratedNames, GeneratedCommandMeta> = {
         'excited': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Add excitement!', short: 'e', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":364,"end":369,"loc":{"start":{"line":16,"column":26,"index":364},"end":{"line":16,"column":31,"index":369}},"value":false}}]}, validator: '(val) => true' }
       },
       path: './src/commands/hello'
+    },
+  'ps': {
+      name: 'ps',
+      description: 'List running quadlet containers',
+      options: {
+        'all': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Show all containers (including non-quadlet)', short: 'a', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":2278,"end":2283,"loc":{"start":{"line":79,"column":26,"index":2278},"end":{"line":79,"column":31,"index":2283}},"value":false}}]}, validator: '(val) => true' },
+        'project': { type: 'z.string.optional', required: false, hasDefault: false, description: 'Filter by project name', short: 'p', schema: {"type":"zod","method":"optional","args":[]}, validator: '(val) => true' },
+        'json': { type: 'z.boolean.default', required: true, hasDefault: true, default: false, description: 'Output as JSON', schema: {"type":"zod","method":"default","args":[{"type":"unknown","raw":{"type":"BooleanLiteral","start":2537,"end":2542,"loc":{"start":{"line":87,"column":26,"index":2537},"end":{"line":87,"column":31,"index":2542}},"value":false}}]}, validator: '(val) => true' }
+      },
+      path: './src/commands/ps'
     },
   'run': {
       name: 'run',
