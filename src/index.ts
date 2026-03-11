@@ -14,6 +14,7 @@ import execCommand from './commands/exec.js'
 import volumePathCommand from './commands/volume-path.js'
 import deployCommand from './commands/deploy.js'
 import undeployCommand from './commands/undeploy.js'
+import logCommand from './commands/log.js'
 
 const cli = await createCLI({
   name: 'quadlet-serde',
@@ -35,5 +36,6 @@ cli.command(execCommand)
 cli.command(volumePathCommand)
 cli.command(deployCommand)
 cli.command(undeployCommand)
+cli.command(logCommand)
 
 await cli.run()
