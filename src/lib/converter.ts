@@ -633,9 +633,15 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
   // Single non-scaled service and no scaled: no pod needed
   if (normalNames.length === 1 && scaledFiles.length === 0) {
     const name = normalNames[0]
+    const ir = composeServiceToQuadletIR(name, services[name], { build: opts?.build })
+    if (!ir.Container) ir.Container = []
+    ir.Container.push(
+      { key: 'Label', value: `io.podman.quadlet.project=${podName}` },
+      { key: 'Label', value: `io.podman.quadlet.service=${name}` },
+    )
     return [{
       filename: `${name}.container`,
-      ir: composeServiceToQuadletIR(name, services[name], { build: opts?.build }),
+      ir,
     }]
   }
 
@@ -735,6 +741,11 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
         ir.Container.push({ key: 'Notify', value: 'healthy' })
       }
 
+      ir.Container.push(
+        { key: 'Label', value: `io.podman.quadlet.project=${podName}` },
+        { key: 'Label', value: `io.podman.quadlet.service=${name}` },
+      )
+
       files.push({ filename: `${projectResourceName(podName, name)}.container`, ir })
     }
 
@@ -804,6 +815,11 @@ export function composeToQuadletFiles(compose: ComposeFile, podName: string, opt
       if (!ir.Container) ir.Container = []
       ir.Container.push({ key: 'Notify', value: 'healthy' })
     }
+    if (!ir.Container) ir.Container = []
+    ir.Container.push(
+      { key: 'Label', value: `io.podman.quadlet.project=${podName}` },
+      { key: 'Label', value: `io.podman.quadlet.service=${name}` },
+    )
     files.push({ filename: `${name}.container`, ir })
   }
 

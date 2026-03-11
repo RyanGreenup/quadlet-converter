@@ -16,6 +16,8 @@ HealthRetries=3
 HealthTimeout=5s
 NoNewPrivileges=true
 NetworkAlias=grafana
+Label=io.podman.quadlet.project=postgres-example-no-name
+Label=io.podman.quadlet.service=grafana
 
 [Service]
 CPUQuota=100%

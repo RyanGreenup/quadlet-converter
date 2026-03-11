@@ -18,6 +18,8 @@ Label=traefik.http.routers.dashboard.entrypoints=websecure
 Label=traefik.http.routers.dashboard.tls.certresolver=letsencrypt
 Label=traefik.http.routers.dashboard.service=api@internal
 Label=traefik.http.routers.dashboard.middlewares=auth@file
+Label=io.podman.quadlet.project=example-proxy
+Label=io.podman.quadlet.service=traefik
 ReadOnly=true
 Tmpfs=/tmp:noexec,nosuid,size=64m
 Sysctl=net.core.somaxconn=4096

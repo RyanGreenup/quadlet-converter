@@ -21,6 +21,8 @@ HealthTimeout=5s
 NoNewPrivileges=true
 Secret=pgcat_password
 NetworkAlias=pgbouncer
+Label=io.podman.quadlet.project=postgres-example-no-name
+Label=io.podman.quadlet.service=pgbouncer
 
 [Service]
 CPUQuota=200%

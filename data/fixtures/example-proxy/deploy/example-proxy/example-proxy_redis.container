@@ -21,6 +21,8 @@ NoNewPrivileges=true
 PodmanArgs=--memory-swappiness=0
 NetworkAlias=redis
 Notify=healthy
+Label=io.podman.quadlet.project=example-proxy
+Label=io.podman.quadlet.service=redis
 
 [Service]
 CPUQuota=50%

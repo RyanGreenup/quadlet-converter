@@ -725,6 +725,8 @@ describe('composeToQuadletFiles', () => {
     expect(files).toHaveLength(1)
     expect(files[0].filename).toBe('my-caddy.container')
     expect(files[0].ir.Container).toContainEqual({ key: 'PublishPort', value: '80:80' })
+    expect(files[0].ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.project=example' })
+    expect(files[0].ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.service=my-caddy' })
   })
 
   test('multi-service compose produces pod + container files', () => {
@@ -766,6 +768,39 @@ describe('composeToQuadletFiles', () => {
     expect(redisFile.ir.Container).toContainEqual({ key: 'Pod', value: 'example.pod' })
     const redisPorts = (redisFile.ir.Container ?? []).filter(e => e.key === 'PublishPort')
     expect(redisPorts).toHaveLength(0)
+
+    // Both containers should have project/service labels
+    expect(webFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.project=example' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.service=web' })
+    expect(redisFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.project=example' })
+    expect(redisFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.service=redis' })
+  })
+
+  test('no-pod multi-network containers include project/service labels', () => {
+    const compose: ComposeFile = {
+      services: {
+        web: {
+          image: 'nginx',
+          networks: ['frontend', 'backend'],
+        },
+        api: {
+          image: 'node',
+          networks: ['backend'],
+        },
+      },
+      networks: {
+        frontend: {},
+        backend: {},
+      },
+    }
+    const files = composeToQuadletFiles(compose, 'myproj')
+    const webFile = files.find(f => f.filename.endsWith('web.container'))!
+    const apiFile = files.find(f => f.filename.endsWith('api.container'))!
+
+    expect(webFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.project=myproj' })
+    expect(webFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.service=web' })
+    expect(apiFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.project=myproj' })
+    expect(apiFile.ir.Container).toContainEqual({ key: 'Label', value: 'io.podman.quadlet.service=api' })
   })
 
   test('empty services produces empty file set', () => {

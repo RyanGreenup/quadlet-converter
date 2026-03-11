@@ -1,3 +1,5 @@
 [Container]
 Image=prom/prometheus:latest
 Pod=env-ports.pod
+Label=io.podman.quadlet.project=env-ports
+Label=io.podman.quadlet.service=metrics

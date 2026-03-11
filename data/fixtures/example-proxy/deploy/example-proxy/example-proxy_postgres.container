@@ -32,6 +32,8 @@ Secret=db_password
 PodmanArgs=--ulimit=nofile=65536:65536
 NetworkAlias=postgres
 Notify=healthy
+Label=io.podman.quadlet.project=example-proxy
+Label=io.podman.quadlet.service=postgres
 
 [Service]
 CPUQuota=200%

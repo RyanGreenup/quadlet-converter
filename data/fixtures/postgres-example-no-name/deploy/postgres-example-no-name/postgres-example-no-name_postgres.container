@@ -17,6 +17,8 @@ NoNewPrivileges=true
 Secret=postgres_password
 Secret=pgcat_password
 Notify=healthy
+Label=io.podman.quadlet.project=postgres-example-no-name
+Label=io.podman.quadlet.service=postgres
 
 [Service]
 CPUQuota=400%

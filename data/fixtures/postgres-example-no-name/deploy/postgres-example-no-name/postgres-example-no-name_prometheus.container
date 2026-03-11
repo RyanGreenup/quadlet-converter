@@ -13,6 +13,8 @@ HealthTimeout=5s
 NoNewPrivileges=true
 NetworkAlias=prometheus
 Notify=healthy
+Label=io.podman.quadlet.project=postgres-example-no-name
+Label=io.podman.quadlet.service=prometheus
 
 [Service]
 CPUQuota=100%

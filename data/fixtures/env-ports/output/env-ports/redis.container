@@ -1,3 +1,5 @@
 [Container]
 Image=redis:7-alpine
 Pod=env-ports.pod
+Label=io.podman.quadlet.project=env-ports
+Label=io.podman.quadlet.service=redis
