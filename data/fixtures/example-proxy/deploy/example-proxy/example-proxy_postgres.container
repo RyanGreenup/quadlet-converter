@@ -1,7 +1,7 @@
 [Container]
 Image=docker.io/library/postgres:17-alpine
 Volume=example-proxy_postgres-data.volume:/var/lib/postgresql/data:Z
-Volume=/var/home/ryan/Sync/journals/2026/03/10/quadlet-serde-tool/quadlet-serde/data/fixtures/example-proxy/initdb:/docker-entrypoint-initdb.d:ro,Z
+Volume=./initdb:/docker-entrypoint-initdb.d:ro,Z
 Environment=POSTGRES_USER=app
 Environment=POSTGRES_PASSWORD_FILE=/run/secrets/db_password
 Environment=POSTGRES_DB=myapp

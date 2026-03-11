@@ -1,6 +1,6 @@
 [Container]
 Image=docker.io/prom/prometheus:v3.2.0
-Volume=/var/home/ryan/Sync/journals/2026/03/10/quadlet-serde-tool/quadlet-serde/data/fixtures/postgres-example-no-name/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
+Volume=./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z,ro
 Volume=postgres-example-no-name_prometheus_data.volume:/prometheus:Z
 Network=postgres-example-no-name_monitoring.network
 DropCapability=ALL
